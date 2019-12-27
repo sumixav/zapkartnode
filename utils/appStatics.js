@@ -1,6 +1,31 @@
 "use strict";
 
 var enums = {};
+
+enums.product = {
+  availablity: {
+    IN_STOCK: "in-stock",
+    UNAVAILABLE: "unavailable"
+  },
+  status: {
+    PENDING: "pending",
+    ACTIVE: "active",
+    DISABLED: "disabled",
+    DELETED: "deleted"
+  }
+};
+
+// enums.status = {
+//   enabled: "enabled",
+//   disabled: "disabled",
+//   deleted: "deleted"
+// };
+
+enums.status = {
+  active: "active",
+  hold: "hold"
+};
+
 enums.status_codes_msg = {
   SUCCESS: {
     status: "success",
@@ -25,7 +50,7 @@ enums.status_codes_msg = {
   UNAUTHORIZED: {
     status: "error",
     code: 401,
-    error: "Please enter a valid credentials." 
+    error: "Please enter a valid credentials."
   },
   JWT_TOKEN_EXPIRED: {
     status: "error",
@@ -53,7 +78,5 @@ enums.status_codes_msg = {
     error: "Created"
   }
 };
-
-
 
 module.exports = enums;

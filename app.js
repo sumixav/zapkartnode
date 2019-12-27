@@ -1,14 +1,19 @@
-const express 		= require('express');
-const logger 	    = require('morgan');
-const bodyParser 	= require('body-parser');
-const passport      = require('passport');
-const pe            = require('parse-error');
-const cors          = require('cors');
+const express = require('express');
+const logger = require('morgan');
+const bodyParser = require('body-parser');
+const passport = require('passport');
+const pe = require('parse-error');
+const mongoose = require('mongoose')
+const cors = require('cors');
 const fileUpload = require('express-fileupload');
+const multer = require('multer')
+const upload = multer()
+const Logger = require('./logger')
+const { ReE } = require('./services/util.service')
 
-const v1    = require('./routes/v1');
-const app   = express();
-const {status_codes_msg} = require('./utils/appStatics')
+const v1 = require('./routes/v1');
+const app = express();
+const { status_codes_msg } = require('./utils/appStatics')
 
 const CONFIG = require('./config/config');
 
@@ -17,37 +22,43 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
-app.use("/upload", express.static(__dirname + '/upload'));
+// app.use("/upload", express.static(__dirname + '/upload'));
+app.use("/uploads", express.static("uploads"));
 
 //Passport
 app.use(passport.initialize());
 
+
 //Log Env
-console.log("Environment:", CONFIG.app)
-//DATABASE
-const models = require("./models");
-models.sequelize.authenticate().then(() => {
-    console.log('Connected to SQL database:', CONFIG.db_name);
-})
-.catch(err => {
-    console.error('Unable to connect to SQL database:',CONFIG.db_name, err);
-});
-if(CONFIG.app==='dev'){
-    //models.sequelize.sync();//creates table if they do not already exist
-    //models.sequelize.sync({ force: true }); //deletes all tables then recreates them useful for testing and development purposes
+Logger.info(`Environment: ${CONFIG.app}`)
+//DATABASE    
+Logger.info(CONFIG.mongodb_uri)
+mongoose.connect(CONFIG.mongodb_uri, {
+  dbName: CONFIG.db_name,
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => Logger.info(`Connected to MongoDB. Database: ${CONFIG.db_name}`))
+  .catch(err => Logger.error('Could not connect to MongoDB...', err));
+
+if (CONFIG.app === 'dev') {
+  //models.sequelize.sync();//creates table if they do not already exist
+  //models.sequelize.sync({ force: true }); //deletes all tables then recreates them useful for testing and development purposes
 }
 // CORS
 app.use(cors());
-app.use(fileUpload());
+// app.use(fileUpload());
+// app.use(bodyParser.urlencoded({ extended: false }))
+// app.use(bodyParser.json());
+// app.use(upload.none())
 
-app.use('/wedding/v1', v1);
+app.use('/mongodb/v1', v1);
 
-app.use('/', function(req, res){
-	res.status(status_codes_msg.NO_RECORD_FOUND.code).json(status_codes_msg.NO_RECORD_FOUND);
+app.use('/', function (req, res) {
+  res.status(status_codes_msg.NO_RECORD_FOUND.code).json(status_codes_msg.NO_RECORD_FOUND);
 });
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   console.log("err.status");
   var err = new Error('Not Found');
   err.status = 404;
@@ -55,21 +66,27 @@ app.use(function(req, res, next) {
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-  console.log("err.status"+err.status);
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+app.use((err, req, res, next) => {
+  Logger.error(err)
+  return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+})
+
+// error handler
+// app.use(function (err, req, res, next) {
+//   // set locals, only providing error in development
+//   res.locals.message = err.message;
+//   res.locals.error = req.app.get('env') === 'development' ? err : {};
+//   console.log("err.status" + err.status);
+//   // render the error page
+//   res.status(err.status || 500);
+//   res.render('error');
+// });
 
 module.exports = app;
 
 //This is here to handle all the uncaught promise rejections
 process.on('unhandledRejection', error => {
-    console.error('Uncaught Error', pe(error));
+  console.error('Uncaught Error', pe(error));
 });
 
 const http = require('http');
@@ -124,12 +141,13 @@ function onError(error) {
 
 function onListening() {
   const addr = server.address();
+
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-//   debug('Listening on ' + bind);
+  //   debug('Listening on ' + bind);
 
-  console.log('Server listenning on port:', addr.port);
+  Logger.info(`Server listenning on port: ${port}`);
 
 }
 

@@ -1,40 +1,25 @@
-'use strict';
-const fs        = require('fs');
-const path      = require('path');
-const Sequelize = require('sequelize');
-const basename  = path.basename(__filename);
-const db        = {};
-const CONFIG = require('../config/config');
+// 'use strict';
+// const fs        = require('fs');
+// const path      = require('path');
+// const mongoose = require('mongoose');
+// const basename  = path.basename(__filename);
+// const db        = {};
+// const CONFIG = require('../config/config');
+
+// mongoose.connect(CONFIG.mongodb_uri, {
+//   dbName: CONFIG.DB_NAME,
+//   useNewUrlParser: true
+// });
+
+// fs.readdirSync(__dirname)
+//   .filter((file) => {
+//     return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
+//   })
+//   .forEach((file) => {
+//     let model = mongoose.model(path.join(file.toUpperCase()), file);
+//     db[model.name] = model;
+//   });
 
 
-const sequelize = new Sequelize(CONFIG.db_name, CONFIG.db_user, CONFIG.db_password, {
-  host: CONFIG.db_host,
-  dialect: CONFIG.db_dialect,
-  port: CONFIG.db_port,
-  operatorsAliases: false,
-  define: {
-    charset: 'utf8',
-    collate: 'utf8_general_ci', 
-    timestamps: true
-  },
-});
 
-fs.readdirSync(__dirname)
-  .filter((file) => {
-    return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
-  })
-  .forEach((file) => {
-    let model = sequelize['import'](path.join(__dirname, file));
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-module.exports = db;
+// module.exports = db;
