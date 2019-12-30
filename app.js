@@ -37,8 +37,8 @@ mongoose.connect(CONFIG.mongodb_uri, {
   dbName: CONFIG.db_name,
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => Logger.info(`Connected to MongoDB. Database: ${CONFIG.db_name}`))
-  .catch(err => Logger.error('Could not connect to MongoDB...', err));
+}).then(() => Logger.info(`📓   Connected to MongoDB. Database: ${CONFIG.db_name}`))
+  .catch(err => Logger.error('❗  Could not connect to MongoDB...', err));
 
 if (CONFIG.app === 'dev') {
   //models.sequelize.sync();//creates table if they do not already exist
@@ -147,7 +147,7 @@ function onListening() {
     : 'port ' + addr.port;
   //   debug('Listening on ' + bind);
 
-  Logger.info(`Server listenning on port: ${port}`);
+  Logger.info(`🚀   Server listening on port: ${port}`);
 
 }
 

@@ -6,15 +6,16 @@ const seoSchema = Schema(
     {
         metaTitle: {
             type: String,
-            required: true
+            default:''
         },
         metaDescription: {
             type: String,
-            required: true
+            default:''
         },
         metaKeywords: {
             type: String,
-            required: true
+            // required: true
+            default:''
         }
     },
     {

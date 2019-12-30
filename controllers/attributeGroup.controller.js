@@ -48,3 +48,17 @@ exports.getAttribute = async function (req, res, next) {
         next(error)
     }
 }
+
+exports.editAttributeGroup = async function (req, res, next) {
+    try {
+        const [err, attribute] = await to(attributeGroupService.editAttributeGroup(req.params.id));
+        if (err) { next(err) }
+        if (attribute) {
+            return ReS(res, { message: 'Attribute', data: attribute }
+                , status_codes_msg.SUCCESS.code);
+        }
+    } catch (error) {
+
+        next(error)
+    }
+}

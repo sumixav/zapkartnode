@@ -14,10 +14,20 @@ const pricingSchema = Schema({
   taxId: { type: Schema.Types.ObjectId, ref: "TaxClass" }
 });
 
+const shippingSchema = Schema({
+  dimensions: {
+    height: Number,
+    length: Number,
+    width: Number
+  },
+  weight: Number
+});
+
 const productsSchema = Schema(
   {
     // _id: Schema.Types.ObjectId,
     name: { type: String, required: true },
+    pricing: { type: pricingSchema, required: false },
     slug: {
       type: String,
       slug: "name",
@@ -30,7 +40,7 @@ const productsSchema = Schema(
       enum: Object.values(enums.product.status),
       required: true
     },
-    mainImage: [imageSchema],
+    mainImage: imageSchema,
     images: [imageSchema],
     category: {
       type: [
@@ -51,7 +61,8 @@ const productsSchema = Schema(
     maxOrderQty: Number,
     availability: {
       type: String,
-      enum: Object.values(enums.product.availablity)
+      enum: Object.values(enums.product.availablity),
+      default: enums.product.availablity.IN_STOCK
     },
     // images: [imageSchema],
     shipping: shippingSchema,
@@ -62,31 +73,32 @@ const productsSchema = Schema(
       required: true
     },
     featured: Boolean,
-    medicineType: {
-      type: String,
-      enum: Object.values(enums.MedicineType),
-      required: true
-    },
+    // medicineType: {
+    //   type: String,
+    //   enum: Object.values(enums.MedicineType),
+    //   required: true
+    // },
     returnPeriod: {
       type: Number,
       required: function () {
         return this.returnable;
       }
     },
-    tags: [{ type: Schema.Types.ObjectId, ref: "Tags" }],
+    // tags: [{ type: Schema.Types.ObjectId, ref: "Tags" }],
+    tags: [{ type: Schema.Types.String }],
     seo: [seoSchema],
-    attributes: [
-      {
-        attributeGroup: { type: Schema.Types.ObjectId, ref: "Attributes" },
-        required: false,
-        values: [
-          {
-            type: Schema.Types.ObjectId,
-            ref: "AttributesValues"
-          }
-        ]
-      }
-    ]
+    // attributes: [
+    //   {
+    //     attributeGroup: { type: Schema.Types.ObjectId, ref: "Attributes" },
+    //     required: false,
+    //     values: [
+    //       {
+    //         type: Schema.Types.ObjectId,
+    //         ref: "AttributesValues"
+    //       }
+    //     ]
+    //   }
+    // ]
   },
   {
     timestamps: true

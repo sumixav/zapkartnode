@@ -9,18 +9,22 @@ const Logger = require('../logger')
 module.exports.to = async (promise) => {
     let err, res;
     [err, res] = await to(promise);
+
     if (err) return [pe(err)];
 
     return [null, res];
 };
 
 module.exports.ReE = function (res, err, code) { // Error Web Response
+
+
+    Logger.error(err);
     if (typeof err == 'object' && typeof err.message != 'undefined') {
         err = err.message;
     }
 
     if (typeof code !== 'undefined') res.statusCode = code;
-    Logger.error(JSON.stringify(err));
+
     return res.json({ success: false, error: err });
 };
 
@@ -35,6 +39,26 @@ module.exports.ReS = function (res, data, code) { // Success Web Response
 
     return res.json(send_data)
 };
+
+module.exports.formatValidationError = function (errorArray) {
+    let errorMessage = [];
+    errorArray.forEach(i => {
+        if (i.property === 'instance') {
+            errorMessage = errorMessage + i.message + '.' + '\n';
+            // const obj = { message: i.message }
+            // errorMessage.push(obj)
+        }
+        else {
+            const a = i.property.split("instance.")[1]
+            errorMessage = errorMessage + ' ' + a + ' ' + i.message + '.' + '\n'
+            // const obj = { path: a, message: i.message }
+            // errorMessage.push(obj)
+
+        }
+    })
+    Logger.info(errorMessage)
+    return errorMessage
+}
 
 module.exports.TE = TE = function (err_message, log) { // TE stands for Throw Error
     if (log === true) {
@@ -97,20 +121,38 @@ exports.isObjectId = id => {
     return id.match(regEx) && mongoose.Types.ObjectId.isValid(id);
 };
 
-exports.getIdQuery = (id, queryField) => {
+exports.getIdQuery = (id, queryField = 'slug') => {
     let query = {
         _id: id
     };
-    let toQuery = 'slug'
-    if (typeof queryField !== 'undefined')
-        toQuery = [queryField]
-    Logger.info(toQuery)
+    // let toQuery = 'slug'
+    let toQuery = queryField
+    // if (typeof queryField !== 'undefined')
+    //     toQuery = [queryField]
     if (!this.isObjectId(id))
         query = {
             [toQuery]: id
         };
+    Logger.info(query)
     return query;
 };
+
+exports.getError = (message = 'Error', status = 422) => {
+    const error = new Error()
+    error.message = message;
+    error.status = status;
+    return error
+}
+
+exports.isEmpty = val => {
+    if (!Object.entries) {
+        entries.shim();
+    }
+    if (val === '' || val === null || val === undefined) return true
+    if (val.constructor === Object && Object.entries(val).length === 0) return true
+    if (val.constructor === Array && val.length === 0) return true
+    return false
+}
 
 
 
