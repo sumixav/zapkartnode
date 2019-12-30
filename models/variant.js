@@ -30,20 +30,6 @@ const variantSchema = Schema(
         // images: [imageSchema],
         // shipping: shippingSchema,
 
-        returnable: {
-            type: Boolean,
-            required: true
-        },
-        featured: Boolean,
-
-        returnPeriod: {
-            type: Number,
-            required: function () {
-                return this.returnable;
-            }
-        },
-
-
         attributes: [
             {
                 attributeGroup: { type: Schema.Types.ObjectId, ref: "Attributes" },

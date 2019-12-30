@@ -31,7 +31,22 @@ const brandSchema = Schema(
     }
 )
 
+<<<<<<< HEAD
 module.exports = {
     brandModel: mongoose.model("Brand", brandSchema),
     brandSchema
 }
+=======
+// brandsSchema.pre('save', async function (next) {
+//     Logger.info('in pre save brand hook', this.name)
+//     const duplicateBrand = await mongoose.models["Brand"].findOne({ name: this.name })
+//     if (duplicateBrand) {
+//         Logger.info('duplicate brand')
+//         const error = getError('Brand with same name already exists', 409)
+//         next(error)
+//     }
+//     else next()
+// })
+
+module.exports = mongoose.model('Brand', brandsSchema)
+>>>>>>> d5df668b6cb396ebd300b478011a1ea3dcff8ef6

@@ -7,7 +7,7 @@ const getStorage = (location = null) =>
         destination: (req, file, cb) => {
             const newDestination = `./uploads/${location}/`;
             // console.log('dest file')
-            var stat = null;
+            let stat = null;
             try {
                 stat = fs.statSync(newDestination);
             } catch (err) {

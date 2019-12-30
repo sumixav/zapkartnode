@@ -8,5 +8,7 @@ const { imageModel: Image } = require('../models/image');
 exports.createVariant = (params, images) => {
     const { name, product, sku, status, purchaseCount,
         availability,
-        attributes } = params
+        attributes } = params;
+    
+    
 }
