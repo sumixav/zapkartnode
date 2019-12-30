@@ -10,6 +10,7 @@ const { imageModel: Image } = require('../models/image');
 //use parse-strings-in-object
 
 exports.createCategory = async (param, images) => {
+    Logger.info("mmmmddddd");
     const { name,
         parent,
         description,
@@ -17,7 +18,7 @@ exports.createCategory = async (param, images) => {
 
     let imagesPath = []
     imagesPath = images.map(i => i.path)
-    Logger.info(imagesPath)
+    Logger.info("mmmm",typeof images)
 
     const duplicateCategory = await Category.find({ name: name })
 

@@ -8,10 +8,13 @@ const categoryService = require('../services/category.services');
 exports.createCategory = async function (req, res) {
     const param = req.body
     try {
-
-        if (!req.files || (req.files && !req.files["image"])) { const err = new Error('Image(s) required'); throw err };
-        let images = req.files["image"]
-        if (req.files.image.constructor === Object) images = new Array(req.files["image"])
+        let images = {};
+        //if (!req.files || (req.files && !req.files["image"])) { const err = new Error('Image(s) required'); throw err };
+        if (typeof req.files.image != 'undefined') {
+        images = req.files["image"]
+        //images = new Array(req.files["image"]);
+            
+        }
         const [err, category] = await to(categoryService.createCategory(param, images));
         if (err) { Logger.error(err); return ReE(res, err, status_codes_msg.INVALID_ENTITY.code); }
         if (category) {
