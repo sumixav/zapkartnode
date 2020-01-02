@@ -21,12 +21,7 @@ const variantSchema = Schema(
             enum: Object.values(enums.product.status),
             required: true
         },
-        images: [imageSchema],
-        purchaseCount: { type: Number },
-        availability: {
-            type: String,
-            enum: Object.values(enums.product.availablity)
-        },
+        
         // images: [imageSchema],
         // shipping: shippingSchema,
 

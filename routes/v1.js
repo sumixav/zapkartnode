@@ -7,6 +7,7 @@ const CategoryController = require('../controllers/category.controller')
 const AttributeGroupController = require('../controllers/attributeGroup.controller')
 const ProductController = require('../controllers/product.controller')
 const BrandConroller = require('../controllers/brand.controller')
+const VarientConroller = require('../controllers/variant.controller')
 
 
 const passport = require('passport');
@@ -43,6 +44,11 @@ router.post('/products/create', productUpload, Validate.validateProduct, Product
 router.post('/brands/create', brandUpload, Validate.validateBrand, BrandConroller.createBrand);
 router.get('/brands/', BrandConroller.getAllBrands);
 router.patch('/brands/:brandId', brandUpload, BrandConroller.editBrand);
+
+//variant
+router.get('/varient/', VarientConroller.getAllVariant);
+router.post('/varient/create', VarientConroller.createVariant);
+
 // router.patch('/brands/:brandId', brandUpload, (Validate.validateBrand("update")), BrandConroller.editBrand);
 
 // router.post('/users/login', Validate.validateAuth, UserController.login);
