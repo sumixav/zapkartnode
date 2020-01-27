@@ -306,7 +306,7 @@ exports.deleteProduct = async id => {
         if (b.ok === 1 && b.nModified === 1) return true;
     };
 
-    return false;
+    return false; 
 };
 
 exports.restoreProduct = async id => {
