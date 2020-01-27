@@ -150,7 +150,7 @@ exports.createProduct = async (param) => {
     const [errProd, newProductDoc] = await to(newProduct.save());
 
     let errParent = null;
-    Logger.info(parentProdDoc)
+    Logger.info(parentProdDoc);
     if (parentProdDoc) {
         let [errParent, updatedParentProdDoc] = await to(parentProdDoc.save());
         Logger.info(updatedParentProdDoc)
