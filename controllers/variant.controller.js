@@ -13,7 +13,7 @@ exports.createVariant = async function (req, res) {
         let images = req.files["image"]
         if (req.files.image.constructor === Object) images = new Array(req.files["image"])
         const [err,variant] = await to(variantService.createVariant(param, images));
-        if (err) { Logger.error(err); return ReE(res, err, status_codes_msg.INVALID_ENTITY.code); }
+        if (err) { return ReE(res, err, status_codes_msg.INVALID_ENTITY.code); }
         if (variant) {
             return ReS(res, { message: 'Variant', data: variant }
                 , status_codes_msg.SUCCESS.code);

@@ -1,0 +1,19 @@
+{"message":"(app.js:33) Environment: dev","level":"info"}
+{"message":"(app.js:35) mongodb://167.114.115.100:27017/?gssapiServiceName=mongodb","level":"info"}
+{"message":"(app.js:150) 🚀   Server listening on port: 3004","level":"info"}
+{"message":"(app.js:40) 📓   Connected to MongoDB. Database: zapkart","level":"info"}
+{"message":"(app.js:33) Environment: dev","level":"info"}
+{"message":"(app.js:35) mongodb://167.114.115.100:27017/?gssapiServiceName=mongodb","level":"info"}
+{"message":"(app.js:150) 🚀   Server listening on port: 3004","level":"info"}
+{"message":"(app.js:40) 📓   Connected to MongoDB. Database: zapkart","level":"info"}
+{"message":"(services/attributeGroup.service.js:85) 5e16ef7bffb79462de40290a","level":"info"}
+{"filename":"/Users/riolabztechnologies/Desktop/js-works/zapkart/node-mongodb/services/attributeGroup.service.js","line":87,"row":34,"message":"(app.js:70)Invalid ID","type":"Error","stack":"Error: Invalid ID\n    at Object.exports.deleteAttributeGroup (/Users/riolabztechnologies/Desktop/js-works/zapkart/node-mongodb/services/attributeGroup.service.js:87:34)\n    at process._tickCallback (internal/process/next_tick.js:68:7)","level":"error"}
+{"filename":"/Users/riolabztechnologies/Desktop/js-works/zapkart/node-mongodb/services/attributeGroup.service.js","line":87,"row":34,"message":"(services/util.service.js:21)Invalid ID","type":"Error","stack":"Error: Invalid ID\n    at Object.exports.deleteAttributeGroup (/Users/riolabztechnologies/Desktop/js-works/zapkart/node-mongodb/services/attributeGroup.service.js:87:34)\n    at process._tickCallback (internal/process/next_tick.js:68:7)","level":"error"}
+{"message":"(app.js:33) Environment: dev","level":"info"}
+{"message":"(app.js:35) mongodb://167.114.115.100:27017/?gssapiServiceName=mongodb","level":"info"}
+{"message":"(app.js:150) 🚀   Server listening on port: 3004","level":"info"}
+{"message":"(app.js:40) 📓   Connected to MongoDB. Database: zapkart","level":"info"}
+2020-01-10T05:33:24.872Z - [32minfo[39m: (app.js:33) Environment: dev
+2020-01-10T05:33:24.880Z - [32minfo[39m: (app.js:35) mongodb://167.114.115.100:27017/?gssapiServiceName=mongodb
+2020-01-10T05:33:24.908Z - [32minfo[39m: (app.js:150) 🚀   Server listening on port: 3004
+2020-01-10T05:33:25.544Z - [32minfo[39m: (app.js:40) 📓   Connected to MongoDB. Database: zapkart

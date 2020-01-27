@@ -17,6 +17,8 @@ const { status_codes_msg } = require('./utils/appStatics')
 
 const CONFIG = require('./config/config');
 
+console.log(JSON.stringify(a))
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -32,12 +34,12 @@ app.use(passport.initialize());
 //Log Env
 Logger.info(`Environment: ${CONFIG.app}`)
 //DATABASE    
-Logger.info(CONFIG.mongodb_uri)
+Logger.info('MONDODB_URI',CONFIG.mongodb_uri)
 mongoose.connect(CONFIG.mongodb_uri, {
   dbName: CONFIG.db_name,
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => Logger.info(`📓   Connected to MongoDB. Database: ${CONFIG.db_name}`))
+}).then(() => Logger.info(`📖  Connected to MongoDB. Database: ${CONFIG.db_name}`))
   .catch(err => Logger.error('❗  Could not connect to MongoDB...', err));
 
 if (CONFIG.app === 'dev') {
@@ -67,7 +69,7 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use((err, req, res, next) => {
-  Logger.error(err)
+  console.error('ERROR', err.status)
   return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
 })
 

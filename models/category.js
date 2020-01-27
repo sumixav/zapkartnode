@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const enums = require("../utils/appStatics");
+const { enums } = require("../utils/appStatics");
 const slug = require("mongoose-slug-updater");
 const { seoSchema } = require("./seo");
 const { imageSchema } = require("./image");
@@ -40,6 +40,10 @@ const categorySchema = mongoose.Schema(
     priorityOrder: {
       type: Number,
       default: 0
+    },
+    deleted: {
+      type: Boolean,
+      default: false
     }
   },
   {
@@ -47,6 +51,22 @@ const categorySchema = mongoose.Schema(
   }
 );
 
-// categorySchema.pre()
+// categorySchema.pre('find', function(next) {
+
+//   console.log('in category pre find', this)
+//    next()
+// });
+
+// categorySchema.pre('update', function(next) {
+
+//   console.log('in category pre update')
+//    next()
+// });
+// categorySchema.pre('findOne', function(next) {
+
+//   console.log('in category pre findOne')
+//    next()
+// });
+
 
 module.exports = mongoose.model("Category", categorySchema);

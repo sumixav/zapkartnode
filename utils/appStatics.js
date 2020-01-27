@@ -1,32 +1,31 @@
 "use strict";
 
-var enums = {};
+// var enums = {};
 
-enums.product = {
-  availablity: {
-    IN_STOCK: "in-stock",
-    UNAVAILABLE: "unavailable"
+module.exports.enums = {
+  product: {
+    availablity: {
+      IN_STOCK: "in-stock",
+      UNAVAILABLE: "unavailable"
+    },
+    status: {
+      PENDING: "pending",
+      ACTIVE: "active",
+      DISABLED: "disabled",
+      DELETED: "deleted"
+    },
+    variantType: {
+      SINGLE: "single",
+      MULTIPLE: "multiple"
+    }
   },
   status: {
-    PENDING: "pending",
-    ACTIVE: "active",
-    DISABLED: "disabled",
-    DELETED: "deleted"
-  }
+    active: "active",
+    hold: "hold"
+  },
 };
 
-// enums.status = {
-//   enabled: "enabled",
-//   disabled: "disabled",
-//   deleted: "deleted"
-// };
-
-enums.status = {
-  active: "active",
-  hold: "hold"
-};
-
-enums.status_codes_msg = {
+module.exports.status_codes_msg = {
   SUCCESS: {
     status: "success",
     code: 200,
@@ -77,6 +76,19 @@ enums.status_codes_msg = {
     code: 201,
     error: "Created"
   }
-};
+}
 
-module.exports = enums;
+
+// enums.status = {
+//   enabled: "enabled",
+//   disabled: "disabled",
+//   deleted: "deleted"
+// };
+
+
+module.exports.STRINGS = {
+  NOT_EXIST: "Resource does not exist",
+  DB_ERROR: "Database Error",
+  INVALID_PARENTID : "Invalid parent product ID",
+  INVALID_ID : "Invalid ID"
+}

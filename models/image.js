@@ -11,11 +11,12 @@ const imageSchema = Schema(
             type: String,
             required: true
         },
-        width: Number,
-        height: Number,
+        width: { type: Number, requirred: true },
+        height: { type: Number, requirred: true },
         title: {
             type: String,
-            default: ''
+            default: " ",
+            // required: true,
         }
     },
     {

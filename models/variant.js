@@ -7,8 +7,12 @@ mongoose.plugin(slug);
 // id name attribute sku
 const variantSchema = Schema(
     {
+        deleted: {
+            type: Boolean,
+            default: false
+        },
         name: { type: String, required: true },
-        product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+        product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
         slug: {
             type: String,
             slug: "name",
