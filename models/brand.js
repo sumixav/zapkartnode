@@ -40,6 +40,7 @@ const brandsSchema = mongoose.Schema(
   }
 );
 
+
 // brandsSchema.pre('save', async function (next) {
 //     Logger.info('in pre save brand hook', this.name)
 //     const duplicateBrand = await mongoose.models["Brand"].findOne({ name: this.name })
@@ -51,4 +52,8 @@ const brandsSchema = mongoose.Schema(
 //     else next()
 // })
 
+
 module.exports = mongoose.model("Brand", brandsSchema);
+
+module.exports = mongoose.model('Brand', brandsSchema)
+

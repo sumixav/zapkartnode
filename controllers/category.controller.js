@@ -4,32 +4,32 @@ const Logger = require("../logger/index");
 
 const categoryService = require("../services/category.services");
 
-exports.createCategory = async function(req, res) {
-  const param = req.body;
+
+exports.createCategory = async function (req, res) {
+  const param = req.body
   try {
-    // if (!req.files || (req.files && !req.files["image"])) { const err = new Error('Image(s) required'); throw err };
-    let images = req.files["image"];
-    // if (req.files.image instanceof Object) images = new Array(req.files["image"])
-    const [err, category] = await to(
-      categoryService.createCategory(param, images)
-    );
-    if (err) {
-      return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    let images = {};
+    //if (!req.files || (req.files && !req.files["image"])) { const err = new Error('Image(s) required'); throw err };
+    if (typeof req.files.image != 'undefined') {
+      images = req.files["image"]
+      //images = new Array(req.files["image"]);
+
     }
+    const [err, category] = await to(categoryService.createCategory(param, images));
+    if (err) { Logger.error(err); return ReE(res, err, status_codes_msg.INVALID_ENTITY.code); }
     if (category) {
-      return ReS(
-        res,
-        { message: "Category", data: category },
-        status_codes_msg.SUCCESS.code
-      );
+      return ReS(res, { message: 'Category', data: category }
+        , status_codes_msg.SUCCESS.code);
     }
   } catch (err) {
-    console.error(err);
+    console.error(err)
     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+
   }
+
 };
 
-exports.deleteCategory = async function(req, res) {
+exports.deleteCategory = async function (req, res) {
   try {
     const [err, isDeleted] = await to(
       categoryService.deleteCategory(req.params.id)
@@ -47,7 +47,7 @@ exports.deleteCategory = async function(req, res) {
   }
 };
 
-exports.getAllCategories = async function(req, res) {
+exports.getAllCategories = async function (req, res) {
   try {
     const [err, categories] = await to(
       categoryService.getAllCategories(req.query)
@@ -68,7 +68,7 @@ exports.getAllCategories = async function(req, res) {
   }
 };
 
-exports.getCategory = async function(req, res, next) {
+exports.getCategory = async function (req, res, next) {
   try {
     const [err, category] = await to(
       categoryService.getCategoryDetails(req.params.id)
