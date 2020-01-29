@@ -17,7 +17,7 @@ const { status_codes_msg } = require('./utils/appStatics')
 
 const CONFIG = require('./config/config');
 
-
+//console.log(JSON.stringify(a))
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
