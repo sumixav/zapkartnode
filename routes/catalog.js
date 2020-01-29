@@ -27,6 +27,9 @@ router.get('/get-heart-beat', function (req, res, next) {
   res.json({ status: "success", message: "Zapkart API", data: { "version_number": "v1.0.0" } })
 });
 
+//auth details
+//router.post(  '/users/register'     , Validate.registerUser, UserController.create); 
+//router.post(  '/users/login'        , Validate.validateAuth, UserController.login);
 // router.get('/config', CommonController.config);
 // Category
 router.post('/category/create', categoryUpload, Validate.validateCategory, CategoryController.createCategory);

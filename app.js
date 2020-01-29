@@ -11,7 +11,8 @@ const upload = multer();
 const Logger = require('./logger')
 const { ReE } = require('./services/util.service')
 
-const v1 = require('./routes/v1');
+const catalog = require('./routes/catalog');
+const backend = require('./routes/backend');
 const app = express();
 const { status_codes_msg } = require('./utils/appStatics')
 
@@ -30,7 +31,18 @@ app.use("/uploads", express.static("uploads"));
 //Passport
 app.use(passport.initialize());
 
-
+//DATABASE
+const authmodels = require("./auth_models");
+authmodels.sequelize.authenticate().then(() => {
+    console.log('Connected to SQL database:', CONFIG.db_name);
+})
+.catch(err => {
+  console.error('Unable to connect to SQL database:',CONFIG.db_name, err);
+});
+if(CONFIG.app==='dev'){
+  //models.sequelize.sync();//creates table if they do not already exist
+  //authmodels.sequelize.sync({ force: true }); //deletes all tables then recreates them useful for testing and development purposes
+}
 //Log Env
 Logger.info(`Environment: ${CONFIG.app}`)
 //DATABASE    
@@ -53,7 +65,9 @@ app.use(cors());
 // app.use(bodyParser.json());
 // app.use(upload.none())
 
-app.use('/mongodb/v1', v1);
+app.use('/api/catalog/v1', catalog);
+app.use('/api/backend/v1', backend);
+
 
 app.use('/', function (req, res) {
   res.status(status_codes_msg.NO_RECORD_FOUND.code).json(status_codes_msg.NO_RECORD_FOUND);

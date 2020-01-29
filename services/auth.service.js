@@ -1,8 +1,9 @@
-const { users } 	    = require('../models');
+const { users } 	    = require('../auth_models');
 const validator     = require('validator');
 const { to, TE , ReE}    = require('../services/util.service');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+const Logger = require("../logger");
 
 const findUserByEmail = async function(email){
 
@@ -44,18 +45,13 @@ const createUser = async (userInfo) => {
         userParam.lastName =  userInfo.lastName;
         userParam.email =  userInfo.email;
         userParam.phone =  (typeof userInfo.phone!='undefined')?userInfo.phone:null;
-        userParam.weddingaddress =  userInfo.weddingaddress;
         userParam.password =  userInfo.password;
-        userParam.userTypeId =  userInfo.userType;
-        userParam.partnerfirstName =  userInfo.partnerfirstName;
-        userParam.partnerlastName =  userInfo.partnerlastName;
-        userParam.languageId =  userInfo.languageId;
-        userParam.weddingDate =  userInfo.weddingDate;
-        userParam.guestCount =  userInfo.guestCount;
+        userParam.userTypeId =1;
         userParam.active =  0;
         userParam.confirmed =  0;
         [err, user] = await to(users.create(userParam));
         if(err) { return TE(err.message); }
+        Logger.info("dsfdg",user);
         return user;
     } else if( email && email.email){
         return TE('Email id already exist');
