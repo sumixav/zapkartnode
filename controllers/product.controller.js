@@ -83,7 +83,7 @@ exports.editProduct = async (req, res, next) => {
             param.images = newImages;
         }
         Logger.info(newImages)
-        
+
         // param.deletedImages = deletedImages
         const [err, product] = await to(
             productService.editProduct(param, req.query)
@@ -107,13 +107,13 @@ exports.editProduct = async (req, res, next) => {
 
 exports.deleteProduct = async function (req, res) {
     try {
-        const [err, isDeleted] = await to(productService.deleteProduct(req.params.id));
+        const [err, isDeleted] = await to(productService.deleteProduct(req.params.productId));
         Logger.info(err, isDeleted);
         if (err) throw err;
         if (isDeleted)
             return ReS(
                 res,
-                { message: "Category deleted" },
+                { message: "Product deleted" },
                 status_codes_msg.SUCCESS.code
             );
     } catch (err) {

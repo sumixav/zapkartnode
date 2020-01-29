@@ -47,6 +47,8 @@ router.patch('/attributeGroup/restore/:id', AttributeGroupController.restore);
 router.post('/products/create', productUpload, Validate.validateProduct, ProductController.createProduct);
 router.get('/products', ProductController.getAllProducts);
 router.patch('/products/:productId', productUpload, ProductController.editProduct);
+router.delete('/products/:productId', ProductController.deleteProduct);
+// router.patch('/products/restore:productId', ProductController.restore);
 
 // Brand
 router.post('/brands/create', brandUpload, Validate.validateBrand, BrandConroller.createBrand);

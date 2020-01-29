@@ -23,16 +23,16 @@ exports.productsSchema = {
       "type": "string"
     },
     "height": {
-      "type": "string"
+      "type": "number"
     },
     "length": {
-      "type": "string"
+      "type": "number"
     },
     "width": {
-      "type": "string"
+      "type": "number"
     },
     "weight": {
-      "type": "string"
+      "type": "number"
     },
     "sku": {
       "type": "string"

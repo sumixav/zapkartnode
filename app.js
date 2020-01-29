@@ -6,8 +6,8 @@ const pe = require('parse-error');
 const mongoose = require('mongoose')
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
-const multer = require('multer')
-const upload = multer()
+const multer = require('multer');
+const upload = multer();
 const Logger = require('./logger')
 const { ReE } = require('./services/util.service')
 
@@ -17,7 +17,7 @@ const { status_codes_msg } = require('./utils/appStatics')
 
 const CONFIG = require('./config/config');
 
-console.log(JSON.stringify(a))
+
 
 app.use(logger('dev'));
 app.use(bodyParser.json());

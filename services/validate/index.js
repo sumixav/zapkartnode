@@ -1,5 +1,6 @@
 "use strict";
 var Validator = require("jsonschema").Validator;
+const parseStrings = require("parse-strings-in-object")
 var v = new Validator();
 const { to, ReE, ReS, formatValidationError } = require("../util.service");
 const Logger = require("../../logger");
@@ -21,19 +22,19 @@ exports.validateProduct = (req, res, next) => {
   let params = Object.assign({}, req.body);
   params.attributes = JSON.parse(params.attributes)
   Logger.info(params)
-  Logger.info(params)
-  params.listPrice = Number(params.listPrice)
-  params.salePrice = Number(params.salePrice)
-  params.purchaseCount = Number(params.purchaseCount)
-  params.minOrderQty = Number(params.minOrderQty)
-  params.maxOrderQty = Number(params.maxOrderQty)
-  params.prescriptionNeeded = (params.prescriptionNeeded === "true")
-  params.returnable = (params.returnable === "true")
-  params.featured = (params.featured === "true")
-  params.returnPeriod = Number(params.returnPeriod)
-  Logger.info(params.attributes)
+  // Logger.info(params)
+  // params.listPrice = Number(params.listPrice)
+  // params.salePrice = Number(params.salePrice)
+  // params.purchaseCount = Number(params.purchaseCount)
+  // params.minOrderQty = Number(params.minOrderQty)
+  // params.maxOrderQty = Number(params.maxOrderQty)
+  // params.prescriptionNeeded = (params.prescriptionNeeded === "true")
+  // params.returnable = (params.returnable === "true")
+  // params.featured = (params.featured === "true")
+  // params.returnPeriod = Number(params.returnPeriod)
+  // Logger.info(params.attributes)
   // params.attributes = JSON.parse(params.attributes)
-  const validRes = v.validate(params, productsSchema).errors;
+  const validRes = v.validate(parseStrings(params), productsSchema).errors;
   Logger.info(validRes);
   const imageValid = req.files && req.files["image"];
   // const mainImageValid = req.files && req.files["mainImage"];

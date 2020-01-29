@@ -11,7 +11,8 @@ const Logger = require('../logger')
 const { seoModel: Seo } = require('../models/seo');
 const { imageModel: Image } = require('../models/image');
 const { STRINGS } = require("../utils/appStatics")
-const { transformProduct } = require("./transforms")
+const { transformProduct } = require("./transforms");
+const parseStrings = require("parse-strings-in-object")
 //use parse-strings-in-object
 
 exports.isParentIdValid = async (id) => {
@@ -22,6 +23,8 @@ exports.isParentIdValid = async (id) => {
 }
 
 exports.createProduct = async (param) => {
+    const parsedParam = parseStrings(param);
+    Logger.info(parsedParam)
     const {
         length, width, height, weight,
         startDate,
@@ -39,7 +42,7 @@ exports.createProduct = async (param) => {
         featured,
         returnPeriod,
         sku,
-        tag, metaTitle, metaDescription, metaKeywords, attributes: attributesJSON, images } = param
+        tag, metaTitle, metaDescription, metaKeywords, attributes: attributesJSON, images } = parsedParam;
 
     const attributes = JSON.parse(attributesJSON)
 
@@ -54,7 +57,8 @@ exports.createProduct = async (param) => {
     };
 
     let parentProdDoc = null;
-    if (typeof parentId !== "undefined" && typeof parentId !== "null") {
+    // if (typeof parentId !== "undefined" && parentId !== "null") {
+    if (parentId) {
         parentProdDoc = await Product.findOne({ _id: parentId });
         Logger.info('parentProdDoc', parentProdDoc)
         if (!parentProdDoc) throw new Error("Invalid parent ID");
@@ -175,7 +179,7 @@ exports.getAllProducts = async (query) => {
         sortQuery = { [query.sort]: -1 }
 
     const products = await Product.find(dbQuery)
-        .sort(sortQuery).populate('category', 'name')
+        .sort(sortQuery).populate('category', 'name images seo')
         .populate('composition', '_id deleted name slug')
         .populate('brand', '_id deleted name slug image')
         .populate('pricing', 'listPrice salePrice startDate endDate')
@@ -239,6 +243,9 @@ exports.editProduct = async (params, query) => {
                     return imageDocs.map(i => product.images.push(i))
                     // return Promise.resolve(1);
                     break;
+                case 'parentId':
+                case 'variantType':
+                    break;
                 case 'listPrice':
                 case 'salePrice':
                 case 'startDate':
@@ -297,16 +304,35 @@ exports.editProduct = async (params, query) => {
 
 exports.deleteProduct = async id => {
     const a = await Product.findOne({ _id: id });
+    Logger.info(a)
     if (!a) throw new Error(STRINGS.INVALID_ID);
     if (a.deleted === true) throw new Error(STRINGS.NOT_EXIST);
-    // main product with  no variants
-    if (a.parentId === null) {
-        const b = await Product.update({ _id: id }, { deleted: true });
-        Logger.info(b);
-        if (b.ok === 1 && b.nModified === 1) return true;
-    };
 
-    return false; 
+    // main product
+    if (a.parentId === null && a.variantCount > 0) {
+        // main with variants; soft deletes all variants
+        const variants = await Product.find({ parentId: id });
+        Logger.info('variants', variants)
+        if (variants.length > 0) {
+            const variantIds = variants.map(i => i._id)
+            Logger.info(variantIds)
+            const b = await Product.updateMany(
+                { _id: { $in: variantIds } },
+                { deleted: true },
+            );
+            Logger.info('Variants delete', b)
+            // return (b.ok === 1 && b.nModified === a.variantCount)
+        }
+    }
+
+
+
+    // delete main product (or) variant product
+    const b = await Product.update({ _id: id }, { deleted: true });
+    Logger.info(b);
+    if (b.ok === 1 && b.nModified === 1) return true;
+
+    return false;
 };
 
 exports.restoreProduct = async id => {
