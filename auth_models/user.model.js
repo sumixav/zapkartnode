@@ -95,6 +95,10 @@ module.exports = function(sequelize, DataTypes) {
   });
   
   Model.associate = function(models){
+    this.merchant = this.hasMany(models.merchants);
+  };
+  
+  Model.associate = function(models){
     this.usertype = this.belongsTo(models.user_types);
   };
   
