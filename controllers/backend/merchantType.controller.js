@@ -5,7 +5,7 @@ const Logger = require("../../logger");
 const merchantTypeService = require("../../services/merchantType.service");
 
 const create = async (req, res, next) => {
-  const param = req.body;
+  const param = {...req.body,"createdBy":3};
   try {
    
      [err, merchanttype] = await to(merchantTypeService.createmerchanttype(param));
@@ -55,8 +55,9 @@ const getMerchantType = async function(req, res) {
 module.exports.getMerchantType = getMerchantType;
 
 const updateMerchantType = async function(req, res) {
+ 
   let id  = req.params.id;
-  
+
   try {
       [err, merchantTypelist] = await to(merchantTypeService.updatemerchantType(id,req.body));
           if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);

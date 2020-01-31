@@ -21,8 +21,9 @@ const CONFIG = require('./config/config');
 //console.log(JSON.stringify(a))
 
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+
+// for parsing application/xwww-
+app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 // app.use("/upload", express.static(__dirname + '/upload'));
