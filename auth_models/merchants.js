@@ -1,4 +1,5 @@
 /* jshint indent: 2 */
+const SequelizeSlugify = require('sequelize-slugify');
 
 module.exports = function(sequelize, DataTypes) {
     let Model = sequelize.define('merchants', {
@@ -22,7 +23,8 @@ module.exports = function(sequelize, DataTypes) {
       },
       slug: {
         type: DataTypes.STRING(255),
-        allowNull: false
+        unique: true,
+        allowNull: true
       },
       address: {
         type: DataTypes.STRING(255),
@@ -53,11 +55,11 @@ module.exports = function(sequelize, DataTypes) {
         }
       },
       zipcode: {
-        type: DataTypes.INTEGER(20),
+        type: DataTypes.STRING(255),
         allowNull: false
       },
       regnumber: {
-        type: DataTypes.INTEGER(20),
+        type: DataTypes.STRING(255),
         allowNull: false
       },
       establishdate: {
@@ -96,6 +98,10 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING(255),
         allowNull: false
       },
+      accountdetails: {
+        type: DataTypes.STRING(255),
+        allowNull: false
+      },
       accounttype: {
           type:   DataTypes.ENUM,
           values: ['saving', 'current']
@@ -108,6 +114,10 @@ module.exports = function(sequelize, DataTypes) {
             type:   DataTypes.ENUM,
             values: ['active', 'hold']
           },
+       deleted: {
+          type:   DataTypes.ENUM,
+          values: ['true', 'false']
+        },
           createdBy: {
           type: DataTypes.INTEGER(11),
           allowNull: true,
@@ -115,12 +125,45 @@ module.exports = function(sequelize, DataTypes) {
             model: 'users',
             key: 'id'
           }
+        },
+        userId: {
+        type: DataTypes.INTEGER(11),
+        allowNull: true,
+        references: {
+          model: 'users',
+          key: 'id'
+        }
+      },
+        customSlug: {
+            type: DataTypes.VIRTUAL,
+            get() {
+              return this.get('name') && this.get('name');
+            },
+        },
+    }, {
+        getterMethods: {
+          timestamp() {
+            return Date.now();
+          },
         }
 
     },
      {
       tableName: 'merchants'
     });
+
+    SequelizeSlugify.slugifyModel(Model, {
+      source: ['customSlug'],
+      suffixSource: ['timestamp'],
+      slugOptions: { lower: true },
+      overwrite: false,
+      column: 'slug',
+      incrementalReplacement: '-',
+  });
+
+    Model.associate = function(models){
+      this.userId = this.belongsTo(models.users);
+    };
 
     Model.associate = function(models){
         this.createdby = this.belongsTo(models.users, {foreignKey: 'createdBy'});

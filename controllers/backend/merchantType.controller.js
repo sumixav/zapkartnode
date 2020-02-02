@@ -28,7 +28,7 @@ exports.getAllMerchantType = async (req, res, next) => {
     if (MerchantType) {
       return ReS(
         res,
-        { message: "MerchantType", data: MerchantType, count: MerchantType.length },
+        { message: "MerchantType", data: MerchantType },
         status_codes_msg.SUCCESS.code
       );
     }

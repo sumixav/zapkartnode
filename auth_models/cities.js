@@ -22,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
      {
-      
+      timestamps: false,
       tableName: 'cities'
     });
     Model.associate = function(models){

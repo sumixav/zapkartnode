@@ -38,17 +38,24 @@ const createUser = async (userInfo) => {
     
      let phone = (typeof userInfo.phone!='undefined')? 
     await findUserByPhone(userInfo.phone.toString()):null;
+
+    let imagesPath = [];
+    let userParam={};
     
+    if (typeof userInfo.files!= 'undefined') {
+        images = userInfo.files["image"];
+        imagesPath = images.map(i => i.path);
+        userParam.avatarlocation = imagesPath;
+      }
     if (email.message === 'NotExist') {
-        let userParam={};
         userParam.firstName =  userInfo.firstName;
         userParam.lastName =  userInfo.lastName;
         userParam.email =  userInfo.email;
         userParam.phone =  (typeof userInfo.phone!='undefined')?userInfo.phone:null;
         userParam.password =  userInfo.password;
-        userParam.userTypeId =1;
-        userParam.active =  0;
-        userParam.confirmed =  0;
+        userParam.userTypeId =userInfo.roleId;
+        userParam.active =  1;
+        userParam.confirmed =  1;
         [err, user] = await to(users.create(userParam));
         if(err) { return TE(err.message); }
         Logger.info("dsfdg",user);
@@ -84,6 +91,7 @@ module.exports.authUser = authUser;
 const updateUserLocation = async function(user, data){
 
     userData = userBodyParam(param.body);
+    
     [err, user] = await to(user.update(
         userData, {where: {id: user.id} }
       ));

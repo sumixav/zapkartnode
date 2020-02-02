@@ -48,6 +48,11 @@ const update = async function(req, res){
     let err, user, data
     user = req.user;
     data = req.body;
+    if (typeof req.files.image != 'undefined') {
+        images = req.files["image"];
+        imagesPath = images.map(i => i.path);
+        data.avatarlocation = imagesPath;
+      }
     user.set(data);
 
     [err, user] = await to(user.save());

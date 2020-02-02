@@ -14,18 +14,13 @@ const Logger = require("../logger");
 
 
 exports.createmerchant = async (param) => {
-
-  let merchantTypes;
-
-  [err, merchants] = await to(merchants.create(param));
-if(err) { return err; }
-  return merchants;
+  [err, merchantlists] = await to(merchants.create(param));
+  if(err) { return err; }
+  return merchantlists;
 };
 
 exports.getAllMerchant = async query => {
-  [err, merchantlist] = await to(merchants.findAll({
-    where: [{ status: 'active' }]
-}));
+  [err, merchantlist] = await to(merchants.findAll());
   if (!merchantlist || merchantlist.length === 0) {
     return "No record found"; 
   }
@@ -43,9 +38,9 @@ module.exports.getMerchantId = getMerchantId;
 const updatemerchant = async (id, param) => {
   
   console.log("hh",param);
-  [err,merchants ] = await to(merchants.update(param, {where: {id: id} }));
+  [err,merchantdetails ] = await to(merchants.update(param, {where: {id: id} }));
       if(err) TE(err.message);
-  return merchants;
+  return merchantdetails;
 }
 
 module.exports.updatemerchant = updatemerchant;

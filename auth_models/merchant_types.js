@@ -19,7 +19,11 @@ module.exports = function(sequelize, DataTypes) {
     status: {
         type:   DataTypes.ENUM,
         values: ['active', 'hold']
-      }
+      },
+      deleted: {
+          type:   DataTypes.ENUM,
+          values: ['true', 'false']
+        }
 
     }, {
       

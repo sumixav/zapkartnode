@@ -37,9 +37,7 @@ if(err) { return err; }
 };
 
 exports.getAllMerchantType = async query => {
-  [err, merchantTypelist] = await to(merchant_types.findAll({
-    where: [{ status: 'active' }]
-}));
+  [err, merchantTypelist] = await to(merchant_types.findAll());
   if (!merchantTypelist || merchantTypelist.length === 0) {
     return "No record found"; 
   }

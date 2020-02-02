@@ -22,8 +22,8 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
      {
-      
-      tableName: 'countries'
+      timestamps: false,
+      tableName: 'countries',
     });
     
     Model.associate = function(models){
