@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slug = require('mongoose-slug-updater');
+const enums = require('../utils/appStatics')
 mongoose.plugin(slug);
 
 const taxClassSchema = mongoose.Schema(

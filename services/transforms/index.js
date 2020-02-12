@@ -14,9 +14,9 @@ exports.transformCategory = data => {
     };
 };
 
-exports.transformProduct = data => {
+exports.transformProduct = (data) => {
     Logger.info(data)
-    delete data.shipping_id;
+    if (data.shipping) delete data.shipping._id;
     const compositions = (data.compositions && data.compositions._id) ? {
         deleted: data.compositions.deleted,
         _id: data.compositions._id,
@@ -26,17 +26,18 @@ exports.transformProduct = data => {
 
     return {
         ...data._doc,
-        images: data.images.map(i => this.transformImage(i)),
-        brand: { ...data.brand._doc, image: data.brand.image.map(i => this.transformImage(i)) },
+        images: data.images && data.images.map(i => this.transformImage(i)),
+        brand: data.brand && { ...data.brand._doc, image: data.brand.image.map(i => this.transformImage(i))
+    },
         compositions,
-        pricing: this.transformPricing(data.pricing),
-        category: data.category.map(i => this.transformCategory(i))
-    }
+        pricing: data.pricing && this.transformPricing(data.pricing),
+            category: data.category && data.category.map(i => this.transformCategory(i))
+}
 }
 
 exports.transformPricing = data => {
     return {
-        _id:data._id,
+        _id: data._id,
         startDate: data.startDate,
         endDate: data.endDate,
         listPrice: data.listPrice,

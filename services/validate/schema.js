@@ -34,8 +34,14 @@ exports.productsSchema = {
     "weight": {
       "type": "number"
     },
+    "lengthClass": {
+      "type": Object.values(enums.lengthClass)
+    },
+    "weightClass": {
+      "type": Object.values(enums.weightClass)
+    },
     "sku": {
-      "type": "string"
+      "type": ["string, integer"]
     },
     "status": {
       "enum": Object.values(enums.status)
@@ -97,6 +103,18 @@ exports.productsSchema = {
     },
     "variantType": {
       "enum": ["single", "multiple"]
+    },
+    "quantity":{
+      "type":"number"
+    },
+    "subtract":{
+      "type":"boolean"
+    },
+    "outOfStockStatus":{
+      "enum":Object.values(enums.outOfStockStatus)
+    },
+    "textDescription":{
+      "type":"string"
     }
   },
   "definitions": {
@@ -130,7 +148,29 @@ exports.productsSchema = {
     "metaTitle",
     "metaDescription",
     "metaKeywords",
-    "height", "length", "width", "weight"]
+    "height", "length", "width", "weight", "weightClass", "lengthClass"]
+}
+
+exports.medicineTypesBulkSchema = {
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/medicineType" }
+    }
+  },
+  "definitions": {
+    "medicineType": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of medicine type"
+        }
+      }
+    }
+  },
+  "required": ["data"]
 }
 
 exports.brandSchema = {
