@@ -159,12 +159,6 @@ var userRegisterSchema = {
     lastName: {
       type: "string"
     },
-    partnerlastName: {
-      type: "string"
-    },
-    partnerfirstName: {
-      type: "string"
-    },
     phone: {
       type: "string",
       pattern: "^[0-9()\\-\\.\\s]+$",
@@ -179,9 +173,7 @@ var userRegisterSchema = {
     "firstName",
     "lastName",
     "email",
-    "password",
-    "partnerfirstName",
-    "partnerlastName"
+    "password"
   ]
 };
 

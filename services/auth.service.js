@@ -1,8 +1,9 @@
-const { users } 	    = require('../models');
+const { users } 	    = require('../auth_models');
 const validator     = require('validator');
 const { to, TE , ReE}    = require('../services/util.service');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+const Logger = require("../logger");
 
 const findUserByEmail = async function(email){
 
@@ -37,25 +38,27 @@ const createUser = async (userInfo) => {
     
      let phone = (typeof userInfo.phone!='undefined')? 
     await findUserByPhone(userInfo.phone.toString()):null;
+
+    let imagesPath = [];
+    let userParam={};
     
+    if (typeof userInfo.files!= 'undefined') {
+        images = userInfo.files["image"];
+        imagesPath = images.map(i => i.path);
+        userParam.avatarlocation = imagesPath;
+      }
     if (email.message === 'NotExist') {
-        let userParam={};
         userParam.firstName =  userInfo.firstName;
         userParam.lastName =  userInfo.lastName;
         userParam.email =  userInfo.email;
         userParam.phone =  (typeof userInfo.phone!='undefined')?userInfo.phone:null;
-        userParam.weddingaddress =  userInfo.weddingaddress;
         userParam.password =  userInfo.password;
-        userParam.userTypeId =  userInfo.userType;
-        userParam.partnerfirstName =  userInfo.partnerfirstName;
-        userParam.partnerlastName =  userInfo.partnerlastName;
-        userParam.languageId =  userInfo.languageId;
-        userParam.weddingDate =  userInfo.weddingDate;
-        userParam.guestCount =  userInfo.guestCount;
-        userParam.active =  0;
-        userParam.confirmed =  0;
+        userParam.userTypeId =userInfo.roleId;
+        userParam.active =  1;
+        userParam.confirmed =  1;
         [err, user] = await to(users.create(userParam));
         if(err) { return TE(err.message); }
+        Logger.info("dsfdg",user);
         return user;
     } else if( email && email.email){
         return TE('Email id already exist');
@@ -88,6 +91,7 @@ module.exports.authUser = authUser;
 const updateUserLocation = async function(user, data){
 
     userData = userBodyParam(param.body);
+    
     [err, user] = await to(user.update(
         userData, {where: {id: user.id} }
       ));

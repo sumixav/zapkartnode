@@ -34,6 +34,9 @@ router.get("/get-heart-beat", function(req, res, next) {
   });
 });
 
+//auth details
+//router.post(  '/users/register'     , Validate.registerUser, UserController.create); 
+//router.post(  '/users/login'        , Validate.validateAuth, UserController.login);
 // router.get('/config', CommonController.config);
 // Category
 router.post(

@@ -13,15 +13,22 @@ const { ReE } = require("./services/util.service");
 
 const Composition = require("./models/composition");
 
+const catalog = require('./routes/catalog');
+const backend = require('./routes/backend');
+const app = express();
+const { status_codes_msg } = require('./utils/appStatics')
+
 const v1 = require("./routes/v1");
 const app = express();
 const { status_codes_msg } = require("./utils/appStatics");
 
 const CONFIG = require("./config/config");
 
-app.use(logger("dev"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(logger('dev'));
+
+// for parsing application/xwww-
+app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 // app.use("/upload", express.static(__dirname + '/upload'));
@@ -30,6 +37,19 @@ app.use("/uploads", express.static("uploads"));
 //Passport
 app.use(passport.initialize());
 
+
+//DATABASE
+const authmodels = require("./auth_models");
+authmodels.sequelize.authenticate().then(() => {
+    console.log('Connected to SQL database:', CONFIG.db_name);
+})
+.catch(err => {
+  console.error('Unable to connect to SQL database:',CONFIG.db_name, err);
+});
+if(CONFIG.app==='dev'){
+  //models.sequelize.sync();//creates table if they do not already exist
+  //authmodels.sequelize.sync({ force: true }); //deletes all tables then recreates them useful for testing and development purposes
+}
 //Log Env
 Logger.info(`Environment: ${CONFIG.app}`);
 //DATABASE
@@ -56,7 +76,10 @@ app.use(cors());
 // app.use(bodyParser.json());
 // app.use(upload.none())
 
-app.use("/mongodb/v1", v1);
+
+app.use('/api/catalog/v1', catalog);
+app.use('/api/backend/v1', backend);
+
 
 app.use("/", function(req, res) {
   res
