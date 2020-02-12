@@ -102,6 +102,54 @@ exports.saveThumbnails = imagePathArray => {
   return Promise.all(promises);
 };
 
+exports.resizeCropMultiple = (imagePathArray, w, h) => {
+  Logger.info(imagePathArray);
+  // Logger.info("in resize&crop");
+  const promises = imagePathArray.map(imagePath => {
+    Logger.info(imagePath);
+    // const parsedPath = path.parse(imagePath);
+    // const resizedName = `${parsedPath.dir}/${parsedPath.name}_${w}x${h}${parsedPath.ext}`;
+    return new Promise((resolve, reject) =>
+      gm(imagePath)
+        // .resize(w, h, "^")
+        .resize(w, h)
+        .gravity("Center")
+        // .crop(w, h)
+        .write(imagePath, function(err) {
+          if (err) {
+            Logger.error(err);
+            reject(new Error(err));
+          }
+          Logger.info(imagePath);
+          resolve(imagePath);
+        })
+    );
+  });
+
+  return Promise.all(promises);
+};
+
+exports.resizeCrop = (imagePath, w, h) => {
+  Logger.info(imagePath);
+  // const parsedPath = path.parse(imagePath);
+  // const resizedName = `${parsedPath.dir}/${parsedPath.name}_${w}x${h}${parsedPath.ext}`;
+  return new Promise((resolve, reject) =>
+    gm(imagePath)
+      // .resize(w, h, "^")
+      .resize(w, h)
+      .gravity("Center")
+      // .crop(w, h)
+      .write(imagePath, function(err) {
+        if (err) {
+          Logger.error(err);
+          reject(new Error(err));
+        }
+        Logger.info(imagePath);
+        resolve(imagePath);
+      })
+  );
+};
+
 exports.saveThumbnail = imagePath => {
   Logger.info(imagePath);
   const parsedPath = path.parse(imagePath);

@@ -5,7 +5,7 @@ const { imageSchema } = require("./image");
 const { shippingDimSchema } = require("./shippingDim");
 // const { enums } = require("../utils/appStatics");
 const slug = require("mongoose-slug-updater");
-const shortId = require("shortid")
+const shortId = require("shortid");
 mongoose.plugin(slug);
 
 // const pricingSchema = Schema({
@@ -15,8 +15,6 @@ mongoose.plugin(slug);
 //   salePrice: Number,
 //   taxId: { type: Schema.Types.ObjectId, ref: "TaxClass" }
 // });
-
-
 
 const productsSchema = Schema(
   {
@@ -65,8 +63,8 @@ const productsSchema = Schema(
     maxOrderQty: { type: "Number", required: false },
     availability: {
       type: String,
-      enum: ['in-stock', 'unavailable'],
-      default: 'in-stock'
+      enum: ["in-stock", "unavailable"],
+      default: "in-stock"
     },
     // images: [imageSchema],
     shipping: shippingDimSchema,
@@ -85,7 +83,7 @@ const productsSchema = Schema(
     // },
     returnPeriod: {
       type: Number,
-      required: function () {
+      required: function() {
         return this.returnable;
       }
     },
@@ -103,14 +101,14 @@ const productsSchema = Schema(
     },
     variantCount: {
       type: Number,
-      required: function () {
+      required: function() {
         return this.parentId === null;
       },
-      default: 0,
+      default: 0
     },
     variantType: {
       type: "String",
-      enum: ['single', 'multiple'] // single, multiple
+      enum: ["single", "multiple"] // single, multiple
     },
     attributes: [
       {
@@ -121,10 +119,33 @@ const productsSchema = Schema(
           ref: "AttributesValues"
         }
       }
-    ]
+    ],
+    deleted: {
+      type: Boolean,
+      default: false
+    },
+    medicineType: {
+      type: Schema.Types.ObjectId,
+      ref: "MedicineType"
+    },
+    stock: {
+      type: Schema.Types.ObjectId,
+      ref: "Stock",
+      required: true
+    },
+    relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    textDescription: {
+      type: String,
+      default: ""
+    }
+    // createdBy : {
+    //   type: Schema.Types.ObjectId,
+    //   ref:"User"
+    // }
   },
   {
-    timestamps: true
+    timestamps: true,
+    selectPopulatedPaths: false
   }
 );
 

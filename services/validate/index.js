@@ -10,7 +10,8 @@ const {
   brandSchema,
   editAttributesSchema,
   categorySchema,
-  editCategorySchema
+  editCategorySchema,
+  medicineTypesBulkSchema
 } = require("./schema");
 
 exports.validateProduct = (req, res, next) => {
@@ -34,11 +35,12 @@ exports.validateProduct = (req, res, next) => {
   // params.returnPeriod = Number(params.returnPeriod)
   // Logger.info(params.attributes)
   // params.attributes = JSON.parse(params.attributes)
-  const validRes = v.validate(parseStrings(params), productsSchema).errors;
+  const parsedParams = parseStrings(params)
+  const validRes = v.validate(parsedParams, productsSchema).errors;
   Logger.info(validRes);
   const imageValid = req.files && req.files["image"];
   // const mainImageValid = req.files && req.files["mainImage"];
-  if (typeof imageValid === "undefined")
+  if (!parsedParams.parentId && typeof imageValid === "undefined")
     validRes.push({ property: "instance.image", message: "Image required" });
   // if (typeof mainImageValid === "undefined")
   // validRes.push({
@@ -60,6 +62,17 @@ exports.validateBrand = (req, res, next) => {
   const imageValid = req.files && req.files["image"];
   if (typeof imageValid === "undefined")
     validRes.push({ property: "instance.image", message: "required" });
+  if (!(validRes.length > 0)) {
+    return next();
+  } else {
+    const errorMessage = formatValidationError(validRes);
+    return ReE(res, errorMessage, status_codes_msg.VALIDATION_ERROR.code);
+  }
+};
+
+exports.validateMedicineTypesBulk = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  const validRes = v.validate(params, medicineTypesBulkSchema).errors;
   if (!(validRes.length > 0)) {
     return next();
   } else {

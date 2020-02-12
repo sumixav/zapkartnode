@@ -23,6 +23,21 @@ module.exports.enums = {
     active: "active",
     hold: "hold"
   },
+  lengthClass: {
+    mm: "mm",
+    cm: "cm",
+    m: "inch"
+  },
+  weightClass: {
+    kg: "kg",
+    gm: "gm",
+    pound: "pound",
+    ounce: "ounce"
+  },
+  outOfStockStatus: {
+    inStock: "in-stock",
+    outOfStock: "out-of-stock"
+  }
 };
 
 module.exports.status_codes_msg = {
@@ -76,8 +91,7 @@ module.exports.status_codes_msg = {
     code: 201,
     error: "Created"
   }
-}
-
+};
 
 // enums.status = {
 //   enabled: "enabled",
@@ -85,10 +99,16 @@ module.exports.status_codes_msg = {
 //   deleted: "deleted"
 // };
 
-
 module.exports.STRINGS = {
   NOT_EXIST: "Resource does not exist",
   DB_ERROR: "Database Error",
-  INVALID_PARENTID : "Invalid parent product ID",
-  INVALID_ID : "Invalid ID"
-}
+  INVALID_PARENTID: "Invalid parent product ID",
+  INVALID_ID: "Invalid ID",
+  DELETED: "Resource deleted",
+  RESTORED: "Resource restored",
+  DUPLICATE: "Resource with same name already exists",
+  NO_DATA: "No data available",
+  CREATE_SUCCESS: "Created successfully"
+};
+
+module.exports.PAGE_LIMIT = 0;
