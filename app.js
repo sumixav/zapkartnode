@@ -16,10 +16,6 @@ const Composition = require("./models/composition");
 const catalog = require('./routes/catalog');
 const backend = require('./routes/backend');
 const app = express();
-const { status_codes_msg } = require('./utils/appStatics')
-
-const v1 = require("./routes/v1");
-const app = express();
 const { status_codes_msg } = require("./utils/appStatics");
 
 const CONFIG = require("./config/config");
