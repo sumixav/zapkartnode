@@ -6,10 +6,10 @@ CONFIG.app          = process.env.APP   || 'dev';
 CONFIG.port         = process.env.PORT  || '3010';
 
 CONFIG.db_dialect   = process.env.DB_DIALECT    || 'mysql';
-CONFIG.db_host      = process.env.DB_HOST       || '%';
+CONFIG.db_host      = process.env.DB_HOST       || 'localhost';
 CONFIG.db_port      = process.env.DB_PORT       || '3306';
 CONFIG.db_name      = process.env.DB_NAME       || 'zapkart-dev';
-CONFIG.sql_db_name      = process.env.SQL_DB_NAME || 'zapkartdev';
+CONFIG.sql_db_name      = process.env.SQL_DB_NAME || 'zapkart-dev';
 CONFIG.db_user      = process.env.DB_USER       || 'admin';
 CONFIG.db_password  = process.env.DB_PASSWORD   || 'admin';
 CONFIG.mongodb_uri       = process.env.MONGODB_URI   || 'mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb'

@@ -36,3 +36,43 @@ const getCart = async function(req, res) {
   };
   
   module.exports.getCart = getCart;
+
+  const updateCart = async function(req, res) {
+ 
+    let id  = req.params.id;
+  
+    try {
+        [err, cartlist] = await to(cartService.updateCart(id,req.body));
+            if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+            if (cartlist) {
+                
+                return ReS(res, { message:'cart has been updated', cartlistDetails : cartlist}
+                        , status_codes_msg.SUCCESS.code);
+            }
+    } catch (err) {
+        return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    }
+  
+  };
+  
+  module.exports.updateCart = updateCart;
+
+  const deleteCart = async function(req, res) {
+ 
+    let id  = req.params.id;
+  
+    try {
+        [err, cartlist] = await to(cartService.deleteCart(id));
+            if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+            if (cartlist) {
+                
+                return ReS(res, { message:'cart has been deleted', cartlistDetails : cartlist}
+                        , status_codes_msg.SUCCESS.code);
+            }
+    } catch (err) {
+        return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    }
+  
+  };
+  
+  module.exports.deleteCart = deleteCart;

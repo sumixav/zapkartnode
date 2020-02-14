@@ -42,4 +42,6 @@ router.get('/city/:id', GeoLocationController.getCity);
 
 router.post(  '/cart/create', formupload.none(),passport.authenticate('jwt', {session:false}),CartController.create);
 router.get(   '/cart' ,passport.authenticate('jwt', {session:false}),CartController.getCart);
+router.patch(  '/updatecart/:id'  ,formupload.none(), CartController.updateCart);
+router.delete(  '/deletecart/:id'  ,formupload.none(), CartController.deleteCart);
 module.exports = router;
