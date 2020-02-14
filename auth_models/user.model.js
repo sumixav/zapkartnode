@@ -93,6 +93,10 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     tableName: 'users'
   });
+
+  Model.associate = function(models){
+    this.cart = this.hasMany(models.carts);
+  };
   
   Model.associate = function(models){
     this.merchant = this.hasMany(models.merchants);
