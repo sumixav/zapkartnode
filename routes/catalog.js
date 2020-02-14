@@ -83,6 +83,7 @@ router.post(
 );
 router.get("/products/:productId", ProductController.getProduct);
 router.get("/products", ProductController.getAllProducts);
+router.get("/products/variants/:productId", ProductController.getAllVariants);
 router.patch(
   "/products/:productId",
   productUpload,
