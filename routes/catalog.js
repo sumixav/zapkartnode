@@ -10,6 +10,7 @@ const BrandConroller = require("../controllers/brand.controller");
 const TaxClassController = require("../controllers/taxclass.controller");
 const CompositionController = require("../controllers/composition.controller");
 const MedicineTypeController = require("../controllers/medicineType.controller.js");
+const ComboController = require("../controllers/combo.controller.js");
 
 const passport = require("passport");
 const path = require("path");
@@ -24,6 +25,7 @@ const productUpload = upload("product").fields([
   { name: "mainImage" }
 ]);
 const brandUpload = upload("brand").fields([{ name: "image" }]);
+const comboUpload = upload("combo").fields([{ name: "image" }]);
 
 /* GET Heart Beat. */
 router.get("/get-heart-beat", function(req, res, next) {
@@ -155,6 +157,19 @@ router.patch(
   "/medicineType/restore/:medicineTypeId",
   MedicineTypeController.restoreMedicineType
 );
+
+// Brand
+router.post(
+  "/combo/create",
+  comboUpload,
+  Validate.validateCombo,
+  ComboController.createCombo
+);
+router.get("/combos/", ComboController.getAllCombos);
+router.get("/combos/:comboId", ComboController.getCombo);
+router.patch("/combos/:comboId", brandUpload, ComboController.editCombo);
+router.delete("/combos/:id", ComboController.deleteCombo);
+
 
 // router.post('/users/login', Validate.validateAuth, UserController.login);
 // router.get('/users/:id', passport.authenticate('jwt', { session: false }), UserController.getUserById);

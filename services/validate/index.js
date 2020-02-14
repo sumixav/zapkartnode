@@ -11,7 +11,8 @@ const {
   editAttributesSchema,
   categorySchema,
   editCategorySchema,
-  medicineTypesBulkSchema
+  medicineTypesBulkSchema,
+  comboSchema
 } = require("./schema");
 
 exports.validateProduct = (req, res, next) => {
@@ -272,5 +273,19 @@ module.exports.validateUpdateLocation = (req, res, next) => {
     return next();
   } else {
     return ReE(res, validRes[0].message, status_codes_msg.INVALID_ENTITY);
+  }
+};
+
+exports.validateCombo = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  const validRes = v.validate(params, comboSchema).errors;
+  const imageValid = req.files && req.files["image"];
+  if (typeof imageValid === "undefined")
+    validRes.push({ property: "instance.image", message: "required" });
+  if (!(validRes.length > 0)) {
+    return next();
+  } else {
+    const errorMessage = formatValidationError(validRes);
+    return ReE(res, errorMessage, status_codes_msg.VALIDATION_ERROR.code);
   }
 };

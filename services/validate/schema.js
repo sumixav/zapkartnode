@@ -173,6 +173,30 @@ exports.medicineTypesBulkSchema = {
   "required": ["data"]
 }
 
+exports.comboSchema = {
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["active", "hold"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "price": {
+      "type": "string"
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "string",
+      }
+    }
+  },
+  "required": ["name"]
+}
+
 exports.brandSchema = {
   "properties": {
     "name": {

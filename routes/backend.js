@@ -4,6 +4,7 @@ const UserController 	    = require('../controllers/backend/user.controller');
 const MerchantTypeController 	    = require('../controllers/backend/merchantType.controller');
 const MerchantController 	    = require('../controllers/backend/merchant.controller');
 const GeoLocationController 	    = require('../controllers/backend/geolocation.controller');
+const CartController 	    = require('../controllers/backend/cart.controller');
 const Validate                    = require('../services/validate');
 const multer  = require('multer')
 const formupload = multer()
@@ -38,4 +39,7 @@ router.patch(  '/updatemerchant/:id'  ,formupload.none(), MerchantController.upd
 router.get('/country', GeoLocationController.getAllCountry);
 router.get('/state/:id', GeoLocationController.getState);
 router.get('/city/:id', GeoLocationController.getCity);
+
+router.post(  '/cart/create', formupload.none(),passport.authenticate('jwt', {session:false}),CartController.create);
+router.get(   '/cart' ,passport.authenticate('jwt', {session:false}),CartController.getCart);
 module.exports = router;
