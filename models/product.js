@@ -69,6 +69,7 @@ const productsSchema = Schema(
     // images: [imageSchema],
     shipping: shippingDimSchema,
     composition: [{ type: Schema.Types.ObjectId, ref: "Composition" }],
+    organic: [{ type: Schema.Types.ObjectId, ref: "Organic" }],
     prescriptionNeeded: Boolean,
     returnable: {
       type: Boolean,

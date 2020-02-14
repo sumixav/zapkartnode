@@ -16,7 +16,7 @@ exports.createProduct = async (req, res, next) => {
     Logger.info(param.parentId, typeof param.parentId);
     if (
       param.parentId !== "undefined" &&
-      typeof param.parentId !== undefined &&
+      typeof param.parentId !== "undefined" &&
       param.parentId !== "null" &&
       param.parentId !== null
     ) {
@@ -45,28 +45,52 @@ exports.createProduct = async (req, res, next) => {
 
 exports.getAllProducts = async (req, res, next) => {
   try {
+    Logger.info("hi");
     const parsedQuery = parseStrings(req.query);
     Logger.info("parsedQuery", parsedQuery);
-    const [err, response] = await to(
-      productService.getAllProducts(parsedQuery)
-    );
-    if (err) {
-      return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-    }
+    const { id, fields } = parsedQuery;
     const limit = parsedQuery.limit || PAGE_LIMIT;
     const page = parsedQuery.page || 1;
-    if (response.products) {
-      return ReS(
-        res,
-        {
-          message: "Product",
-          data: response.products,
-          total: response.total,
-          page,
-          limit
-        },
-        status_codes_msg.SUCCESS.code
+    if (id) {
+      const [err, response] = await to(
+        productService.getProductsFromIds(id, fields || [])
       );
+      Logger.info(response);
+      if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+      if (response.products) {
+        return ReS(
+          res,
+          {
+            message: "Product",
+            data: response.products,
+            total: response.total,
+            page,
+            limit
+          },
+          status_codes_msg.SUCCESS.code
+        );
+      }
+    } else {
+      const [err, response] = await to(
+        productService.getAllProducts(parsedQuery)
+      );
+      if (err) {
+        return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+      }
+
+      if (response.products) {
+        return ReS(
+          res,
+          {
+            message: "Product",
+            data: response.products,
+            total: response.total,
+            page,
+            limit
+          },
+          status_codes_msg.SUCCESS.code
+        );
+      }
     }
   } catch (err) {
     console.error(err);
@@ -113,7 +137,7 @@ exports.editProduct = async (req, res, next) => {
       productService.editProduct(param, req.query)
     );
     if (err) {
-      console.log("will throw error");
+      console.log("will throw error", err);
       throw err;
     }
     if (product) {

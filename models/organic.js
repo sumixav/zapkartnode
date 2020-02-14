@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const slug = require("mongoose-slug-updater");
 mongoose.plugin(slug);
 
-const compositionSchema = mongoose.Schema(
+const organicSchema = mongoose.Schema(
   {
     // _id: mongoose.Schema.Types.ObjectId,
     name: { type: String, required: true, unique: true, index: true },
@@ -14,6 +14,7 @@ const compositionSchema = mongoose.Schema(
       type: String,
       slug: "name",
       index: true,
+      unique: true,
       slugPaddingSize: 4
     }
   },
@@ -22,4 +23,4 @@ const compositionSchema = mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Composition", compositionSchema);
+module.exports = mongoose.model("Organic", organicSchema);

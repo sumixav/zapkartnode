@@ -73,6 +73,12 @@ exports.productsSchema = {
         "type": "string"
       }
     },
+    "organic": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "prescriptionNeeded": {
       "type": "boolean"
     },
