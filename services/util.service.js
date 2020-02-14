@@ -129,6 +129,12 @@ exports.resizeCropMultiple = (imagePathArray, w, h) => {
   return Promise.all(promises);
 };
 
+function uniq(a) {
+  return Array.from(new Set(a));
+}
+exports.uniq = uniq
+
+
 exports.resizeCrop = (imagePath, w, h) => {
   Logger.info(imagePath);
   // const parsedPath = path.parse(imagePath);

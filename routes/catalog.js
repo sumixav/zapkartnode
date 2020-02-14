@@ -9,6 +9,7 @@ const ProductController = require("../controllers/product.controller");
 const BrandConroller = require("../controllers/brand.controller");
 const TaxClassController = require("../controllers/taxclass.controller");
 const CompositionController = require("../controllers/composition.controller");
+const OrganicController = require("../controllers/organic.controller");
 const MedicineTypeController = require("../controllers/medicineType.controller.js");
 const ComboController = require("../controllers/combo.controller.js");
 
@@ -131,6 +132,22 @@ router.delete(
 router.patch(
   "/composition/restore/:compositionId",
   CompositionController.restoreComposition
+);
+// Organic
+router.post("/organic/create", OrganicController.createOrganic);
+router.get("/organic/", OrganicController.getAllOrganics);
+router.get("/organic/:organicId", OrganicController.getOrganic);
+router.patch(
+  "/organic/:organicId",
+  OrganicController.editOrganic
+);
+router.delete(
+  "/organic/:organicId",
+  OrganicController.deleteOrganic
+);
+router.patch(
+  "/organic/restore/:organicId",
+  OrganicController.restoreOrganic
 );
 
 // Medicine Type

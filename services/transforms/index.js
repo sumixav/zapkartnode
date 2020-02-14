@@ -15,7 +15,7 @@ exports.transformCategory = data => {
 };
 
 exports.transformProduct = (data) => {
-    Logger.info(data)
+    // Logger.info(data)
     if (data.shipping) delete data.shipping._id;
     const compositions = (data.compositions && data.compositions._id) ? {
         deleted: data.compositions.deleted,

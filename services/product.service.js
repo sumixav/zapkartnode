@@ -17,7 +17,8 @@ const {
   resizeCrop,
   saveThumbnail,
   getDimensions,
-  getIdQuery
+  getIdQuery,
+  uniq
 } = require("../services/util.service");
 const mongoose = require("mongoose");
 const Logger = require("../logger");
@@ -27,9 +28,10 @@ const { STRINGS, PAGE_LIMIT } = require("../utils/appStatics");
 const { transformProduct } = require("./transforms");
 const parseStrings = require("parse-strings-in-object");
 const { isObjectId } = require("./util.service");
-const { createCompositions } = require("./composition.service");
+const { addCompositions } = require("./composition.service");
+const { addOrganics } = require("./organic.service");
+const { createOrganic } = require("./organic.service");
 //use parse-strings-in-object
-
 
 const WIDTH = null;
 // const WIDTH = 800;
@@ -37,7 +39,7 @@ const WIDTH = null;
 const HEIGHT = 340;
 
 exports.isParentIdValid = async id => {
-  Logger.info('isParentIdValid', id)
+  Logger.info("isParentIdValid", id);
   const [err, parentProduct] = await to(Product.findOne({ _id: id }));
   if (err) throw err;
   if (parentProduct) return true;
@@ -45,7 +47,7 @@ exports.isParentIdValid = async id => {
 };
 
 exports.createProduct = async param => {
-  Logger.info('createProduct')
+  Logger.info("createProduct");
   const parsedParam = parseStrings(param);
   Logger.info(parsedParam);
   const {
@@ -86,7 +88,8 @@ exports.createProduct = async param => {
     quantity,
     outOfStockStatus,
     subtract,
-    textDescription
+    textDescription,
+    organic
   } = parsedParam;
 
   const attributes = JSON.parse(attributesJSON);
@@ -117,20 +120,43 @@ exports.createProduct = async param => {
   // const dimensionsMainImage = await getDimensions(mainImage[0].path)
   // Logger.info(dimensions)
 
+  // handling composition field
   const newCompositions = composition.filter(i => !isObjectId(i));
+  const newCompositionsDocs = addCompositions(newCompositions);
   let toAddComps = composition.filter(i => isObjectId(i));
+  toAddComps = uniq([
+    ...(await newCompositionsDocs).map(i => i._id),
+    ...toAddComps
+  ]);
 
-  let [err, newCompositionsDocs] = await to(
-    createCompositions({ names: newCompositions })
-  );
-  if (err) {
-    Logger.error("Error adding new compositions", err);
-  }
+  // handling organic field
+  const newOrganics = organic.filter(i => !isObjectId(i));
+  const newOrganicsDocs = addOrganics(newOrganics);
+  let toAddOrganicsId = organic.filter(i => isObjectId(i));
+  toAddOrganicsId = uniq([
+    ...(await newOrganicsDocs).map(i => i._id),
+    ...toAddOrganicsId
+  ]);
 
-  toAddComps = [...toAddComps, ...newCompositionsDocs.map(i => i._id)];
+  // Logger.info('newCompositions raw', newCompositions)
+  // let [errExistComp, existingCompDocs] = await to(
+  //   findCompositionsFromNames({names: newCompositions})
+  // )
+  // Logger.info('existingCompDocs', existingCompDocs)
+  // let [errNewComp, newCompositionsDocs] = await to(
+  //   createCompositions({ names: newCompositions })
+  // );
 
-  let imageDocs = parentId ? parentProdDoc.images : []; 
-  if (images && images.length > 0){
+  // let newCompIds = newCompositionsDocs && newCompositionsDocs.length > 0 ? newCompositionsDocs.map(i => i._id): []
+  // let existingCompIds = existingCompDocs && existingCompDocs.length > 0 ? existingCompDocs.map(i => i._id) : []
+  // if (errExistComp || errNewComp) {
+  //   Logger.error("Error adding new compositions", errNewComp, errExistComp);
+  // }
+
+  // toAddComps = uniq([...toAddComps, ...newCompIds, ...existingCompIds]);
+
+  let imageDocs = parentId ? parentProdDoc.images : [];
+  if (images && images.length > 0) {
     // for variants maybe no images
     const imageDocsNew = await Promise.all(
       images.map(async i => {
@@ -145,8 +171,8 @@ exports.createProduct = async param => {
         });
       })
     );
-    imageDocs=[...imageDocs, ...imageDocsNew]
-    }
+    imageDocs = [...imageDocs, ...imageDocsNew];
+  }
   Logger.info(imageDocs);
 
   // const mainImageDoc = new Image({
@@ -224,6 +250,7 @@ exports.createProduct = async param => {
     maxOrderQty,
     shipping,
     composition: toAddComps,
+    organic: toAddOrganicsId,
     prescriptionNeeded,
     returnable,
     featured,
@@ -262,11 +289,37 @@ exports.createProduct = async param => {
   );
 };
 
-exports.getAllProducts = async (query) => {
+exports.getProductsFromIds = async (ids, fields = []) => {
+  Logger.info("hi", ids, fields);
+  let select = {};
+  if (fields && fields.length > 0) {
+    fields.forEach(i => (select[i] = 1));
+  }
+  const [err, prods] = await to(
+    Product.find({ _id: { $in: ids } })
+      .select(select)
+      .populate("category", "name images seo")
+      .populate("composition", "_id deleted name slug")
+      .populate("organic", "_id deleted name slug")
+      .populate("brand", "_id deleted name slug image")
+      .populate("pricing", "listPrice salePrice startDate endDate taxId")
+      .populate("attributes.attributeGroup", "name status attribute_group_code")
+      .populate("attributes.value", "value status")
+      .populate("medicineType")
+      .populate("stock")
+  );
+  Logger.info(err, prods);
+  if (err) throw err;
+  return {
+    products: prods.map(i => transformProduct(i))
+  };
+};
+
+exports.getAllProducts = async query => {
   let dbQuery = { deleted: false };
 
   let queryParsed = parseStrings(query);
-  Logger.info(queryParsed)
+  // Logger.info(queryParsed);
   let {
     fields,
     status,
@@ -274,9 +327,12 @@ exports.getAllProducts = async (query) => {
     limit = PAGE_LIMIT,
     sortField = "updatedAt",
     sortOrder = 1,
+    category // slugs
 
+    // id
   } = queryParsed;
-  Logger.info(limit)
+
+  if (category) dbQuery = { ...dbQuery, category  };
   if (status) dbQuery = { ...dbQuery, status };
   // if (query.priorityOrder)
   //     dbQuery = { ...dbQuery, priorityOrder: -1 }
@@ -286,9 +342,9 @@ exports.getAllProducts = async (query) => {
     fields.forEach(i => (select[i] = 1));
   }
 
-  sortOrder === "ascend" ? sortOrder = 1 : sortOrder = -1;
+  sortOrder === "ascend" ? (sortOrder = 1) : (sortOrder = -1);
 
-  Logger.info(dbQuery, select, sortField, sortOrder, page, limit)
+  Logger.info(dbQuery, select, sortField, sortOrder, page, limit);
 
   const products = await Product.find(dbQuery)
     .select(select)
@@ -297,6 +353,7 @@ exports.getAllProducts = async (query) => {
     .limit(limit)
     .populate("category", "name images seo")
     .populate("composition", "_id deleted name slug")
+    .populate("organic", "_id deleted name slug")
     .populate("brand", "_id deleted name slug image")
     .populate("pricing", "listPrice salePrice startDate endDate taxId")
     .populate("attributes.attributeGroup", "name status attribute_group_code")
@@ -307,17 +364,15 @@ exports.getAllProducts = async (query) => {
     const err = new Error("No products");
     throw err;
   }
-  return { products: products.map(i => transformProduct(i)), total: await Product.estimatedDocumentCount({ deleted: false, ...dbQuery }) }
+  return {
+    products: products.map(i => transformProduct(i)),
+    total: await Product.countDocuments({ deleted: false, ...dbQuery })
+    // total: await Product.estimatedDocumentCount({ deleted: false, ...dbQuery })
+  };
   // return products
 };
 
-exports.getProductDetails = async (
-  id,
-  {
-    fields,
-
-  }
-) => {
+exports.getProductDetails = async (id, { fields }) => {
   let dbQuery = getIdQuery(id);
   dbQuery = { ...dbQuery, deleted: false };
   Logger.info(dbQuery);
@@ -327,7 +382,6 @@ exports.getProductDetails = async (
   if (fields && fields.length > 0) {
     fields.forEach(i => (select[i] = 1));
   }
-
 
   const product = await Product.find(dbQuery) // limit page sort fielf sort order
     .select(select)
@@ -440,6 +494,27 @@ exports.editProduct = async (params, query) => {
       case "outOfStockStatus":
       case "subtract":
         stock[key] = value;
+      case "composition":
+        Logger.info(value);
+        const newCompositions = params.composition.filter(i => !isObjectId(i));
+        const newCompositionsDocs = addCompositions(newCompositions);
+        let toAddComps = params.composition.filter(i => isObjectId(i));
+        toAddComps = uniq([
+          ...(await newCompositionsDocs).map(i => i._id),
+          ...toAddComps
+        ]);
+        product["composition"] = toAddComps;
+        break;
+      case "organic":
+        const newOrganics = params.organic.filter(i => !isObjectId(i));
+        const newOrganicsDocs = addOrganics(newOrganics);
+        let toAddOrganicsId = params.organic.filter(i => isObjectId(i));
+        toAddOrganicsId = uniq([
+          ...(await newOrganicsDocs).map(i => i._id),
+          ...toAddOrganicsId
+        ]);
+        product["organic"] = toAddOrganicsId;
+        break;
       default:
         product[key] = value;
         // return Promise.resolve(1)
@@ -454,7 +529,7 @@ exports.editProduct = async (params, query) => {
   const updatedProduct = await product.save();
   const populatedProd = await Product.populate(
     updatedProduct,
-    "category composition pricing brand attributes.attributeGroup attributes.value stock"
+    "category composition pricing brand attributes.attributeGroup attributes.value stock organic"
   );
   Logger.info(populatedProd);
   return transformProduct(populatedProd);
