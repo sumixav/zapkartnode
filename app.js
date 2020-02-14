@@ -13,8 +13,9 @@ const { ReE } = require("./services/util.service");
 
 const Composition = require("./models/composition");
 
-const catalog = require("./routes/catalog");
-const backend = require("./routes/backend");
+const catalog = require('./routes/catalog');
+const backend = require('./routes/backend');
+
 const app = express();
 const { status_codes_msg } = require("./utils/appStatics");
 

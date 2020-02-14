@@ -1,4 +1,4 @@
-const { users } 	    = require('../auth_models');
+const { users, user_types } 	    = require('../auth_models');
 const validator     = require('validator');
 const { to, TE , ReE}    = require('../services/util.service');
 const Sequelize = require('sequelize');
@@ -69,13 +69,21 @@ const createUser = async (userInfo) => {
 module.exports.createUser = createUser;
 
 const authUser = async function(userInfo){
-    
+    //console.log("999999999999999",userInfo.loginId);
     if(validator.isEmail(userInfo.loginId)) {
-        [err, user] = await to(users.findOne({where: {email:userInfo.loginId}}));
+        [err, user] = await to(users.findOne({where: [{email:userInfo.loginId}],include: [
+            { model :user_types,
+                required:false
+             }
+         ]}));
             if(err) TE(err.message);
     
     } else if (validator.isMobilePhone(userInfo.loginId)) {
-        [err, user] = await to(users.findOne({where:{phone:userInfo.loginId}}));
+        [err, user] = await to(users.findOne({where:[{phone:userInfo.loginId}],include: [
+            { model :user_types,
+                required:false
+             }
+         ]}));
             if(err) TE(err.message);
     }
     

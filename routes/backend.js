@@ -23,7 +23,7 @@ router.get('/get-heart-beat-admin', function (req, res, next) {
 });
 
 router.post(  '/users/register'     , userUpload, Validate.registerUser, UserController.create); 
-router.post(  '/users/login'        , Validate.validateAuth, UserController.login);
+router.post(  '/users/login'        , formupload.none(),UserController.login);
 router.patch(  '/users/update'        , userUpload, Validate.validateAuth, UserController.update);
 router.post(  '/merchanttype/create', formupload.none(), MerchantTypeController.create);
 router.get(  '/merchanttype', MerchantTypeController.getAllMerchantType);
