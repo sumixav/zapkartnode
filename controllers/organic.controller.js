@@ -7,7 +7,7 @@ const organicService = require("../services/organic.service");
 
 exports.createOrganic = async (req, res, next) => {
   const param = req.body;
-  Logger.info(param);
+  
   try {
     const [err, organic] = await to(organicService.createOrganic(param));
     Logger.info(err);

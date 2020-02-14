@@ -42,7 +42,7 @@ exports.createComposition = async param => {
 };
 
 /**
- * to get compositions from name
+ * to add compositions from name if already exists, return existing)
  * @param {array} values ['abc', id, 'abc', 'acd']
  */
 exports.addCompositions = async values => {
@@ -56,6 +56,7 @@ exports.addCompositions = async values => {
   let [errNewComp, newCompositionsDocs = []] = await to(
     this.createCompositions({ names: newCompositions })
   );
+
 
   if (errExistComp || errNewComp) {
     Logger.error("error adding new comps");

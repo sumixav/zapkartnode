@@ -43,12 +43,7 @@ authmodels.sequelize
   .authenticate()
   .then(() => {
     console.log("Connected to SQL database:", CONFIG.sql_db_name);
-    function uniq(a) {
-      return Array.from(new Set(a));
-    }
-    
-    const anc = ['123', 'bbb', '123']
-    console.log(uniq(anc))
+
   })
   .catch(err => {
     console.error("Unable to connect to SQL database:", CONFIG.sql_db_name, err);
