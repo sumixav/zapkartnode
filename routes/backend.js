@@ -26,6 +26,7 @@ router.get('/get-heart-beat-admin', function (req, res, next) {
 router.post(  '/users/register'     , userUpload, Validate.registerUser, UserController.create); 
 router.post(  '/users/login'        , formupload.none(),UserController.login);
 router.patch(  '/users/update'        , userUpload, Validate.validateAuth, UserController.update);
+router.get(   '/users'          , passport.authenticate('jwt', {session:false}), UserController.getUser);
 router.post(  '/merchanttype/create', formupload.none(), MerchantTypeController.create);
 router.get(  '/merchanttype', MerchantTypeController.getAllMerchantType);
 router.get(   '/merchanttype/:id' ,MerchantTypeController.getMerchantType);

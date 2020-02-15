@@ -123,7 +123,11 @@ module.exports.userBodyParam = userBodyParam;
 
 const getUser = async function(userId){
     console.log(userId);
-    [err, user] = await to(users.findById(userId));
+    [err, user] = await to(users.findOne({where: [{id:userId}],include: [
+        { model :user_types,
+            required:false
+         }
+     ]}));
       if(err) TE(err.message);
       return user;
 }
