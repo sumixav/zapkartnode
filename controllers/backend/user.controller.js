@@ -34,6 +34,16 @@ const login = async function(req, res){
 }
 module.exports.login = login;
 
+const getUser = async function(req, res){
+    [err, user] = await to(authService.getUser(req.user.id));
+    if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (user) {
+        return ReS(res, { message:'user.', user : user.toWeb() }
+                , status_codes_msg.SUCCESS.code);
+    }
+}
+module.exports.getUser = getUser;
+
 const getUserById = async function(req, res){
     [err, user] = await to(authService.getUser(req.params.id));
     if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
