@@ -34,9 +34,6 @@ module.exports = function(sequelize, DataTypes) {
         this.userId = this.belongsTo(models.users, {foreignKey: 'userId'});
       };
 
-      Model.associate = function(models){
-        this.merchants = this.hasMany(models.merchants);
-      };
     return Model;
   };
   
