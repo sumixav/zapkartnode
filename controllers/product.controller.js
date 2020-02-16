@@ -98,6 +98,41 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
+exports.getAllVariants = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const parsedQuery = parseStrings(req.query);
+    Logger.info("parsedQuery", parsedQuery);
+
+    const limit = parsedQuery.limit || PAGE_LIMIT;
+    const page = parsedQuery.page || 1;
+
+    const [err, response] = await to(
+      productService.getAllVariants(productId, parsedQuery)
+    );
+    if (err) {
+      return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    }
+
+    if (response.products) {
+      return ReS(
+        res,
+        {
+          message: "Variants",
+          data: response.products,
+          total: response.total,
+          page,
+          limit
+        },
+        status_codes_msg.SUCCESS.code
+      );
+    }
+  } catch (err) {
+    console.error(err);
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
 exports.getProduct = async (req, res, next) => {
   try {
     Logger.info(req.params);

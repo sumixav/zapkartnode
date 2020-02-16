@@ -64,7 +64,7 @@ mongoose
     useUnifiedTopology: true
   })
   .then(() => {
-    Logger.info(`📖  Connected to MongoDB. Database: ${CONFIG.db_name}`);
+    Logger.info(`📖  Connected to MongoDB database: ${CONFIG.db_name}`);
   })
   .catch(err => Logger.error("❗  Could not connect to MongoDB...", err));
 

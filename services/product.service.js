@@ -327,13 +327,19 @@ exports.getAllProducts = async query => {
     limit = PAGE_LIMIT,
     sortField = "updatedAt",
     sortOrder = 1,
+    organic,
     category // slugs
 
     // id
   } = queryParsed;
 
-  if (category) dbQuery = { ...dbQuery, category  };
+  // Object.entries(queryParsed).forEach(([key,value]) => {
+  // })
+
+  if (category) dbQuery = { ...dbQuery, category };
   if (status) dbQuery = { ...dbQuery, status };
+  if (organic) dbQuery = { ...dbQuery, organic: { $in: organic } };
+  Logger.info(organic)
   // if (query.priorityOrder)
   //     dbQuery = { ...dbQuery, priorityOrder: -1 }
   // if (query.sort) sortQuery = { [query.sort]: -1 };
@@ -362,6 +368,66 @@ exports.getAllProducts = async query => {
     .populate("stock");
   if (!products || products.length === 0) {
     const err = new Error("No products");
+    throw err;
+  }
+  return {
+    products: products.map(i => transformProduct(i)),
+    total: await Product.countDocuments({ deleted: false, ...dbQuery })
+    // total: await Product.estimatedDocumentCount({ deleted: false, ...dbQuery })
+  };
+  // return products
+};
+
+exports.getAllVariants = async (productId, query) => {
+  let dbQuery = { deleted: false, parentId: productId };
+
+  let queryParsed = parseStrings(query);
+  // Logger.info(queryParsed);
+  let {
+    fields,
+    status,
+    page = 1,
+    limit = PAGE_LIMIT,
+    sortField = "updatedAt",
+    sortOrder = 1
+    // category // slugs
+
+    // id
+  } = queryParsed;
+
+  Logger.info("queryParsed", queryParsed);
+
+  if (status) dbQuery = { ...dbQuery, status };
+  // if (query.priorityOrder)
+  //     dbQuery = { ...dbQuery, priorityOrder: -1 }
+  // if (query.sort) sortQuery = { [query.sort]: -1 };
+  let select = {};
+  if (fields && fields.length > 0) {
+    fields.forEach(i => (select[i] = 1));
+  }
+
+  sortOrder === "ascend" ? (sortOrder = 1) : (sortOrder = -1);
+
+  Logger.info(select, sortField, sortOrder, page, limit);
+
+  Logger.info("dbQuery", dbQuery);
+
+  const products = await Product.find(dbQuery)
+    .select(select)
+    .sort({ [sortField]: sortOrder })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .populate("category", "name images seo")
+    .populate("composition", "_id deleted name slug")
+    .populate("organic", "_id deleted name slug")
+    .populate("brand", "_id deleted name slug image")
+    .populate("pricing", "listPrice salePrice startDate endDate taxId")
+    .populate("attributes.attributeGroup", "name status attribute_group_code")
+    .populate("attributes.value", "value status")
+    .populate("medicineType")
+    .populate("stock");
+  if (!products || products.length === 0) {
+    const err = new Error("No variants");
     throw err;
   }
   return {

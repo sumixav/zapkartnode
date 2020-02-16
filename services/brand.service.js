@@ -97,7 +97,13 @@ exports.getAllBrands = async query => {
   if (query.priorityOrder) dbQuery = { ...dbQuery, priorityOrder: -1 };
   if (query.sort) sortQuery = { [query.sort]: -1 };
 
-  const brands = await Brand.find(dbQuery).sort(sortQuery);
+  const { fields } = query;
+  let select = {};
+  if (fields && fields.length > 0) {
+    fields.forEach(i => (select[i] = 1));
+  }
+
+  const brands = await Brand.find(dbQuery).sort(sortQuery).select(select);
   if (!brands || brands.length === 0) {
     const err = new Error("No brands");
     throw err;

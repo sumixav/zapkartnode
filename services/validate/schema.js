@@ -110,17 +110,17 @@ exports.productsSchema = {
     "variantType": {
       "enum": ["single", "multiple"]
     },
-    "quantity":{
-      "type":"number"
+    "quantity": {
+      "type": "number"
     },
-    "subtract":{
-      "type":"boolean"
+    "subtract": {
+      "type": "boolean"
     },
-    "outOfStockStatus":{
-      "enum":Object.values(enums.outOfStockStatus)
+    "outOfStockStatus": {
+      "enum": Object.values(enums.outOfStockStatus)
     },
-    "textDescription":{
-      "type":"string"
+    "textDescription": {
+      "type": "string"
     }
   },
   "definitions": {
@@ -222,6 +222,33 @@ exports.brandSchema = {
     },
   },
   "required": ["name"]
+}
+
+exports.informationSchema = {
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["active", "hold"]
+    },
+    "metaTitle": {
+      "type": "string"
+    },
+    "metaDescription": {
+      "type": "string"
+    },
+    "metaKeywords": {
+      "type": "string"
+    },
+    "priorityOrder": {
+      "type": "number"
+    },
+    "htmlContent": {
+      "type": "string"
+    }
+  },
+  "required": ["name", "status", "priorityOrder", "htmlContent"]
 }
 
 exports.categorySchema = {
