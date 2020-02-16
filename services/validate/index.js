@@ -1,6 +1,6 @@
 "use strict";
 var Validator = require("jsonschema").Validator;
-const parseStrings = require("parse-strings-in-object")
+const parseStrings = require("parse-strings-in-object");
 var v = new Validator();
 const { to, ReE, ReS, formatValidationError } = require("../util.service");
 const Logger = require("../../logger");
@@ -12,7 +12,8 @@ const {
   categorySchema,
   editCategorySchema,
   medicineTypesBulkSchema,
-  comboSchema
+  comboSchema,
+  informationSchema
 } = require("./schema");
 
 exports.validateProduct = (req, res, next) => {
@@ -22,8 +23,8 @@ exports.validateProduct = (req, res, next) => {
     req.body.returnable.constructor
   );
   let params = Object.assign({}, req.body);
-  params.attributes = JSON.parse(params.attributes)
-  Logger.info(params)
+  params.attributes = JSON.parse(params.attributes);
+  Logger.info(params);
   // Logger.info(params)
   // params.listPrice = Number(params.listPrice)
   // params.salePrice = Number(params.salePrice)
@@ -36,7 +37,7 @@ exports.validateProduct = (req, res, next) => {
   // params.returnPeriod = Number(params.returnPeriod)
   // Logger.info(params.attributes)
   // params.attributes = JSON.parse(params.attributes)
-  const parsedParams = parseStrings(params)
+  const parsedParams = parseStrings(params);
   const validRes = v.validate(parsedParams, productsSchema).errors;
   Logger.info(validRes);
   const imageValid = req.files && req.files["image"];
@@ -71,6 +72,17 @@ exports.validateBrand = (req, res, next) => {
   }
 };
 
+exports.validateInfos = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  const validRes = v.validate(parseStrings(params), informationSchema).errors;
+  if (!(validRes.length > 0)) {
+    return next();
+  } else {
+    const errorMessage = formatValidationError(validRes);
+    return ReE(res, errorMessage, status_codes_msg.VALIDATION_ERROR.code);
+  }
+};
+
 exports.validateMedicineTypesBulk = (req, res, next) => {
   let params = Object.assign({}, req.body);
   const validRes = v.validate(params, medicineTypesBulkSchema).errors;
@@ -86,7 +98,7 @@ exports.validateCategory = (req, res, next) => {
   let params = Object.assign({}, req.body);
   if (params.priorityOrder) params.priorityOrder = Number(params.priorityOrder);
   const validRes = v.validate(params, categorySchema).errors;
-  Logger.info(req.files, req.files["image"])
+  Logger.info(req.files, req.files["image"]);
   const imageValid = req.files && req.files["image"];
   if (typeof imageValid === "undefined")
     validRes.push({ property: "instance.image", message: "required" });
@@ -170,12 +182,7 @@ var userRegisterSchema = {
       type: "string"
     }
   },
-  required: [
-    "firstName",
-    "lastName",
-    "email",
-    "password"
-  ]
+  required: ["firstName", "lastName", "email", "password"]
 };
 
 var userLoginValidateSchema = {

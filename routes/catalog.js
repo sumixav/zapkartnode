@@ -7,6 +7,7 @@ const CategoryController = require("../controllers/category.controller");
 const AttributeGroupController = require("../controllers/attributeGroup.controller");
 const ProductController = require("../controllers/product.controller");
 const BrandConroller = require("../controllers/brand.controller");
+const InformationController = require("../controllers/information.controller");
 const TaxClassController = require("../controllers/taxclass.controller");
 const CompositionController = require("../controllers/composition.controller");
 const OrganicController = require("../controllers/organic.controller");
@@ -19,7 +20,7 @@ const path = require("path");
 require("./../middleware/passport")(passport);
 
 const { upload } = require("../middleware/upload");
-const multerUpload = require("multer")();
+const formUpload = require("multer")();
 const categoryUpload = upload("category").fields([{ name: "image" }]);
 const productUpload = upload("product").fields([
   { name: "image" },
@@ -38,7 +39,7 @@ router.get("/get-heart-beat", function(req, res, next) {
 });
 
 //auth details
-//router.post(  '/users/register'     , Validate.registerUser, UserController.create); 
+//router.post(  '/users/register'     , Validate.registerUser, UserController.create);
 //router.post(  '/users/login'        , Validate.validateAuth, UserController.login);
 // router.get('/config', CommonController.config);
 // Category
@@ -62,7 +63,7 @@ router.delete("/category/:id", CategoryController.deleteCategory);
 router.get("/attributeGroup", AttributeGroupController.getAllAttrubutes);
 router.post(
   "/attributeGroup/create",
-  multerUpload.none(),
+  formUpload.none(),
   AttributeGroupController.createAttributeGroup
 );
 router.get("/attributeGroup/:id", AttributeGroupController.getAttribute);
@@ -119,7 +120,7 @@ router.patch(
 // router.patch('/brands/:brandId', brandUpload, (Validate.validateBrand("update")), BrandConroller.editBrand);
 
 // Composition
-router.post("/composition/create", CompositionController.createComposition);
+router.post("/composition/create",  CompositionController.createComposition);
 router.get("/composition/", CompositionController.getAllCompositions);
 router.get("/composition/:compositionId", CompositionController.getComposition);
 router.patch(
@@ -138,18 +139,9 @@ router.patch(
 router.post("/organic/create", OrganicController.createOrganic);
 router.get("/organic/", OrganicController.getAllOrganics);
 router.get("/organic/:organicId", OrganicController.getOrganic);
-router.patch(
-  "/organic/:organicId",
-  OrganicController.editOrganic
-);
-router.delete(
-  "/organic/:organicId",
-  OrganicController.deleteOrganic
-);
-router.patch(
-  "/organic/restore/:organicId",
-  OrganicController.restoreOrganic
-);
+router.patch("/organic/:organicId", OrganicController.editOrganic);
+router.delete("/organic/:organicId", OrganicController.deleteOrganic);
+router.patch("/organic/restore/:organicId", OrganicController.restoreOrganic);
 
 // Medicine Type
 router.post("/medicineType/create", MedicineTypeController.createMedicineType);
@@ -176,7 +168,7 @@ router.patch(
   MedicineTypeController.restoreMedicineType
 );
 
-// Brand
+// Combo
 router.post(
   "/combo/create",
   comboUpload,
@@ -188,6 +180,18 @@ router.get("/combos/:comboId", ComboController.getCombo);
 router.patch("/combos/:comboId", brandUpload, ComboController.editCombo);
 router.delete("/combos/:id", ComboController.deleteCombo);
 
+// Information
+router.post(
+  "/informations/create",
+  formUpload.none(),
+  Validate.validateInfos,
+  InformationController.createInformation
+);
+router.get("/informations/", InformationController.getAllInformations);
+router.get("/informations/:informationId", InformationController.getInformation);
+// router.patch("/informations/:informationId", formUpload.none(), Validate.validateInfos, InformationController.editInformation);
+router.patch("/informations/:informationId", formUpload.none(), InformationController.editInformation);
+router.delete("/informations/:informationId", InformationController.deleteInformation);
 
 // router.post('/users/login', Validate.validateAuth, UserController.login);
 // router.get('/users/:id', passport.authenticate('jwt', { session: false }), UserController.getUserById);

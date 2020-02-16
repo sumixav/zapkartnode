@@ -327,13 +327,19 @@ exports.getAllProducts = async query => {
     limit = PAGE_LIMIT,
     sortField = "updatedAt",
     sortOrder = 1,
+    organic,
     category // slugs
 
     // id
   } = queryParsed;
 
+  // Object.entries(queryParsed).forEach(([key,value]) => {
+  // })
+
   if (category) dbQuery = { ...dbQuery, category };
   if (status) dbQuery = { ...dbQuery, status };
+  if (organic) dbQuery = { ...dbQuery, organic: { $in: organic } };
+  Logger.info(organic)
   // if (query.priorityOrder)
   //     dbQuery = { ...dbQuery, priorityOrder: -1 }
   // if (query.sort) sortQuery = { [query.sort]: -1 };

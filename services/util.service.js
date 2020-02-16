@@ -194,17 +194,17 @@ exports.isObjectId = id => {
   return id.match(regEx) && mongoose.Types.ObjectId.isValid(id);
 };
 
-exports.getIdQuery = (id, queryField = "slug") => {
+exports.getIdQuery = (value, queryField = "slug") => {
   let query = {
-    _id: id
+    _id: value
   };
   // let toQuery = 'slug'
   let toQuery = queryField;
   // if (typeof queryField !== 'undefined')
   //     toQuery = [queryField]
-  if (!this.isObjectId(id))
+  if (!this.isObjectId(value))
     query = {
-      [toQuery]: id
+      [toQuery]: value
     };
   Logger.info(query);
   return query;
