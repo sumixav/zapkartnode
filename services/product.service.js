@@ -328,8 +328,8 @@ exports.getAllProducts = async query => {
     sortField = "updatedAt",
     sortOrder = 1,
     organic,
-    category // slugs
-
+    category, // slugs
+    featured
     // id
   } = queryParsed;
 
@@ -337,6 +337,7 @@ exports.getAllProducts = async query => {
   // })
 
   if (category) dbQuery = { ...dbQuery, category };
+  if (featured) dbQuery = { ...dbQuery, featured: true };
   if (status) dbQuery = { ...dbQuery, status };
   if (organic) dbQuery = { ...dbQuery, organic: { $in: organic } };
   Logger.info(organic)
