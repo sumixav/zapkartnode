@@ -1,7 +1,7 @@
 "use strict";
 
 const cleanDeep = require("clean-deep");
-const Information = require("../models/Information");
+const Information = require("../models/information");
 const { to, getIdQuery } = require("../services/util.service");
 const Logger = require("../logger");
 const { seoModel: Seo } = require("../models/seo");

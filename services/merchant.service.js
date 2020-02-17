@@ -21,9 +21,7 @@ exports.createmerchant = async (param) => {
 
 exports.getAllMerchant = async query => {
   [err, merchantlist] = await to(merchants.findAll());
-  if (!merchantlist || merchantlist.length === 0) {
-    return "No record found"; 
-  }
+  if(err) { return err; }
   return merchantlist;
 };
 
