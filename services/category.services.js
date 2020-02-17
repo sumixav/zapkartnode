@@ -2,6 +2,7 @@
 
 const Category = require("../models/category");
 const validator = require("validator");
+const parseStrings = require('parse-strings-in-object')
 const {
   to,
   TE,
@@ -127,6 +128,14 @@ exports.getAllCategories = async query => {
   // if (query.priorityOrder)
   //     dbQuery = { ...dbQuery, priorityOrder: -1 }
   if (query.sort) sortQuery = { [query.sort]: -1 };
+
+  const parsedQuery = parseStrings(query)
+  Object.entries(parsedQuery).forEach(([key, value])=>{
+    switch (key){
+      case 'parent':
+        dbQuery = {...dbQuery, [key]: value}
+    }
+  })
 
   const categories = await Category.find(dbQuery).sort(sortQuery);
   if (!categories || categories.length === 0) {

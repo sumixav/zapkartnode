@@ -155,7 +155,8 @@ exports.createProduct = async param => {
 
   // toAddComps = uniq([...toAddComps, ...newCompIds, ...existingCompIds]);
 
-  let imageDocs = parentId ? parentProdDoc.images : [];
+  // let imageDocs = parentId ? parentProdDoc.images : [];
+  let imageDocs = [];
   if (images && images.length > 0) {
     // for variants maybe no images
     const imageDocsNew = await Promise.all(
@@ -329,7 +330,7 @@ exports.getAllProducts = async query => {
     sortOrder = 1,
     organic,
     category, // slugs
-    featured
+    featured, brand
     // id
   } = queryParsed;
 
@@ -337,6 +338,7 @@ exports.getAllProducts = async query => {
   // })
 
   if (category) dbQuery = { ...dbQuery, category };
+  if (brand) dbQuery = { ...dbQuery, brand };
   if (featured) dbQuery = { ...dbQuery, featured: true };
   if (status) dbQuery = { ...dbQuery, status };
   if (organic) dbQuery = { ...dbQuery, organic: { $in: organic } };
