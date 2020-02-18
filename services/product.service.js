@@ -155,8 +155,8 @@ exports.createProduct = async param => {
 
   // toAddComps = uniq([...toAddComps, ...newCompIds, ...existingCompIds]);
 
-  // let imageDocs = parentId ? parentProdDoc.images : [];
-  let imageDocs = [];
+  let imageDocs = parentId ? parentProdDoc.images : [];
+  // let imageDocs = [];
   if (images && images.length > 0) {
     // for variants maybe no images
     const imageDocsNew = await Promise.all(
