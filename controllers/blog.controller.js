@@ -7,10 +7,8 @@ const blogService = require("../services/blog.service");
 exports.createBlog = async (req, res, next) => {
   const param = req.body;
   try {
-    let image = req.files["image"];
-    Logger.info(image);
     // if (image.constructor === Object) image = new Array(image);
-    param.images = (req.files["image"])?image[0]:null;
+    param.images = (req.files["image"])?req.files["image"][0]:null;
     const [err, blog] = await to(blogService.createBlog(param));
     Logger.info(err);
     if (err) {
@@ -72,7 +70,7 @@ exports.editBlog = async (req, res, next) => {
   try {
     if (typeof req.files !== "undefined" && req.files["image"] !== "undefined")
       param.images = (req.files["image"])?req.files["image"][0]:null;
-      Logger.log(param.image);
+      Logger.log(param.images);
     const [err, blog] = await to(
       blogService.editBlog(param, req.query)
     );

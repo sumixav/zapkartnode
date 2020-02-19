@@ -9,7 +9,8 @@ exports.createBanner = async (req, res, next) => {
   try {
     // Logger.info(image);
     // if (image.constructor === Object) image = new Array(image);
-    param.images = (req.files["images"])?req.files["images"][0]:null;
+    param.images = (req.files["image"])?req.files["image"][0]:null;
+    console.log("yyyyy",param.images);
     const [err, banner] = await to(bannerService.createBanner(param));
     Logger.info(err);
     if (err) {
@@ -69,8 +70,8 @@ exports.editBanner = async (req, res, next) => {
   const param = req.body;
   param.bannerId = req.params.bannerId;
   try {
-    if (typeof req.files !== "undefined" && req.files["images"] !== "undefined")
-      param.images = (req.files["images"])?req.files["images"][0]:null;
+    if (typeof req.files !== "undefined" && req.files["image"] !== "undefined")
+      param.images = (req.files["image"])?req.files["image"][0]:null;
       Logger.log("ttttttttttttt",param.image);
     const [err, banner] = await to(
       bannerService.editBanner(param, req.query)
