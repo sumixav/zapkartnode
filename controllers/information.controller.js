@@ -89,7 +89,7 @@ exports.editInformation = async (req, res, next) => {
 
 exports.deleteInformation = async function(req, res) {
   try {
-    const [err, isDeleted] = await to(informationService.deleteInformation(req.params.id));
+    const [err, isDeleted] = await to(informationService.deleteInformation(req.params.informationId));
     Logger.info(err, isDeleted);
     if (err) throw err;
     if (isDeleted)
