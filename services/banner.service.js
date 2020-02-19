@@ -17,10 +17,8 @@ const {
 const Logger = require("../logger");
 const { STRINGS } = require("../utils/appStatics");
 const { imageModel: Image } = require("../models/image");
-const WIDTH = null;
-// const WIDTH = 800;
-// const HEIGHT = 550;
-const HEIGHT = 340;
+const WIDTH = 800;
+const HEIGHT = 550;
 //use parse-strings-in-object
 
 exports.getBanner = async id => {
@@ -34,7 +32,7 @@ exports.getBanner = async id => {
 };
 
 exports.createBanner = async param => {
-  const { name,images, shortDescription, width, height } = param;
+  const { name,images, shortDescription } = param;
   const duplicateBanner = await Banner.find({
     name: name,
     shortDescription:shortDescription,
@@ -55,7 +53,7 @@ exports.createBanner = async param => {
     
       
         const thumbnail = await saveThumbnail(images.path);
-        const url = await resizeCrop(images.path, width, height);
+        const url = await resizeCrop(images.path, WIDTH, HEIGHT);
         const dimensions = await getDimensions(images.path);
         const imageDocsNew =  new Image({
           url,
@@ -137,7 +135,7 @@ exports.editBanner = async (params, query) => {
     
       
         const thumbnail = await saveThumbnail(images.path);
-        const url = await resizeCrop(images.path, params.width, params.height);
+        const url = await resizeCrop(images.path, WIDTH, HEIGHT);
         const dimensions = await getDimensions(images.path);
         const imageDocsNew =  new Image({
           url,
@@ -154,10 +152,10 @@ exports.editBanner = async (params, query) => {
 
   const fieldsToEdit = cleanDeep({
     status: params.status,
-    height: params.height,
+    imglink: params.imglink,
     name: params.name,
     priorityOrder: params.priorityOrder,
-    width: params.width,
+    imgtext: params.imgtext,
     shortDescription: params.shortDescription
   });
 

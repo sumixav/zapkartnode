@@ -169,7 +169,8 @@ exports.editBlog = async (params, query) => {
     metaTitle: params.metaTitle,
     metaDescription: params.metaDescription,
     metaKeywords: params.metaKeywords,
-    shortDescription: params.shortDescription
+    shortDescription: params.shortDescription,
+    imgtext_data: params.imgtext_data,
   });
 
   Logger.info(blog);

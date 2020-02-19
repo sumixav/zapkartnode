@@ -32,6 +32,9 @@ const blogsSchema = mongoose.Schema(
       type: Number,
       default: 0
     },
+    imgtext_data: {
+      type: String
+    },
     htmlContent: {
       type: String,
       required: true

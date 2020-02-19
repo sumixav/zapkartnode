@@ -7,8 +7,8 @@ const bannerSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
     shortDescription: { type: String, default: "" },
-    width: { type: Number },
-    height: { type: Number },
+    imglink: { type: String, default: "" },
+    imgtext: { type: String, default: "" },
     status: {
       type: String,
       enum: ["active", "hold"],
