@@ -9,7 +9,7 @@ exports.createBanner = async (req, res, next) => {
   try {
     Logger.info(image);
     // if (image.constructor === Object) image = new Array(image);
-    param.images = (req.files["images"])?image[0]:null;
+    param.images = (req.files["images"])?req.files["images"][0]:null;
     const [err, banner] = await to(bannerService.createBanner(param));
     Logger.info(err);
     if (err) {
