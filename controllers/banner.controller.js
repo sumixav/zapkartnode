@@ -7,7 +7,7 @@ const bannerService = require("../services/banner.service");
 exports.createBanner = async (req, res, next) => {
   const param = req.body;
   try {
-    Logger.info(image);
+    // Logger.info(image);
     // if (image.constructor === Object) image = new Array(image);
     param.images = (req.files["images"])?req.files["images"][0]:null;
     const [err, banner] = await to(bannerService.createBanner(param));
