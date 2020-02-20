@@ -17,7 +17,7 @@ const {
 const Logger = require("../logger");
 const { STRINGS } = require("../utils/appStatics");
 const { imageModel: Image } = require("../models/image");
-const WIDTH = 1602;
+const WIDTH = 1380;
 const HEIGHT = null;
 //use parse-strings-in-object
 
