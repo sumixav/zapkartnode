@@ -136,7 +136,7 @@ exports.editBanner = async (params, query) => {
       
         const thumbnail = await saveThumbnail(images.path);
         // const url = await resizeCrop(images.path, WIDTH, HEIGHT);
-        const url = images.path;
+        const url = await resizeCrop(images.path, WIDTH, HEIGHT);
         const dimensions = await getDimensions(images.path);
         const imageDocsNew =  new Image({
           url,
