@@ -18,7 +18,7 @@ const Logger = require("../logger");
 const { STRINGS } = require("../utils/appStatics");
 const { imageModel: Image } = require("../models/image");
 const WIDTH = 1602;
-const HEIGHT = 304;
+const HEIGHT = null;
 //use parse-strings-in-object
 
 exports.getBanner = async id => {
