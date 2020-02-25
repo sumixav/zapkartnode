@@ -2,20 +2,22 @@ const { to, ReE, ReS } = require("../services/util.service");
 const { status_codes_msg } = require("../utils/appStatics");
 const Logger = require("../logger");
 
-const informationService = require("../services/information.service");
+const blogService = require("../services/blog.service");
 
-exports.createInformation = async (req, res, next) => {
+exports.createBlog = async (req, res, next) => {
   const param = req.body;
   try {
-    const [err, information] = await to(informationService.createInformation(param));
+    // if (image.constructor === Object) image = new Array(image);
+    param.images = (req.files["image"])?req.files["image"][0]:null;
+    const [err, blog] = await to(blogService.createBlog(param));
     Logger.info(err);
     if (err) {
       throw err;
     }
-    if (information) {
+    if (blog) {
       return ReS(
         res,
-        { message: "Information", data: information },
+        { message: "Blog", data: blog },
         status_codes_msg.CREATED.code
       );
     }
@@ -24,16 +26,16 @@ exports.createInformation = async (req, res, next) => {
   }
 };
 
-exports.getAllInformations = async (req, res, next) => {
+exports.getAllBlogs = async (req, res, next) => {
   try {
-    const [err, informations] = await to(informationService.getAllInformations(req.query));
+    const [err, blogs] = await to(blogService.getAllBlogs(req.query));
     if (err) {
       return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     }
-    if (informations) {
+    if (blogs) {
       return ReS(
         res,
-        { message: "Information", data: informations, count: informations.length },
+        { message: "Blogs", data: blogs, count: blogs.length },
         status_codes_msg.SUCCESS.code
       );
     }
@@ -43,16 +45,16 @@ exports.getAllInformations = async (req, res, next) => {
   }
 };
 
-exports.getInformation = async (req, res, next) => {
+exports.getBlog = async (req, res, next) => {
   try {
-    const [err, information] = await to(informationService.getInformation(req.params.informationId));
+    const [err, blog] = await to(blogService.getBlog(req.params.blogId));
     if (err) {
       return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     }
-    if (information) {
+    if (blog) {
       return ReS(
         res,
-        { message: "Information", data: information },
+        { message: "Blog", data: blog },
         status_codes_msg.SUCCESS.code
       );
     }
@@ -62,22 +64,24 @@ exports.getInformation = async (req, res, next) => {
   }
 };
 
-exports.editInformation = async (req, res, next) => {
+exports.editBlog = async (req, res, next) => {
   const param = req.body;
-  param.informationId = req.params.informationId;
+  param.blogId = req.params.blogId;
   try {
-    
-    const [err, information] = await to(
-      informationService.editInformation(param, req.query)
+    if (typeof req.files !== "undefined" && req.files["image"] !== "undefined")
+      param.images = (req.files["image"])?req.files["image"][0]:null;
+      Logger.log(param.images);
+    const [err, blog] = await to(
+      blogService.editBlog(param, req.query)
     );
     if (err) {
       console.log("will throw error");
       throw err;
     }
-    if (information) {
+    if (blog) {
       return ReS(
         res,
-        { message: "Information", data: information },
+        { message: "Blog", data: blog },
         status_codes_msg.SUCCESS.code
       );
     }
@@ -87,15 +91,15 @@ exports.editInformation = async (req, res, next) => {
   }
 };
 
-exports.deleteInformation = async function(req, res) {
+exports.deleteBlog = async function(req, res) {
   try {
-    const [err, isDeleted] = await to(informationService.deleteInformation(req.params.informationId));
+    const [err, isDeleted] = await to(blogService.deleteBlog(req.params.blogId));
     Logger.info(err, isDeleted);
     if (err) throw err;
     if (isDeleted)
       return ReS(
         res,
-        { message: "Category deleted" },
+        { message: "Blog deleted" },
         status_codes_msg.SUCCESS.code
       );
   } catch (err) {

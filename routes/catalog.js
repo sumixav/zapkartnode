@@ -13,6 +13,8 @@ const CompositionController = require("../controllers/composition.controller");
 const OrganicController = require("../controllers/organic.controller");
 const MedicineTypeController = require("../controllers/medicineType.controller.js");
 const ComboController = require("../controllers/combo.controller.js");
+const BlogController = require("../controllers/blog.controller.js");
+const BannerController = require("../controllers/banner.controller.js");
 
 const passport = require("passport");
 const path = require("path");
@@ -28,6 +30,8 @@ const productUpload = upload("product").fields([
 ]);
 const brandUpload = upload("brand").fields([{ name: "image" }]);
 const comboUpload = upload("combo").fields([{ name: "image" }]);
+const blogUpload = upload("blog").fields([{ name: "image" }]);
+const bannerUpload = upload("banner").fields([{ name: "image" }]);
 
 /* GET Heart Beat. */
 router.get("/get-heart-beat", function(req, res, next) {
@@ -203,6 +207,27 @@ router.delete(
   "/informations/:informationId",
   InformationController.deleteInformation
 );
+
+router.post(
+  "/blog/create",
+  blogUpload,
+  Validate.validateInfos,
+  BlogController.createBlog
+);
+router.get("/blog/", BlogController.getAllBlogs);
+router.get("/blog/:blogId", BlogController.getBlog);
+router.patch("/blog/:blogId", blogUpload, BlogController.editBlog);
+router.delete("/blog/:blogId", BlogController.deleteBlog);
+
+router.post(
+  "/banner/create",
+  bannerUpload,
+  BannerController.createBanner
+);
+router.get("/banner/", BannerController.getAllBanners);
+router.get("/banner/:bannerId", BannerController.getBanner);
+router.patch("/banner/:bannerId", bannerUpload, BannerController.editBanner);
+router.delete("/banner/:bannerId", BannerController.deleteBanner);
 
 // router.post('/users/login', Validate.validateAuth, UserController.login);
 // router.get('/users/:id', passport.authenticate('jwt', { session: false }), UserController.getUserById);
