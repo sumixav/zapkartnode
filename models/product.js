@@ -138,7 +138,8 @@ const productsSchema = Schema(
     textDescription: {
       type: String,
       default: ""
-    }
+    },
+    productExtraInfo: { type: Schema.Types.ObjectId, ref: "ProductExtraInfo", required: true },
     // createdBy : {
     //   type: Schema.Types.ObjectId,
     //   ref:"User"

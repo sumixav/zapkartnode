@@ -6,6 +6,8 @@ const gm = require("gm");
 const mongoose = require("mongoose");
 const Logger = require("../logger");
 
+module.exports.fromEntries = arr => Object.assign({}, ...Array.from(arr, ([k, v]) => ({[k]: v}) ));
+
 module.exports.to = async promise => {
   let err, res;
   [err, res] = await to(promise);

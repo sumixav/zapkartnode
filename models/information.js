@@ -13,6 +13,11 @@ const infosSchema = mongoose.Schema(
       enum: ["active", "hold"],
       required: true
     },
+    footerStatus:{
+      type:Boolean, 
+      required:true,
+      default:true
+    },
     slug: {
       type: String,
       slug: "name",

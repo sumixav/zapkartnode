@@ -100,16 +100,19 @@ exports.editInformation = async (params, query) => {
     }
   }
 
-  const fieldsToEdit = cleanDeep({
-    status: params.status,
-    name: params.name,
-    priorityOrder: params.priorityOrder,
-    htmlContent: params.htmlContent,
-    metaTitle: params.metaTitle,
-    metaDescription: params.metaDescription,
-    metaKeywords: params.metaKeywords,
-    shortDescription: params.shortDescription
-  });
+  // const fieldsToEdit = cleanDeep({
+  //   footerStatus: params.footerStatus,
+  //   status: params.status,
+  //   name: params.name,
+  //   priorityOrder: params.priorityOrder,
+  //   htmlContent: params.htmlContent,
+  //   metaTitle: params.metaTitle,
+  //   metaDescription: params.metaDescription,
+  //   metaKeywords: params.metaKeywords,
+  //   shortDescription: params.shortDescription
+  // });
+
+  const fieldsToEdit = cleanDeep(params)
 
   Logger.info(info);
   Logger.info(fieldsToEdit);

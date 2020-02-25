@@ -1,8 +1,9 @@
 "use strict";
 
 const Category = require("../models/category");
+const qs = require("qs");
 const validator = require("validator");
-const parseStrings = require('parse-strings-in-object')
+const parseStrings = require("parse-strings-in-object");
 const {
   to,
   TE,
@@ -13,7 +14,8 @@ const {
   saveThumbnail,
   getDimensions,
   getIdQuery,
-  generateObjectId
+  generateObjectId,
+  fromEntries
 } = require("../services/util.service");
 const mongoose = require("mongoose");
 const Logger = require("../logger");
@@ -122,22 +124,61 @@ exports.createCategory = async (param, images) => {
 
 exports.getAllCategories = async query => {
   //&status=active&
+  // const sortArray = Object.entries(query.sort).map(([key, value]) => {
+  //   if (value === "ascend") return { [key]: 1 };
+  //   return { [key]: -1 };
+  // });
+  // console.log(sortArray);
+  // const sortObject = fromEntries(sortArray);
+  // console.log(sortObject);
+
+  // const options = { sort: { priorityOrder: 1, updatedAt: -1 }, status: "active" };
+  // console.log(qs.stringify(options))
+  // sort%5BpriorityOrder%5D=1&sort%5BupdatedAt%5D=-1&status=active
+
+  let sortQuery = {};
+  let select = {};
   let dbQuery = { deleted: false };
-  let sortQuery = { updatedAt: -1 };
-  if (query.status) dbQuery = { ...dbQuery, status: query.status };
-  // if (query.priorityOrder)
-  //     dbQuery = { ...dbQuery, priorityOrder: -1 }
-  if (query.sort) sortQuery = { [query.sort]: -1 };
 
-  const parsedQuery = parseStrings(query)
-  Object.entries(parsedQuery).forEach(([key, value])=>{
-    switch (key){
-      case 'parent':
-        dbQuery = {...dbQuery, [key]: value}
+  // if (query.status) dbQuery = { ...dbQuery, status: query.status };
+  // if (query.sort) sortQuery = { ...query.sort, updatedAt: -1 };
+  const { populateParent } = query;
+
+  const parsedQuery = parseStrings(query);
+  console.log('parsedQuery',parsedQuery)
+  Object.entries(parsedQuery).forEach(([key, value]) => {
+    switch (key) {
+      // case "parent":
+      //   dbQuery = { ...dbQuery, [key]: value };
+      //   break;
+      case "sort":
+        sortQuery = { ...value, updatedAt: -1 };
+      case "page":
+      case "limit":
+        break;
+      case "field": //field[]=name&field[]=slug
+        Logger.info(value)
+        if (value && value.length > 0) {
+          value.forEach(i => (select[i] = 1));
+        }
+        break;
+      default:
+        dbQuery = { ...dbQuery, [key]: value };
     }
-  })
+  });
 
-  const categories = await Category.find(dbQuery).sort(sortQuery);
+  console.log(sortQuery);
+  console.log(select);
+
+  const categories = populateParent
+    ? await Category.find(dbQuery)
+        .sort(sortQuery)
+        .select(select)
+        .populate("parent")
+    : await Category.find(dbQuery)
+        .sort(sortQuery)
+        .select(select);
+
   if (!categories || categories.length === 0) {
     const err = new Error("No categories");
     throw err;

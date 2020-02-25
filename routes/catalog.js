@@ -84,6 +84,7 @@ router.post(
   Validate.validateProduct,
   ProductController.createProduct
 );
+// router.get("/products/query", ProductController.getAllProductsAggregate);
 router.get("/products/:productId", ProductController.getProduct);
 router.get("/products", ProductController.getAllProducts);
 router.get("/products/variants/:productId", ProductController.getAllVariants);
@@ -120,7 +121,7 @@ router.patch(
 // router.patch('/brands/:brandId', brandUpload, (Validate.validateBrand("update")), BrandConroller.editBrand);
 
 // Composition
-router.post("/composition/create",  CompositionController.createComposition);
+router.post("/composition/create", CompositionController.createComposition);
 router.get("/composition/", CompositionController.getAllCompositions);
 router.get("/composition/:compositionId", CompositionController.getComposition);
 router.patch(
@@ -188,10 +189,20 @@ router.post(
   InformationController.createInformation
 );
 router.get("/informations/", InformationController.getAllInformations);
-router.get("/informations/:informationId", InformationController.getInformation);
+router.get(
+  "/informations/:informationId",
+  InformationController.getInformation
+);
 // router.patch("/informations/:informationId", formUpload.none(), Validate.validateInfos, InformationController.editInformation);
-router.patch("/informations/:informationId", formUpload.none(), InformationController.editInformation);
-router.delete("/informations/:informationId", InformationController.deleteInformation);
+router.patch(
+  "/informations/:informationId",
+  formUpload.none(),
+  InformationController.editInformation
+);
+router.delete(
+  "/informations/:informationId",
+  InformationController.deleteInformation
+);
 
 // router.post('/users/login', Validate.validateAuth, UserController.login);
 // router.get('/users/:id', passport.authenticate('jwt', { session: false }), UserController.getUserById);

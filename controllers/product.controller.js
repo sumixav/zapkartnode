@@ -4,6 +4,7 @@ const Logger = require("../logger");
 const { STRINGS, PAGE_LIMIT } = require("../utils/appStatics");
 const parseStrings = require("parse-strings-in-object");
 
+
 const productService = require("../services/product.service");
 
 exports.createProduct = async (req, res, next) => {
@@ -51,6 +52,7 @@ exports.getAllProducts = async (req, res, next) => {
     const { id, fields } = parsedQuery;
     const limit = parsedQuery.limit || PAGE_LIMIT;
     const page = parsedQuery.page || 1;
+
     if (id) {
       const [err, response] = await to(
         productService.getProductsFromIds(id, fields || [])
@@ -77,8 +79,65 @@ exports.getAllProducts = async (req, res, next) => {
       if (err) {
         return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
       }
+      // Logger.info(response);
+      if (!response) throw new Error("No products");
+      if (response && response.products) {
+        return ReS(
+          res,
+          {
+            message: "Product",
+            data: response.products,
+            total: response.total,
+            page,
+            limit
+          },
+          status_codes_msg.SUCCESS.code
+        );
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
 
+exports.getAllProductsAggregate = async (req, res, next) => {
+  try {
+    Logger.info("hi");
+    const parsedQuery = parseStrings(req.query);
+    Logger.info("parsedQuery", parsedQuery);
+    const { id, fields } = parsedQuery;
+    const limit = parsedQuery.limit || PAGE_LIMIT;
+    const page = parsedQuery.page || 1;
+    if (id) {
+      const [err, response] = await to(
+        productService.getProductsFromIds(id, fields || [])
+      );
+      Logger.info(response);
+      if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
       if (response.products) {
+        return ReS(
+          res,
+          {
+            message: "Product",
+            data: response.products,
+            total: response.total,
+            page,
+            limit
+          },
+          status_codes_msg.SUCCESS.code
+        );
+      }
+    } else {
+      const [err, response] = await to(
+        productService.getAllProductsAggregate(parsedQuery)
+      );
+      if (err) {
+        return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+      }
+      // Logger.info(response);
+      if (!response) throw new Error("No products");
+      if (response && response.products) {
         return ReS(
           res,
           {
