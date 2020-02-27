@@ -265,10 +265,11 @@ exports.deleteProduct = async function(req, res) {
   }
 };
 
-exports.getProductDetails = async (req, res, next) => {
+exports.getProductFilter = async (req, res, next) => {
   try {
+    const param = req.body;
     const [err, product] = await to(
-      productService.getProductAggregate()
+      productService.getProductFilterAggregate(param)
     );
     if (err) {
       return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
