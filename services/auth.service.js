@@ -171,4 +171,50 @@ const authSearchCriteria = async function(params) {
 
 module.exports.authSearchCriteria = authSearchCriteria;
 
+const authFbUser = async function(userInfo){
+    [err, user] = await to(users.findOne({where: [{email:userInfo.loginId,socialMediaId:userInfo.id,socialType:'facebook'}]}));
+        if(err) TE(err.message);
+        let userParam={};
+    if(!user) {
+        userParam.firstName =  userInfo.name;
+        userParam.lastName =  '';
+        userParam.email =  userInfo.loginId;
+        userParam.socialMediaId =  userInfo.id;
+        userParam.socialType =  'facebook';
+        userParam.userTypeId =userInfo.roleId;
+        userParam.active =  1;
+        userParam.confirmed =  1;
+        Logger.info(userParam);
+        [err, user] = await to(users.create(userParam));
+        if(err) { return TE(err.message); }
+    
+    } 
+    return user;
+
+}
+module.exports.authFbUser = authFbUser;
+
+const authGbUser = async function(userInfo){
+    [err, user] = await to(users.findOne({where: [{email:userInfo.loginId,socialMediaId:userInfo.id,socialType:'facebook'}]}));
+        if(err) TE(err.message);
+        let userParam={};
+    if(!user) {
+        userParam.firstName =  userInfo.name;
+        userParam.lastName =  '';
+        userParam.email =  userInfo.loginId;
+        userParam.socialMediaId =  userInfo.id;
+        userParam.socialType =  'google';
+        userParam.userTypeId =userInfo.roleId;
+        userParam.active =  1;
+        userParam.confirmed =  1;
+        Logger.info(userParam);
+        [err, user] = await to(users.create(userParam));
+        if(err) { return TE(err.message); }
+    
+    } 
+    return user;
+
+}
+module.exports.authGbUser = authGbUser;
+
 

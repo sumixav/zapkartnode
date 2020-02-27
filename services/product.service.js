@@ -1171,3 +1171,36 @@ exports.restoreProduct = async id => {
   if (!restoredData) throw new Error(STRINGS.NOT_EXIST);
   return restoredData;
 };
+
+exports.getProductAggregate = async () => {
+  let selectd= { $project:{ document: "$$ROOT",brands:1 }}
+  const docs = await Product.aggregate([
+    { 
+      $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categories'
+          },
+          
+  },
+  { $unwind: '$categories' },
+  { $match: { 'categories.slug':{$in: ['gdg']} } },
+  { 
+      $lookup: {
+          from: 'brands',
+          localField: 'brand',
+          foreignField: '_id',
+          as: 'brands'
+          },
+          
+  },
+  { $unwind: '$brands' },
+  { $match: { 'brands.slug':{$in: ['b1']} } },
+  selectd 
+  ]).exec();
+  
+  return {
+    products: docs
+  };
+};
