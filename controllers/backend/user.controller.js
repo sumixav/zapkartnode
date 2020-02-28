@@ -75,6 +75,9 @@ module.exports.update = update;
 const fblogin = async function(req, res){
     const body = req.body;
     let err, user;
+    if((typeof userInfo.id=='undefined')||(userInfo.id=='')) {
+        return ReE(res, "Error in Social Media Credentials", 422);
+    }
     [err, user] = await to(authService.authFbUser(req.body));
     if(err) return ReE(res, err, 422);
     return ReS(res, { message:'User Authenticated.', user : user.toWeb(), token : user.getJWT(), refreshToken : user.getRefreshToken() }
@@ -86,6 +89,9 @@ module.exports.fblogin = fblogin;
 const gblogin = async function(req, res){
     const body = req.body;
     let err, user;
+    if((typeof userInfo.id=='undefined')||(userInfo.id=='')) {
+        return ReE(res, "Error in Social Media Credentials", 422);
+    }
     [err, user] = await to(authService.authGbUser(req.body));
     if(err) return ReE(res, err, 422);
     return ReS(res, { message:'User Authenticated.', user : user.toWeb(), token : user.getJWT(), refreshToken : user.getRefreshToken() }
