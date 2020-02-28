@@ -815,7 +815,16 @@ exports.getAllProducts = async query => {
         value === "ascend" ? (sortOrder = 1) : (sortOrder = -1);
         break;
       case "brand":
-        dbQuery = { ...dbQuery, brand: { $in: value } };
+        dbQuery = {
+          ...dbQuery,
+          brand: { $in: Array.isArray(value) ? value : new Array(value) }
+        };
+        break;
+      case "category":
+        dbQuery = {
+          ...dbQuery,
+          category: { $in: Array.isArray(value) ? value : new Array(value) }
+        };
         break;
       case "page":
       case "limit":
@@ -865,10 +874,15 @@ exports.getAllProducts = async query => {
     .populate("medicineType")
     .populate("stock")
     .populate("productExtraInfo");
-  if (!products || products.length === 0) {
+  // if (!products || products.length === 0) {
+  //   const err = new Error("No products");
+  //   throw err;
+  // }
+  if (!products) {
     const err = new Error("No products");
     throw err;
   }
+
   return {
     products: products.map(i => transformProduct(i)),
     total: await Product.countDocuments({ deleted: false, ...dbQuery })
