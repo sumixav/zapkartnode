@@ -71,3 +71,25 @@ const update = async function(req, res){
                         , status_codes_msg.CREATED.code);
 }
 module.exports.update = update;
+
+const fblogin = async function(req, res){
+    const body = req.body;
+    let err, user;
+    [err, user] = await to(authService.authFbUser(req.body));
+    if(err) return ReE(res, err, 422);
+    return ReS(res, { message:'User Authenticated.', user : user.toWeb(), token : user.getJWT(), refreshToken : user.getRefreshToken() }
+     , status_codes_msg.SUCCESS.code);
+  
+}
+module.exports.fblogin = fblogin;
+
+const gblogin = async function(req, res){
+    const body = req.body;
+    let err, user;
+    [err, user] = await to(authService.authGbUser(req.body));
+    if(err) return ReE(res, err, 422);
+    return ReS(res, { message:'User Authenticated.', user : user.toWeb(), token : user.getJWT(), refreshToken : user.getRefreshToken() }
+     , status_codes_msg.SUCCESS.code);
+  
+}
+module.exports.gblogin = gblogin;

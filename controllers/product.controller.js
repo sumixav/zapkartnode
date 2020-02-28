@@ -264,3 +264,25 @@ exports.deleteProduct = async function(req, res) {
     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
   }
 };
+
+exports.getProductFilter = async (req, res, next) => {
+  try {
+    const param = req.body;
+    const [err, product] = await to(
+      productService.getProductFilterAggregate(param)
+    );
+    if (err) {
+      return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    }
+    if (product) {
+      return ReS(
+        res,
+        { message: product },
+        status_codes_msg.SUCCESS.code
+      );
+    }
+  } catch (err) {
+    console.error(err);
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};

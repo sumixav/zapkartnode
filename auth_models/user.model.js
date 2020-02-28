@@ -24,8 +24,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     email: {
       type: DataTypes.STRING(30),
-      allowNull: false,
-      unique: true
+      allowNull: false
     },
     phone: {
       type: DataTypes.STRING(20),
@@ -86,9 +85,19 @@ module.exports = function(sequelize, DataTypes) {
       references: {
         model: 'user_types',
         key: 'id'
-      }
+      },
+      
     },
-    
+    socialMediaId: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    socialType: {
+      type:   DataTypes.ENUM,
+      values: ['facebook', 'google','normal'],
+      allowNull: true,
+      defaultValue: 'normal'
+    },
 
   }, {
     tableName: 'users'

@@ -113,3 +113,21 @@ exports.deleteBrand = async function(req, res) {
     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
   }
 };
+
+exports.getBrandCategoryDetails = async function(req, res) {
+  try {
+    const param = req.query;
+    const [err, brand] = await to(brandService.getBrandBasedCategory(param));
+     Logger.info(req.body);
+    if (err) throw err;
+      return ReS(
+        res,
+        { message: brand },
+        status_codes_msg.SUCCESS.code
+      );
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
+

@@ -229,6 +229,9 @@ router.get("/banner/:bannerId", BannerController.getBanner);
 router.patch("/banner/:bannerId", bannerUpload, BannerController.editBanner);
 router.delete("/banner/:bannerId", BannerController.deleteBanner);
 
+router.get("/getbrandcategory", BrandConroller.getBrandCategoryDetails);
+router.post("/getProductFilter", ProductController.getProductFilter);
+
 // router.post('/users/login', Validate.validateAuth, UserController.login);
 // router.get('/users/:id', passport.authenticate('jwt', { session: false }), UserController.getUserById);
 // //********* API DOCUMENTATION **********

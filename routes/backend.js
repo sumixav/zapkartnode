@@ -45,4 +45,6 @@ router.post(  '/cart/create', formupload.none(),passport.authenticate('jwt', {se
 router.get(   '/cart' ,passport.authenticate('jwt', {session:false}),CartController.getCart);
 router.patch(  '/updatecart/:id'  ,formupload.none(), CartController.updateCart);
 router.delete(  '/deletecart/:id'  ,formupload.none(), CartController.deleteCart);
+router.post(  '/users/fblogin', formupload.none(),UserController.fblogin);
+router.post(  '/users/gblogin', formupload.none(),UserController.gblogin);
 module.exports = router;

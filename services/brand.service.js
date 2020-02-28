@@ -4,6 +4,7 @@ const cleanDeep = require("clean-deep");
 const Brand = require("../models/brand");
 const Composition = require("../models/composition");
 const validator = require("validator");
+const Product = require("../models/product");
 const {
   to,
   TE,
@@ -13,7 +14,8 @@ const {
   saveThumbnails,
   getDimensions,
   getIdQuery,
-  isEmpty
+  isEmpty,
+  isValidId,
 } = require("../services/util.service");
 const mongoose = require("mongoose");
 const Logger = require("../logger");
@@ -255,4 +257,48 @@ exports.editBrand = async (params, image, query) => {
   const updatedBrand = await Brand.findOne({ _id: brandId });
   Logger.info(updatedBrand);
   return updatedBrand;
+};
+
+exports.getBrandBasedCategory = async (param) => {
+  const {category} = param;
+  let matchQuery = { 'category.slug':{$in: [category]} }
+  if(isValidId(category))
+  {
+    matchQuery = { 'category._id':{$in: [mongoose.Types.ObjectId(category)]} }
+  }
+  
+  const brandResult = await Product.aggregate([
+    { 
+      $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+          },
+          
+  },
+  { $unwind: '$category' },
+  { $match: matchQuery},
+  { 
+      $lookup: {
+          from: 'brands',
+          localField: 'brand',
+          foreignField: '_id',
+          as: 'brand'
+          },
+          
+  },
+  { $unwind: '$brand' },
+  {
+  $group: {
+    _id:{"category" : "$category"},
+    brand : { $addToSet: '$brand' }
+   
+},
+ }
+  ]).exec();
+  return brandResult;
+  // const brand = await Brand.find(query);
+  // if (!brand || brand.length === 0) throw new Error("Brand does not exist");
+  // return brand[0];
 };
