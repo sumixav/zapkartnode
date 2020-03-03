@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-    let Model = sequelize.define('merchant_types', {
+    let Model = sequelize.define('user_groups', {
       id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
@@ -11,6 +11,15 @@ module.exports = function(sequelize, DataTypes) {
       name: {
         type: DataTypes.STRING(255),
         allowNull: false
+      },
+      userTypeId: {
+        type: DataTypes.INTEGER(11),
+        allowNull: true,
+        references: {
+          model: 'user_types',
+          key: 'id'
+        },
+        
       },
       createdBy: {
       type: DataTypes.INTEGER(11),
@@ -27,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
 
     }, {
       
-      tableName: 'merchant_types'
+      tableName: 'user_groups'
     });
 
     Model.associate = function(models){
@@ -36,6 +45,10 @@ module.exports = function(sequelize, DataTypes) {
 
       Model.associate = function(models){
         this.merchants = this.hasMany(models.merchants);
+      };
+
+      Model.associate = function(models){
+        this.userType = this.belongsTo(models.user_types, {foreignKey: 'userTypeId'});
       };
     return Model;
   };

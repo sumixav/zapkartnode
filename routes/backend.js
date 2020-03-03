@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const UserController 	    = require('../controllers/backend/user.controller');
-const MerchantTypeController 	    = require('../controllers/backend/merchantType.controller');
+const UserGroupController 	    = require('../controllers/backend/userGroup.controller');
 const MerchantController 	    = require('../controllers/backend/merchant.controller');
 const GeoLocationController 	    = require('../controllers/backend/geolocation.controller');
 const CartController 	    = require('../controllers/backend/cart.controller');
@@ -27,10 +27,10 @@ router.post(  '/users/register'     , userUpload, Validate.registerUser, UserCon
 router.post(  '/users/login'        , formupload.none(),UserController.login);
 router.patch(  '/users/update'        , userUpload, Validate.validateAuth, UserController.update);
 router.get(   '/users'          , passport.authenticate('jwt', {session:false}), UserController.getUser);
-router.post(  '/merchanttype/create', formupload.none(), MerchantTypeController.create);
-router.get(  '/merchanttype', MerchantTypeController.getAllMerchantType);
-router.get(   '/merchanttype/:id' ,MerchantTypeController.getMerchantType);
-router.patch(  '/updatemerchanttype/:id'  ,formupload.none(), MerchantTypeController.updateMerchantType);
+router.post(  '/userGroup/create/:role', formupload.none(),passport.authenticate('jwt', {session:false}),  UserGroupController.create);
+router.get(  '/userGroup/list/:role',passport.authenticate('jwt', {session:false}),  UserGroupController.getAllUserGroup);
+router.get(   '/userGroup/:id' ,passport.authenticate('jwt', {session:false}), UserGroupController.getUserGroup);
+router.patch(  '/userGroup/updateuserGroup/:id'  ,formupload.none(),passport.authenticate('jwt', {session:false}),  UserGroupController.updateUserGroup);
 
 router.post(  '/merchant/create', formupload.none(),MerchantController.create);
 router.get(  '/merchant', MerchantController.getAllMerchant);
