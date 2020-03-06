@@ -20,5 +20,13 @@ module.exports = function(sequelize, DataTypes) {
     this.user = this.hasMany(models.users);
   };
 
+  Model.associate = function(models){
+    this.merchants = this.hasMany(models.merchants);
+  };
+
+  Model.associate = function(models){
+    this.usergroup = this.hasMany(models.user_groups);
+  };
+
   return Model;
 };
