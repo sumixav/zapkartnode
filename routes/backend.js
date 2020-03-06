@@ -1,22 +1,12 @@
 const express = require('express');
 const router = express.Router();
-<<<<<<< HEAD
 const UserController = require('../controllers/backend/user.controller');
-const MerchantTypeController = require('../controllers/backend/merchantType.controller');
+const UserGroupController = require('../controllers/backend/userGroup.controller');
 const MerchantController = require('../controllers/backend/merchant.controller');
 const GeoLocationController = require('../controllers/backend/geolocation.controller');
 const CartController = require('../controllers/backend/cart.controller');
 const Validate = require('../services/validate');
 const multer = require('multer')
-=======
-const UserController 	    = require('../controllers/backend/user.controller');
-const UserGroupController 	    = require('../controllers/backend/userGroup.controller');
-const MerchantController 	    = require('../controllers/backend/merchant.controller');
-const GeoLocationController 	    = require('../controllers/backend/geolocation.controller');
-const CartController 	    = require('../controllers/backend/cart.controller');
-const Validate                    = require('../services/validate');
-const multer  = require('multer')
->>>>>>> origin/userGroup
 const formupload = multer()
 const passport = require('passport');
 const path = require('path');
@@ -34,14 +24,14 @@ router.get('/get-heart-beat-admin', function (req, res, next) {
   res.json({ status: "success", message: "Zapkart API", data: { "version_number": "v1.0.0" } })
 });
 
-router.post(  '/users/register'     , userUpload, Validate.registerUser, UserController.create); 
-router.post(  '/users/login'        , formupload.none(),UserController.login);
-router.patch(  '/users/update'        , userUpload, Validate.validateAuth, UserController.update);
-router.get(   '/users'          , passport.authenticate('jwt', {session:false}), UserController.getUser);
-router.post(  '/userGroup/create/:role', formupload.none(),passport.authenticate('jwt', {session:false}),  UserGroupController.create);
-router.get(  '/userGroup/list/:role',passport.authenticate('jwt', {session:false}),  UserGroupController.getAllUserGroup);
-router.get(   '/userGroup/:id' ,passport.authenticate('jwt', {session:false}), UserGroupController.getUserGroup);
-router.patch(  '/userGroup/updateuserGroup/:id'  ,formupload.none(),passport.authenticate('jwt', {session:false}),  UserGroupController.updateUserGroup);
+router.post('/users/register', userUpload, Validate.registerUser, UserController.create);
+router.post('/users/login', formupload.none(), UserController.login);
+router.patch('/users/update', userUpload, Validate.validateAuth, UserController.update);
+router.get('/users', passport.authenticate('jwt', { session: false }), UserController.getUser);
+router.post('/userGroup/create/:role', formupload.none(), passport.authenticate('jwt', { session: false }), UserGroupController.create);
+router.get('/userGroup/list/:role', passport.authenticate('jwt', { session: false }), UserGroupController.getAllUserGroup);
+router.get('/userGroup/:id', passport.authenticate('jwt', { session: false }), UserGroupController.getUserGroup);
+router.patch('/userGroup/updateuserGroup/:id', formupload.none(), passport.authenticate('jwt', { session: false }), UserGroupController.updateUserGroup);
 
 router.post('/merchant/create', formupload.none(), MerchantController.create);
 router.get('/merchant', MerchantController.getAllMerchant);
