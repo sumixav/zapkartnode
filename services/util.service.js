@@ -3,10 +3,15 @@ const path = require("path");
 const pe = require("parse-error");
 const fs = require("fs").promises;
 const gm = require("gm");
+const map = require("lodash/map");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
+
 const mongoose = require("mongoose");
 const Logger = require("../logger");
 
-module.exports.fromEntries = arr => Object.assign({}, ...Array.from(arr, ([k, v]) => ({[k]: v}) ));
+module.exports.fromEntries = arr =>
+  Object.assign({}, ...Array.from(arr, ([k, v]) => ({ [k]: v })));
 
 module.exports.to = async promise => {
   let err, res;
@@ -17,7 +22,7 @@ module.exports.to = async promise => {
   return [null, res];
 };
 
-module.exports.ReE = function(res, err, code) {
+module.exports.ReE = function (res, err, code) {
   // Error Web Response
 
   Logger.error(err);
@@ -30,7 +35,7 @@ module.exports.ReE = function(res, err, code) {
   return res.json({ success: false, error: err });
 };
 
-module.exports.ReS = function(res, data, code) {
+module.exports.ReS = function (res, data, code) {
   // Success Web Response
   let send_data = { success: true };
 
@@ -43,9 +48,10 @@ module.exports.ReS = function(res, data, code) {
   return res.json(send_data);
 };
 
-module.exports.formatValidationError = function(errorArray) {
+module.exports.formatValidationError = function (errorArray) {
   let errorMessage = [];
   errorArray.forEach(i => {
+    // const m = i.message.replace(/(\r\n|\n|\r)/gm," ");
     if (i.property === "instance") {
       errorMessage = errorMessage + i.message + "." + "\n";
       // const obj = { message: i.message }
@@ -61,7 +67,7 @@ module.exports.formatValidationError = function(errorArray) {
   return errorMessage;
 };
 
-module.exports.TE = TE = function(err_message, log) {
+module.exports.TE = TE = function (err_message, log) {
   // TE stands for Throw Error
   if (log === true) {
     console.error(err_message);
@@ -117,7 +123,7 @@ exports.resizeCropMultiple = (imagePathArray, w, h) => {
         .resize(w, h)
         .gravity("Center")
         // .crop(w, h)
-        .write(imagePath, function(err) {
+        .write(imagePath, function (err) {
           if (err) {
             Logger.error(err);
             reject(new Error(err));
@@ -134,8 +140,7 @@ exports.resizeCropMultiple = (imagePathArray, w, h) => {
 function uniq(a) {
   return Array.from(new Set(a));
 }
-exports.uniq = uniq
-
+exports.uniq = uniq;
 
 exports.resizeCrop = (imagePath, w, h) => {
   Logger.info(imagePath);
@@ -147,7 +152,7 @@ exports.resizeCrop = (imagePath, w, h) => {
       .resize(w, h)
       .gravity("Center")
       // .crop(w, h)
-      .write(imagePath, function(err) {
+      .write(imagePath, function (err) {
         if (err) {
           Logger.error(err);
           reject(new Error(err));
@@ -180,7 +185,7 @@ exports.generateObjectId = () => new mongoose.Types.ObjectId();
 
 exports.getDimensions = async filePath => {
   return new Promise((resolve, reject) => {
-    gm(filePath).size(function(err, size) {
+    gm(filePath).size(function (err, size) {
       Logger.info(size);
       if (!err) {
         return resolve({ width: size.width, height: size.height });
@@ -233,6 +238,32 @@ exports.isEmpty = val => {
 exports.isValidId = id => {
   return mongoose.Types.ObjectId.isValid(id);
 };
+
+exports.paginate = (page, pageSize) => {
+  const offset = (page - 1) * pageSize;
+  const limit = pageSize;
+  return {
+    offset,
+    limit
+  };
+};
+
+exports.getSearchQuery = (searchObj = {}, searchOp = Op.like) => {
+  let searchQuery = {};
+  map(searchObj, (value, key) => {
+    searchQuery = {
+      ...searchQuery,
+      [key]: {
+        [searchOp]: "%" + value + "%"
+      }
+    };
+  });
+  return searchQuery
+};
+
+exports.getOrderQuery = (orderObj = {}) => {
+  return { order: Object.entries(orderObj) }
+}
 
 // exports.saveThumbnail = imagePathArray => {
 //     Logger.info(imagePathArray);

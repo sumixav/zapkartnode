@@ -1,7 +1,8 @@
 "use strict";
-var Validator = require("jsonschema").Validator;
+const Validator = require("jsonschema").Validator;
 const parseStrings = require("parse-strings-in-object");
-var v = new Validator();
+const v = new Validator();
+const isEmpty = require("is-empty")
 const { to, ReE, ReS, formatValidationError } = require("../util.service");
 const Logger = require("../../logger");
 const { status_codes_msg } = require("../../utils/appStatics");
@@ -13,8 +14,16 @@ const {
   editCategorySchema,
   medicineTypesBulkSchema,
   comboSchema,
-  informationSchema
+  informationSchema,
+  forgotPasswordSchema,
+  passwordUpdateEmailSchema,
+  addressSchema,
+  updatePasswordSchema
 } = require("./schema");
+
+
+
+
 
 exports.validateProduct = (req, res, next) => {
   Logger.info(
@@ -136,7 +145,7 @@ exports.editAttributesSchema = (req, res, next) => {
   }
 };
 
-var checklistValidateSchema = {
+const checklistValidateSchema = {
   properties: {
     name: {
       type: "string"
@@ -160,11 +169,76 @@ module.exports.validateChecklist = (req, res, next) => {
   }
 };
 
-var userRegisterSchema = {
+module.exports.forgotPassword = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  let validRes = v.validate(params, forgotPasswordSchema).errors;
+  Logger.info(validRes);
+  if (!validRes.length) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      validRes[0].message,
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+module.exports.updatePasswordEmail = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  let validRes = v.validate(params, passwordUpdateEmailSchema).errors;
+  Logger.info('HELLO---', validRes);
+  if (!validRes.length) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      validRes[0].message,
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+module.exports.updatePassword = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  let validRes = v.validate(params, updatePasswordSchema).errors;
+  Logger.info(validRes);
+  if (!validRes.length) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      validRes[0].message,
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+module.exports.prescriptionUpload = (req, res, next) => {
+  let validRes = [];
+
+  const imageValid = req.files && req.files["prescription"];
+  if (typeof imageValid === "undefined")
+    validRes.push({ property: "instance.image", message: "requires image 'prescription'" });
+
+  Logger.info('HELLO', req.files, validRes)
+
+  if (validRes.length === 0) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      validRes[0].message,
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+const userRegisterSchema = {
   properties: {
-    email: {
+    gender: {
       type: "string",
-      format: "email"
+      enum: ["male", "female"]
     },
     firstName: {
       type: "string"
@@ -177,15 +251,38 @@ var userRegisterSchema = {
       pattern: "^[0-9()\\-\\.\\s]+$",
       maxLength: 12,
       minLength: 6
-    },
-    password: {
-      type: "string"
     }
   },
-  required: ["firstName", "lastName", "email", "password"]
+  required: ["firstName", "lastName", "email", "phone"]
 };
 
-var userLoginValidateSchema = {
+const userProfileSchema = {
+  properties: {
+    firstName: {
+      type: "string"
+    },
+    lastName: {
+      type: "string"
+    },
+    phone: {
+      type: "string",
+      pattern: "^[0-9()\\-\\.\\s]+$",
+      maxLength: 12,
+      minLength: 6
+    },
+    phoneVerified: {
+      type: "boolean",
+    }
+  },
+  required: ["firstName", "lastName"],
+  dependencies: {
+    phone: { required: ["phoneVerified"] }
+  }
+};
+
+
+
+const userLoginValidateSchema = {
   properties: {
     loginId: {
       type: "string"
@@ -197,7 +294,7 @@ var userLoginValidateSchema = {
   required: ["loginId", "password"]
 };
 
-var userRefferalValidateSchema = {
+const userRefferalValidateSchema = {
   properties: {
     user_id: {
       type: "integer"
@@ -215,8 +312,52 @@ var userRefferalValidateSchema = {
 
 module.exports.registerUser = (req, res, next) => {
   let params = Object.assign({}, req.body, req.query);
-  var validRes = v.validate(params, userRegisterSchema).errors;
+  const validRes = v.validate(params, userRegisterSchema).errors;
 
+  if (!validRes.length) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      validRes[0].message,
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+module.exports.userProfile = (req, res, next) => {
+  let params = Object.assign({}, req.body, req.query);
+  const validRes = v.validate(parseStrings(params), userProfileSchema).errors;
+
+  if (!validRes.length) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      formatValidationError(validRes),
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+module.exports.validateAddress = (req, res, next) => {
+  let params = Object.assign({}, req.body, req.query);
+  const validRes = v.validate(params, addressSchema).errors;
+
+  if (!validRes.length) {
+    return next();
+  } else {
+    return ReE(
+      res,
+      formatValidationError(validRes),
+      status_codes_msg.VALIDATION_ERROR.code
+    );
+  }
+};
+
+module.exports.validateAuth = (req, res, next) => {
+  let params = Object.assign({}, req.body, req.query);
+  const validRes = v.validate(params, userLoginValidateSchema).errors;
   if (!validRes.length) {
     return next();
   } else {
@@ -230,7 +371,7 @@ module.exports.registerUser = (req, res, next) => {
 
 module.exports.validateAuth = (req, res, next) => {
   let params = Object.assign({}, req.body, req.query);
-  var validRes = v.validate(params, userLoginValidateSchema).errors;
+  const validRes = v.validate(params, userLoginValidateSchema).errors;
   if (!validRes.length) {
     return next();
   } else {
@@ -243,7 +384,7 @@ module.exports.validateAuth = (req, res, next) => {
 };
 module.exports.validateUpdate = (req, res, next) => {
   // let params = Object.assign({}, req.body, req.query);
-  // var validRes = v.validate(params, userLoginValidateSchema).errors;
+  // const validRes = v.validate(params, userLoginValidateSchema).errors;
   // if (!validRes.length) {
   return next();
   // } else {
@@ -253,7 +394,7 @@ module.exports.validateUpdate = (req, res, next) => {
 
 module.exports.validateRefferal = (req, res, next) => {
   let params = Object.assign({}, req.body, req.query);
-  var validRes = v.validate(params, userRefferalValidateSchema).errors;
+  const validRes = v.validate(params, userRefferalValidateSchema).errors;
   if (!validRes.length) {
     return next();
   } else {
@@ -261,7 +402,7 @@ module.exports.validateRefferal = (req, res, next) => {
   }
 };
 
-var validateUpdateLocationSchema = {
+const validateUpdateLocationSchema = {
   properties: {
     latitude: {
       type: "number"
@@ -275,7 +416,7 @@ var validateUpdateLocationSchema = {
 
 module.exports.validateUpdateLocation = (req, res, next) => {
   let params = Object.assign({}, req.body);
-  var validRes = v.validate(params, validateUpdateLocationSchema).errors;
+  const validRes = v.validate(params, validateUpdateLocationSchema).errors;
   if (!validRes.length) {
     return next();
   } else {
@@ -292,7 +433,7 @@ exports.validateCombo = (req, res, next) => {
   if (!(validRes.length > 0)) {
     return next();
   } else {
-    const errorMessage = formatValidationError(validRes);
-    return ReE(res, errorMessage, status_codes_msg.VALIDATION_ERROR.code);
+    
+    return ReE(res, formatValidationError(validRes), status_codes_msg.VALIDATION_ERROR.code);
   }
 };
