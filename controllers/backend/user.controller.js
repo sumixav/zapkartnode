@@ -147,6 +147,7 @@ exports.savePrescriptions = async function (req, res) {
         , status_codes_msg.SUCCESS.code);
 }
 
+
 exports.updatePrescriptions = async function (req, res) {
     const [errUpdate, prescriptions] = await to(prescriptionService.updatePrescriptions(req));
     if (errUpdate) return ReE(res, errUpdate, status_codes_msg.INVALID_ENTITY.code);
@@ -212,4 +213,17 @@ exports.getUsers = async function (req, res) {
         , status_codes_msg.SUCCESS.code);
 }
 
+
+
+
+
+const getUserPerPage = async function(req, res){
+    [err, user] = await to(authService.getUserperPage(req.params));
+    if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (user) {
+        return ReS(res, { message:'user.', data : user }
+                , status_codes_msg.SUCCESS.code);
+    }
+}
+module.exports.getUserPerPage = getUserPerPage;
 

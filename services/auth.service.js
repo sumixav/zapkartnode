@@ -7,6 +7,9 @@ const Op = Sequelize.Op;
 const Logger = require("../logger");
 const { STRINGS } = require("../utils/appStatics")
 const cryptoRandomString = require("crypto-random-string")
+const parseStrings = require("parse-strings-in-object");
+
+
 
 const RESET_TOKEN_EXPIRES_IN = 30; //30 minutes
 
@@ -333,5 +336,16 @@ module.exports.updatePassword = async (params, user) => {
 
 
 
+
+const getUserperPage = async (param) => {
+
+    let {pagelimit,offset} = parseStrings(param)
+    
+    const [err, user] = await to(users.findAndCountAll({where:{active:1},
+    limit : pagelimit,offset:offset}));
+    if(err) { return TE(err.message); }
+      return user;
+}
+module.exports.getUserperPage = getUserperPage;
 
 

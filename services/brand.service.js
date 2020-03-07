@@ -154,10 +154,7 @@ exports.editBrand = async (params, image, query) => {
     }
   }
 
-  const fieldsToEdit = cleanDeep({
-    status: params.status,
-    name: params.name
-  });
+  const fieldsToEdit = cleanDeep(params);
   //   const seoFields = cleanDeep({
   //     metaTitle: params.metaTitle,
   //     metaDescription: params.metaDescription,
