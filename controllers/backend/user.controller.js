@@ -99,3 +99,13 @@ const gblogin = async function(req, res){
   
 }
 module.exports.gblogin = gblogin;
+
+const getUserPerPage = async function(req, res){
+    [err, user] = await to(authService.getUserperPage(req.params));
+    if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (user) {
+        return ReS(res, { message:'user.', data : user }
+                , status_codes_msg.SUCCESS.code);
+    }
+}
+module.exports.getUserPerPage = getUserPerPage;

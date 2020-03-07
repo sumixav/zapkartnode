@@ -11,7 +11,7 @@ const create = async (req, res, next) => {
   try {
       [err, user] = await to(authService.createUser({...param,"roleId":2}));
       if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-      let merchantParam = {...param,"userId":3,"createdBy":3};
+      let merchantParam = {...param,"userId":req.user.Id,"createdBy":req.user.Id};
      [err, merchant] = await to(merchantService.createmerchant(merchantParam));
   
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);

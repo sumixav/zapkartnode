@@ -5,6 +5,7 @@ const UserGroupController 	    = require('../controllers/backend/userGroup.contr
 const MerchantController 	    = require('../controllers/backend/merchant.controller');
 const GeoLocationController 	    = require('../controllers/backend/geolocation.controller');
 const CartController 	    = require('../controllers/backend/cart.controller');
+const CoupenController 	    = require('../controllers/backend/coupen.controller');
 const Validate                    = require('../services/validate');
 const multer  = require('multer')
 const formupload = multer()
@@ -27,6 +28,7 @@ router.post(  '/users/register'     , userUpload, Validate.registerUser, UserCon
 router.post(  '/users/login'        , formupload.none(),UserController.login);
 router.patch(  '/users/update'        , userUpload, Validate.validateAuth, UserController.update);
 router.get(   '/users'          , passport.authenticate('jwt', {session:false}), UserController.getUser);
+router.get(   '/usersperpage/:pagelimit/:offset'          , passport.authenticate('jwt', {session:false}), UserController.getUserPerPage);
 router.post(  '/userGroup/create/:role', formupload.none(),passport.authenticate('jwt', {session:false}),  UserGroupController.create);
 router.get(  '/userGroup/list/:role',passport.authenticate('jwt', {session:false}),  UserGroupController.getAllUserGroup);
 router.get(   '/userGroup/:id' ,passport.authenticate('jwt', {session:false}), UserGroupController.getUserGroup);
@@ -47,4 +49,10 @@ router.patch(  '/updatecart/:id'  ,formupload.none(), CartController.updateCart)
 router.delete(  '/deletecart/:id'  ,formupload.none(), CartController.deleteCart);
 router.post(  '/users/fblogin', formupload.none(),UserController.fblogin);
 router.post(  '/users/gblogin', formupload.none(),UserController.gblogin);
+
+router.post(  '/coupen/create', formupload.none(),CoupenController.create);
+router.get(  '/coupen', CoupenController.getAllCoupen);
+router.get(   '/coupen/:id' ,CoupenController.getCoupen);
+router.patch(  '/updatecoupen/:id'  ,formupload.none(), CoupenController.updateCoupen);
+
 module.exports = router;

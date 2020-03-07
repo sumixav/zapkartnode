@@ -4,6 +4,7 @@ const { to, TE , ReE}    = require('../services/util.service');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const Logger = require("../logger");
+const parseStrings = require("parse-strings-in-object");
 
 const findUserByEmail = async function(email){
 
@@ -216,5 +217,16 @@ const authGbUser = async function(userInfo){
 
 }
 module.exports.authGbUser = authGbUser;
+
+const getUserperPage = async (param) => {
+
+    let {pagelimit,offset} = parseStrings(param)
+    
+    const [err, user] = await to(users.findAndCountAll({where:{active:1},
+    limit : pagelimit,offset:offset}));
+    if(err) { return TE(err.message); }
+      return user;
+}
+module.exports.getUserperPage = getUserperPage;
 
 

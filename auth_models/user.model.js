@@ -104,6 +104,14 @@ module.exports = function(sequelize, DataTypes) {
   });
 
   Model.associate = function(models){
+    this.coupenMapping = this.hasMany(models.coupen_user_mappings);
+  }; 
+  
+  Model.associate = function(models){
+    this.coupen = this.hasMany(models.coupens);
+  };
+
+  Model.associate = function(models){
     this.cart = this.hasMany(models.carts);
   };
   
