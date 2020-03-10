@@ -13,6 +13,10 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING(255),
         allowNull: false
       },
+      coupenCode: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
       validFrom: {
         type: DataTypes.DATE,
         allowNull: false

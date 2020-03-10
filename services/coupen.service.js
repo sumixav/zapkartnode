@@ -9,7 +9,7 @@ const {
   isEmpty
 } = require("../services/util.service");
 const Logger = require("../logger");
-//use parse-strings-in-object
+const parseStrings = require("parse-strings-in-object");
 
 
 
@@ -21,8 +21,26 @@ exports.createCoupen = async (param) => {
   return coupenlists;
 };
 
-exports.getAllCoupen = async query => {
-  [err, coupenlist] = await to(coupens.findAll());
+exports.searchCoupenAssign = async (search) => {
+    let searchCondition={};
+    if(search) {
+    Object.assign(searchCondition, search['id'] ? { 'id': search['id'] } : '',
+    search['name'] ? { 'name': search['name'] } : '',
+    search['coupenCode'] ? { 'coupenCode': search['coupenCode'] } : '');
+    }
+    return Object.values(searchCondition);
+};
+
+exports.getAllCoupen = async (query) => {
+  const {page, limit, search} = parseStrings(query);
+  let searchCondition = {};
+  searchCondition= await to(this.searchCoupenAssign(search)); 
+  if(searchCondition) {
+    Logger.info("777",searchCondition)
+    searchCondition = {"where":searchCondition}
+}
+Logger.info("999",searchCondition);
+  [err, coupenlist] = await to(coupens.findAndCountAll({...searchCondition,limit,offset:page}));
   if(err) { return err; }
   return coupenlist;
 };
