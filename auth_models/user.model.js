@@ -1,12 +1,12 @@
 /* jshint indent: 2 */
-const bcrypt 		    	  = require('bcrypt');
-const bcrypt_p 		  	  = require('bcrypt-promise');
-const jwt             	= require('jsonwebtoken');
-const {TE, to}          = require('../services/util.service');
-const CONFIG            = require('../config/config');
-const randtoken = require('rand-token') 
+const bcrypt = require('bcrypt');
+const bcrypt_p = require('bcrypt-promise');
+const jwt = require('jsonwebtoken');
+const { TE, to } = require('../services/util.service');
+const CONFIG = require('../config/config');
+const randtoken = require('rand-token')
 
-module.exports = function(sequelize, DataTypes) {
+module.exports = function (sequelize, DataTypes) {
   var Model = sequelize.define('users', {
     id: {
       type: DataTypes.INTEGER(11),
@@ -86,22 +86,34 @@ module.exports = function(sequelize, DataTypes) {
         model: 'user_types',
         key: 'id'
       },
-      
+
     },
     socialMediaId: {
       type: DataTypes.STRING(100),
       allowNull: true
     },
     socialType: {
-      type:   DataTypes.ENUM,
-      values: ['facebook', 'google','normal'],
+      type: DataTypes.ENUM,
+      values: ['facebook', 'google', 'normal'],
       allowNull: true,
       defaultValue: 'normal'
     },
+    gender: {
+      type: DataTypes.ENUM,
+      values: ['male', 'female'],
+      allowNull: true
+    },
+    resetPasswordToken: DataTypes.STRING,
+    resetPasswordExpiresIn: DataTypes.DATE,
+  },
+    {
+      tableName: 'users'
+    }
+  );
 
-  }, {
-    tableName: 'users'
-  });
+  Model.associate = function (models) {
+    this.prescriptions = this.hasMany(models.prescriptions);
+  };
 
   Model.associate = function(models){
     this.coupenMapping = this.hasMany(models.coupen_user_mappings);
@@ -111,44 +123,48 @@ module.exports = function(sequelize, DataTypes) {
     this.coupen = this.hasMany(models.coupens);
   };
 
-  Model.associate = function(models){
+  Model.associate = function (models) {
+    this.addresses = this.hasMany(models.address);
+  };
+
+  Model.associate = function (models) {
     this.cart = this.hasMany(models.carts);
   };
-  
-  Model.associate = function(models){
+
+  Model.associate = function (models) {
     this.merchant = this.hasMany(models.merchants);
   };
-  
-  Model.associate = function(models){
+
+  Model.associate = function (models) {
     this.usertype = this.belongsTo(models.user_types);
   };
-  
+
   Model.prototype.getJWT = function () {
 
     let expiration_time = parseInt(CONFIG.jwt_expiration);
-    return "Bearer "+jwt.sign({user_id:this.id}, CONFIG.jwt_encryption, {expiresIn: expiration_time});
-    
+    return "Bearer " + jwt.sign({ user_id: this.id }, CONFIG.jwt_encryption, { expiresIn: expiration_time });
+
   };
 
   Model.prototype.getRefreshToken = function () {
-    let refToken =randtoken.uid(16);
-    user.update({ confirmationCode: refToken});
+    let refToken = randtoken.uid(16);
+    user.update({ confirmationCode: refToken });
     return refToken;
-    
+
   };
 
-  
+
   Model.beforeSave(async (user, options) => {
     let err;
-    if (user.changed('password')){
-        let salt, hash
-        [err, salt] = await to(bcrypt.genSalt(10));
-        if(err) TE(err.message, true);
+    if (user.changed('password')) {
+      let salt, hash
+      [err, salt] = await to(bcrypt.genSalt(10));
+      if (err) TE(err.message, true);
 
-        [err, hash] = await to(bcrypt.hash(user.password, salt));
-        if(err) TE(err.message, true);
+      [err, hash] = await to(bcrypt.hash(user.password, salt));
+      if (err) TE(err.message, true);
 
-        user.password = hash;
+      user.password = hash;
     }
   });
 
@@ -160,12 +176,12 @@ module.exports = function(sequelize, DataTypes) {
 
   Model.prototype.comparePassword = async function (pw) {
     let err, pass
-    if(!this.password) TE('password not set');
+    if (!this.password) TE('password not set');
 
     [err, pass] = await to(bcrypt_p.compare(pw, this.password));
-    if(err) TE(err);
+    if (err) TE(err);
 
-    if(!pass) TE('invalid password');
+    if (!pass) TE('invalid password');
 
     return this;
   }

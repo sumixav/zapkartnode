@@ -1,9 +1,9 @@
 'use strict';
-const fs        = require('fs');
-const path      = require('path');
+const fs = require('fs');
+const path = require('path');
 const Sequelize = require('sequelize');
-const basename  = path.basename(__filename);
-const db        = {};
+const basename = path.basename(__filename);
+const db = {};
 const CONFIG = require('../config/config');
 
 
@@ -14,7 +14,7 @@ const sequelize = new Sequelize(CONFIG.sql_db_name, CONFIG.db_user, CONFIG.db_pa
   operatorsAliases: false,
   define: {
     charset: 'utf8',
-    collate: 'utf8_general_ci', 
+    collate: 'utf8_general_ci',
     timestamps: true
   },
 });

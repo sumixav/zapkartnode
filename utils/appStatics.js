@@ -108,7 +108,14 @@ module.exports.STRINGS = {
   RESTORED: "Resource restored",
   DUPLICATE: "Resource with same name already exists",
   NO_DATA: "No data available",
-  CREATE_SUCCESS: "Created successfully"
+  CREATE_SUCCESS: "Created successfully",
+  ADD_ERROR:"Error adding.",
+  UPDATE_ERROR:"Error updating.",
+  DELETE_ERROR:"Error deleting.",
+  NO_DATA_DELETE:"Nothing to delete.",
+  NO_DATA_RESTORE:"Nothing to restore.",
+  RETREIVE_ERROR:"Error while retreiving data.",
+  RESTORE_ERROR:"Error restoring data."
 };
 
 module.exports.PAGE_LIMIT = 0;

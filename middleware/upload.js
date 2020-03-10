@@ -30,23 +30,45 @@ const getStorage = (location = null) =>
 
 const fileFilter = (req, file, cb) => {
     Logger.info(file.mimetype);
-    if (
-        file.mimetype === "image/png" ||
-        file.mimetype === "image/jpeg"
-    ) {
-        cb(null, true); // accept file
-    } else {
-        Logger.error("invalid file type");
-        // cb(null, false) // reject file
-        cb(new Error("invalid file type"), false); // reject file
+    if (file.fieldname === 'prescription') {
+        filter(/image\/jpeg|image\/jpg|image\/png|application\/pdf/, file, cb);
     }
+    else {
+        filter(/image\/jpeg|image\/jpg|image\/png/, file, cb);
+    }
+    // if (
+    //     file.mimetype === "image/png" ||
+    //     file.mimetype === "image/jpeg" ||
+    //     req.files['prescription'] && file.mimetype === "application/pdf"
+    // ) {
+    //     cb(null, true); // accept file
+    // } else {
+    //     Logger.error("invalid file type");
+    //     // cb(null, false) // reject file
+    //     cb(new Error("invalid file type"), false); // reject file
+    // }
 };
+
+
+const filter = (mimetypes, file, cb) => {
+    if (mimetypes.test(file.mimetype))
+        cb(null, true)
+    else {
+        cb(new Error(`Invalid file type. Required: ${mimetypes}`), false)
+        // mimetypes.replace(/^\/?|\/?$/, "")
+
+    }
+
+}
 
 
 const upload = location =>
     multer({
         storage: getStorage(location),
-        fileFilter
+        fileFilter,
+        onError: function (err, next) {
+            Logger.info('SO ERROR', err)
+        }
     });
 
 module.exports = { upload };

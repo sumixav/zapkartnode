@@ -339,3 +339,96 @@ exports.editAttributesSchema = {
     },
   },
 }
+
+exports.forgotPasswordSchema = {
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+  },
+  "required": ["email"]
+}
+
+exports.passwordUpdateEmailSchema = {
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "resetPasswordToken": {
+      "type": "string"
+    },
+    "password": {
+      "type": "password"
+    }
+
+  },
+  "required": ["email", "resetPasswordToken", "password"]
+}
+exports.updatePasswordSchema = {
+  "properties": {
+    "password": {
+      "type": "password"
+    }
+
+  },
+  "required": ["password"]
+
+
+
+}
+
+exports.addressSchema = {
+  properties: {
+    fullName: {
+      type: "string"
+    },
+    mobileNo: {
+      type: "string",
+      pattern: "^([9]{1})([234789]{1})([0-9]{8})$",
+      maxLength: 10,
+
+    },
+    pincode: {
+      type: "string",
+      pattern: "^[1-9][0-9]{5}$",
+      maxLength: 6,
+      description: "Must be valid pincode"
+    },
+    houseNo: {
+      type: "string"
+    },
+    street: {
+      type: "string"
+    },
+    landmark: {
+      type: "string"
+    },
+    city: {
+      type: "string"
+    },
+    state: {
+      type: "string"
+    },
+    active: {
+      type: "string",
+      enum: Object.values(enums.status)
+    },
+    address_type: {
+      type: "string",
+      enum: ["home", "office", "other"]
+    }
+  },
+  "required": [
+    "fullName",
+    "mobileNo",
+    "pincode",
+    "houseNo",
+    "street",
+    "landmark",
+    "city",
+    "state",
+    "active"
+  ],
+};
