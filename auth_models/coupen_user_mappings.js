@@ -16,6 +16,10 @@ module.exports = function(sequelize, DataTypes) {
           key: 'id'
         }
       },
+      mappingType: {
+        type:   DataTypes.ENUM,
+        values: ['userGroup', 'individualUser']
+      },
       userId: {
         type: DataTypes.INTEGER(11),
         allowNull: true,

@@ -67,5 +67,6 @@ router.post(  '/coupen/create', formupload.none(),CoupenController.create);
 router.get(  '/coupen', CoupenController.getAllCoupen);
 router.get(   '/coupen/:id' ,CoupenController.getCoupen);
 router.patch(  '/updatecoupen/:id'  ,formupload.none(), CoupenController.updateCoupen);
+router.get(  '/coupensection', CoupenController.getAllCoupenSection);
 
 module.exports = router;

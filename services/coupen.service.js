@@ -15,10 +15,24 @@ const parseStrings = require("parse-strings-in-object");
 
 
 exports.createCoupen = async (param) => {
-    const {name, validFrom, validTo, coupenTypeId, status} = param;
-
-  [err, coupenlists] = await to(coupens.create({name,validFrom,validTo,coupenTypeId,status}));
+  const {name, validFrom, validTo, coupenTypeId, status,coupenCode, userGroupData, userData} = param;
+  [err, coupenlists] = await to(coupens.create({createdBy:1,name,validFrom,validTo,coupenTypeId,status,coupenCode}));
   if(err) { return err; }
+  let usermapping = '';
+  if(coupenlists) {
+    const usergroup = JSON.parse(userData).map((values, index) => {
+      let aValue = values.value;
+      return {'coupenId':coupenlists.id,'userId':aValue,'mappingType':'userGroup'};
+    });
+    let Stringarray = userGroupData.split(",");
+    const userD = Stringarray.map((values, index) => {
+      let aValue = values;
+      return {'coupenId':coupenlists.id,'userId':aValue,'mappingType':'individualUser'};
+    });
+    usermapping = usergroup.concat(userD);
+    [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
+    if(err) { return err; }
+  }
   return coupenlists;
 };
 
@@ -34,20 +48,21 @@ exports.searchCoupenAssign = async (search) => {
 
 exports.getAllCoupen = async (query) => {
   const {page, limit, search} = parseStrings(query);
-  let searchCondition = {};
+  Logger.info("555",search);
   const dbQuery = {
     where: {
         ...getSearchQuery(search)
     }
   }
-Logger.info("999",searchCondition);
-  [err, coupenlist] = await to(coupens.findAndCountAll({dbQuery,limit,offset:page}));
+  let coupenlist, err = '';
+  [err, coupenlist] = await to(coupens.findAndCountAll({limit,offset:page,
+    include: [{model: coupen_types},{model: coupen_user_mappings}]}));
   if(err) { return err; }
   return coupenlist;
 };
 
 const getCoupenId = async (id) => {
-  [err, coupenlist] = await to(coupens.findById(id));
+  [err, coupenlist] = await to(coupens.find({where: { id: id },include: [{model: coupen_user_mappings}]}));
   if(err) { return err; }
   return coupenlist;
 }
@@ -63,3 +78,9 @@ const updatecoupen = async (id, param) => {
 }
 
 module.exports.updatecoupen = updatecoupen;
+
+exports.getAllCoupenSection = async () => {
+  [err, coupensectionlist] = await to(coupen_types.findAll());
+  if(err) { return err; }
+  return coupensectionlist;
+}

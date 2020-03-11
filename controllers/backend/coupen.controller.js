@@ -73,4 +73,24 @@ const updateCoupen = async function(req, res) {
 
 module.exports.updateCoupen = updateCoupen;
 
+exports.getAllCoupenSection = async (req, res, next) => {
+  try {
+    const [err, Coupensection] = await to(coupenService.getAllCoupenSection());
+
+    if (err) {
+      return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    }
+    if (Coupensection) {
+      return ReS(
+        res,
+        { message: "Coupensection", data: Coupensection },
+        status_codes_msg.SUCCESS.code
+      );
+    }
+  } catch (err) {
+    console.error(err);
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
 
