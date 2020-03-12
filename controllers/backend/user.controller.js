@@ -5,6 +5,7 @@ const { to, ReE, ReS } = require('../../services/util.service');
 const { status_codes_msg } = require('../../utils/appStatics');
 const prescriptionService = require("../../services/prescription.service")
 const Logger = require("../../logger");
+const omit = require('lodash/omit')
 
 const create = async function (req, res) {
 
@@ -64,11 +65,24 @@ const update = async function (req, res) {
         imagesPath = images.map(i => i.path);
         data.avatarlocation = imagesPath;
     }
+    Logger.info(user)
     user.set(data);
 
-    [err, user] = await to(user.save());
+    [err, user] = await to(user.save(
 
-    return ReS(res, { message: user }
+    ));
+    user = user.toWeb();
+    user = omit(user, [
+        'password',
+        'passwordChangedAt',
+        'confirmationCode',
+        'remember_token',
+        'resetPasswordToken',
+        'resetPasswordExpiresIn'
+    ]);
+    if (err)
+        return ReE(res, new Error('nope'), 422);
+    return ReS(res, { user }
         , status_codes_msg.CREATED.code);
 }
 module.exports.update = update;
@@ -76,7 +90,7 @@ module.exports.update = update;
 const fblogin = async function (req, res) {
     const body = req.body;
     let err, user;
-    if((typeof userInfo.id=='undefined')||(userInfo.id=='')) {
+    if ((typeof userInfo.id == 'undefined') || (userInfo.id == '')) {
         return ReE(res, "Error in Social Media Credentials", 422);
     }
     [err, user] = await to(authService.authFbUser(req.body));
@@ -90,7 +104,7 @@ module.exports.fblogin = fblogin;
 const gblogin = async function (req, res) {
     const body = req.body;
     let err, user;
-    if((typeof userInfo.id=='undefined')||(userInfo.id=='')) {
+    if ((typeof userInfo.id == 'undefined') || (userInfo.id == '')) {
         return ReE(res, "Error in Social Media Credentials", 422);
     }
     [err, user] = await to(authService.authGbUser(req.body));
@@ -135,6 +149,16 @@ exports.updatePassword = async function (req, res) {
         return ReS(res, { message: 'Password updated', user: updatedUser }
             , status_codes_msg.SUCCESS.code);
     }
+}
+
+exports.verifyPassword = async (req, res) => {
+    if (!req.user) return ReE(res, new Error('Unauthorized user!'), status_codes_msg.UNAUTHORIZED.code);
+    const [errUpdate, user] = await to(authService.verifyPassword(req.body, req.user));
+    if (errUpdate) return ReE(res, errUpdate);
+    if (!user) return ReE(res, new Error('No user'));
+    return ReS(res, {
+        message: 'Password verified', user
+    }, status_codes_msg.SUCCESS.code);
 }
 
 
@@ -206,23 +230,20 @@ exports.getAddressesromUser = async function (req, res) {
 }
 
 exports.getUsers = async function (req, res) {
-    const [err, users] = await to(userService.getUsers(req.query));
+    const [err, data] = await to(userService.getUsers(req.query));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-    if (!users) return ReE(res, new Error('No users'), status_codes_msg.INVALID_ENTITY.code);
-    return ReS(res, { message: 'Users list', users: users }
+    if (!data) return ReE(res, new Error('No users'), status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: 'Users list', users: data.users, total: data.count }
         , status_codes_msg.SUCCESS.code);
 }
 
 
-
-
-
-const getUserPerPage = async function(req, res){
+const getUserPerPage = async function (req, res) {
     [err, user] = await to(authService.getUserperPage(req.params));
-    if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (user) {
-        return ReS(res, { message:'user.', data : user }
-                , status_codes_msg.SUCCESS.code);
+        return ReS(res, { message: 'user.', data: user }
+            , status_codes_msg.SUCCESS.code);
     }
 }
 module.exports.getUserPerPage = getUserPerPage;

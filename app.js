@@ -38,6 +38,9 @@ app.use("/uploads", express.static("uploads"));
 //Passport
 app.use(passport.initialize());
 
+
+
+
 //DATABASE
 const authmodels = require("./auth_models");
 authmodels.sequelize

@@ -152,7 +152,7 @@ module.exports = function (sequelize, DataTypes) {
 
   Model.prototype.getRefreshToken = function () {
     let refToken = randtoken.uid(16);
-    user.update({ confirmationCode: refToken });
+    user.update({ confirmationCode: refToken, lastLoginAt: Date.now() });
     return refToken;
 
   };
@@ -186,6 +186,24 @@ module.exports = function (sequelize, DataTypes) {
     if (err) TE(err);
 
     if (!pass) TE('invalid password');
+
+    return this;
+  }
+
+  Model.prototype.verifyPassword = async function (pw) {
+    let err, salt, pass;
+    if (!this.password) TE('password not set');
+
+    [err, salt] = await to(bcrypt.genSalt(10));
+    if (err) TE(err.message, true);
+
+    [err, hash] = await to(bcrypt.hash(pw, salt));
+    if (err) TE(err.message, true);
+
+    [err, pass] = await to(bcrypt_p.compare(pw, this.password));
+    if (err) TE(err);
+
+    if (!pass) TE('Invalid password');
 
     return this;
   }

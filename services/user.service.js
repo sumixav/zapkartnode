@@ -7,6 +7,7 @@ const Logger = require("../logger");
 const { STRINGS } = require("../utils/appStatics")
 const omit = require("lodash/omit")
 const map = require("lodash/map")
+const pick = require("lodash/pick")
 const parseStrings = require('parse-strings-in-object')
 
 const MAX_PAGE_LIMIT = 10;
@@ -119,9 +120,10 @@ module.exports.getUsers = async (params) => {
         ...getOrderQuery(sort),
         ...paginate(page, limit)
     }
-    Logger.info(dbQuery)
-    const [err, usersList] = await to(users.findAll(dbQuery))
+
+    // console.log(pick(dbQuery, 'where'))
+    const [err, data] = await to(users.findAndCountAll(dbQuery))
     if (err) TE(STRINGS.DB_ERROR + err.message);
-    if (!usersList) TE(STRINGS.NO_DATA)
-    return usersList
+    if (!data) TE(STRINGS.NO_DATA)
+    return { users: data.rows, count: data.count }
 }

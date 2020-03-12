@@ -8,6 +8,7 @@ const Logger = require("../logger");
 const { STRINGS } = require("../utils/appStatics")
 const cryptoRandomString = require("crypto-random-string")
 const parseStrings = require("parse-strings-in-object");
+const omit = require("lodash/omit")
 
 
 
@@ -113,7 +114,6 @@ module.exports.authUser = authUser;
 
 const updateUser = async function (user, userData) {
   userData = userBodyParam(param.body);
-
   [err, user] = await to(user.update(userData, { where: { id: user.id } }));
   if (err) TE(err.message);
   Logger.info(user);
@@ -311,13 +311,15 @@ module.exports.validateResetPasswordToken = async (params) => {
 
 module.exports.updatePassword = async (params, user) => {
   const { password, resetPasswordToken } = params
-  let updateQuery = { password }
+  let updateQuery = { password, passwordChangedAt: Date.now() }
   if (resetPasswordToken) updateQuery = {
     ...updateQuery,
     resetPasswordExpiresIn: null,
     resetPasswordToken: null,
     passwordChangedAt: Date.now()
   };
+
+
 
   const [err, updatedUser] = await to(user.update(
     updateQuery
@@ -333,18 +335,36 @@ module.exports.updatePassword = async (params, user) => {
 }
 
 
+exports.verifyPassword = async (params, user) => {
+  let [err, u] = await to(user.verifyPassword(params.currentPassword));
+  if (err) TE(err.message);
+  Logger.info(u, !u)
+  if (!u) TE("No user");
+  u = u.toWeb();
+  return omitProtectedFields(u);
+}
 
 
+omitProtectedFields = (user) => {
+  return omit(user, ['password',
+    'passwordChangedAt',
+    'confirmationCode',
+    'remember_token',
+    'resetPasswordToken',
+    'resetPasswordExpiresIn'])
+}
 
 
 const getUserperPage = async (param) => {
 
-    let {pagelimit,offset} = parseStrings(param)
-    
-    const [err, user] = await to(users.findAndCountAll({where:{active:1},
-    limit : pagelimit,offset:offset}));
-    if(err) { return TE(err.message); }
-      return user;
+  let { pagelimit, offset } = parseStrings(param)
+
+  const [err, user] = await to(users.findAndCountAll({
+    where: { active: 1 },
+    limit: pagelimit, offset: offset
+  }));
+  if (err) { return TE(err.message); }
+  return user;
 }
 module.exports.getUserperPage = getUserperPage;
 

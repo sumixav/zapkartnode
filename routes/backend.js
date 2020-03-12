@@ -6,6 +6,7 @@ const UserGroupController = require('../controllers/backend/userGroup.controller
 const MerchantController = require('../controllers/backend/merchant.controller');
 const GeoLocationController = require('../controllers/backend/geolocation.controller');
 const CartController = require('../controllers/backend/cart.controller');
+const CoupenController = require('../controllers/backend/coupen.controller');
 const Validate = require('../services/validate');
 const multer = require('multer')
 
@@ -29,7 +30,7 @@ router.get('/get-heart-beat-admin', function (req, res, next) {
 
 router.post('/users/register', userUpload, Validate.registerUser, UserController.create);
 router.post('/users/login', formupload.none(), UserController.login);
-router.patch('/users/update', userUpload, Validate.validateAuth, UserController.update);
+router.patch('/users/update', userUpload, passport.authenticate('jwt', { session: false }), UserController.update);
 router.get('/users', passport.authenticate('jwt', { session: false }), UserController.getUser);
 router.get('/usersperpage/:pagelimit/:offset', passport.authenticate('jwt', { session: false }), UserController.getUserPerPage);
 router.post('/userGroup/create/:role', formupload.none(), passport.authenticate('jwt', { session: false }), UserGroupController.create);
@@ -47,7 +48,8 @@ router.get('/state/:id', GeoLocationController.getState);
 router.get('/city/:id', GeoLocationController.getCity);
 
 
-router.post('/cart/create', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.create);
+// router.post('/cart/create', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.create);
+router.post('/cart/addToCart', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.addToCart);
 router.get('/cart', passport.authenticate('jwt', { session: false }), CartController.getCart);
 router.patch('/updatecart/:id', formupload.none(), CartController.updateCart);
 router.delete('/deletecart/:id', formupload.none(), CartController.deleteCart);
@@ -56,6 +58,7 @@ router.post('/users/gblogin', formupload.none(), UserController.gblogin);
 router.post('/users/forgotPassword', formupload.none(), Validate.forgotPassword, UserController.forgotPassword);
 router.patch('/users/updatePassword', passport.authenticate('jwt', { session: false }), formupload.none(), Validate.updatePassword, UserController.updatePassword);
 router.patch('/users/updatePasswordViaEmail', formupload.none(), Validate.updatePasswordEmail, UserController.updatePasswordViaEmail);
+router.post('/users/verifyPassword', passport.authenticate('jwt', { session: false }), formupload.none(), UserController.verifyPassword);
 router.post('/users/uploadPrescription', passport.authenticate('jwt', { session: false }), prescriptionUpload, Validate.prescriptionUpload, UserController.savePrescriptions);
 router.get('/users/getPrescriptions', passport.authenticate('jwt', { session: false }), UserController.getPrescriptionsFromUser);
 router.patch('/users/updatePrescriptions', passport.authenticate('jwt', { session: false }), prescriptionUpload, UserController.updatePrescriptions);

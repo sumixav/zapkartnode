@@ -31,6 +31,7 @@ module.exports.ReE = function (res, err, code) {
   }
 
   if (typeof code !== "undefined") res.statusCode = code;
+  else res.statusCode = 422;
 
   return res.json({ success: false, error: err });
 };
