@@ -20,13 +20,18 @@ module.exports = function(sequelize, DataTypes) {
         type:   DataTypes.ENUM,
         values: ['userGroup', 'individualUser']
       },
-      userId: {
+      isApplied: {
+        type:   DataTypes.ENUM,
+        values: ['yes', 'no'],
+        default:'no'
+      },
+      userMappingId: {
         type: DataTypes.INTEGER(11),
         allowNull: true,
-        references: {
-          model: ' users',
-          key: 'id'
-        }
+      },
+      label: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
       },
     },
      {
@@ -35,10 +40,7 @@ module.exports = function(sequelize, DataTypes) {
     
       Model.associate = function(models){
         this.coupen = this.belongsTo(models.coupens);
-      }; 
-      Model.associate = function(models){
-        this.user = this.belongsTo(models.users);
-      };  
+      };   
     return Model;
   };
   

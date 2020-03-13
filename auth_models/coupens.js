@@ -41,6 +41,10 @@ module.exports = function(sequelize, DataTypes) {
           type:   DataTypes.INTEGER(11),
           allowNull: true,
         },
+        deleted: {
+          type:   DataTypes.INTEGER(11),
+          default:0,
+        },
           createdBy: {
           type: DataTypes.INTEGER(11),
           allowNull: true,

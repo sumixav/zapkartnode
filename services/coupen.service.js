@@ -15,21 +15,22 @@ const parseStrings = require("parse-strings-in-object");
 
 
 exports.createCoupen = async (param) => {
-  const {name, validFrom, validTo, coupenTypeId, status,coupenCode, userGroupData, userData} = param;
+  const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData} = param;
   [err, coupenlists] = await to(coupens.create({createdBy:1,name,validFrom,validTo,coupenTypeId,status,coupenCode}));
   if(err) { return err; }
   let usermapping = '';
   if(coupenlists) {
-    const usergroup = JSON.parse(userData).map((values, index) => {
+    const usergroupData = JSON.parse(userData).map((values, index) => {
       let aValue = values.value;
-      return {'coupenId':coupenlists.id,'userId':aValue,'mappingType':'userGroup'};
+      let alabel = values.label;
+      return {'coupenId':coupenlists.id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
     });
-    let Stringarray = userGroupData.split(",");
+    let Stringarray = usergroup.split(",")||usergroup;
     const userD = Stringarray.map((values, index) => {
       let aValue = values;
-      return {'coupenId':coupenlists.id,'userId':aValue,'mappingType':'individualUser'};
+      return {'coupenId':coupenlists.id,'userMappingId':aValue,'mappingType':'userGroup'};
     });
-    usermapping = usergroup.concat(userD);
+    usermapping = usergroupData.concat(userD);
     [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
     if(err) { return err; }
   }
@@ -55,8 +56,7 @@ exports.getAllCoupen = async (query) => {
     }
   }
   let coupenlist, err = '';
-  [err, coupenlist] = await to(coupens.findAndCountAll({limit,offset:page,
-    include: [{model: coupen_types},{model: coupen_user_mappings}]}));
+  [err, coupenlist] = await to(coupens.findAndCountAll({where:{deleted:0},limit,offset:page}));
   if(err) { return err; }
   return coupenlist;
 };
@@ -71,10 +71,28 @@ module.exports.getCoupenId = getCoupenId;
 
 const updatecoupen = async (id, param) => {
   
-  console.log("hh",param);
-  [err,coupendetails ] = await to(coupens.update(param, {where: {id: id} }));
-      if(err) TE(err.message);
-  return coupendetails;
+    const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData,deleted} = param;
+  [err,coupenlists ] = await to(coupens.update(param, {where: {id: id} }));
+  if(err) TE(err.message);
+  let usermapping = '';
+  if(coupenlists && (userData || usergroup )) {
+    [err, deletecoupen] = await to(coupen_user_mappings.destroy({where: {coupenId:id,isApplied:'no'}}));
+    if(err) { return err; }
+    const usergroupData = JSON.parse(userData).map((values, index) => {
+      let aValue = values.value;
+      let alabel = values.label;
+      return {'coupenId':id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
+    });
+    let Stringarray = usergroup.split(",")||usergroup;
+    const userD = Stringarray.map((values, index) => {
+      let aValue = values;
+      return {'coupenId':id,'userMappingId':aValue,'mappingType':'userGroup'};
+    });
+    usermapping = usergroupData.concat(userD);
+    [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
+    if(err) { return err; }
+  }
+  return coupenlists;
 }
 
 module.exports.updatecoupen = updatecoupen;

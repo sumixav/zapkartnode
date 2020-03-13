@@ -114,10 +114,6 @@ module.exports = function (sequelize, DataTypes) {
   Model.associate = function (models) {
     this.prescriptions = this.hasMany(models.prescriptions);
   };
-
-  Model.associate = function(models){
-    this.coupenMapping = this.hasMany(models.coupen_user_mappings);
-  }; 
   
   Model.associate = function(models){
     this.coupen = this.hasMany(models.coupens);
