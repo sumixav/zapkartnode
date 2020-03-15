@@ -29,6 +29,67 @@ exports.addToCart = async (param) => {
   if (!user) TE("Unauthorized");
 
   // find active product
+  [err, product] = await to(Product.find({ _id: { $in: [productId] } }));
+  if (err) return err;
+  if (!product || product.length !== productId.length) {
+    TE("Product not found");
+  }
+  if (product.status === "hold") TE("Product no longer active");
+
+  [err, pricing] = await to(Pricing.findOne({ _id: product.pricing }));
+  if (err) TE(err.message);
+  if (!pricing) TE("Invalid product")
+  // find cart if exists to update
+  Logger.info('will execute find cart');
+  [err, cart] = await to(carts.findOne({ where: { userId: user.id, productId } }))
+  if (err) TE(err.message);
+
+  Logger.info(cart)
+
+  let updatedQty = (cart && cart !== null) ? cart.quantity + quantity : quantity;
+  if (updatedQty > product.maxOrderQty) {
+    updatedQty = product.maxOrderQty
+    // TE("Max limit reached")
+  }
+
+  if (updatedQty < product.minOrderQty)
+    TE(`Minimum ${product.minOrderQty} required`);
+
+  Logger.info('will save/ create cart');
+  // if existing cart
+  if (cart) { // existing cart
+    // cart.price = pricing.salePrice;
+    cart.quantity = updatedQty;
+    [err, cart] = await to(cart.save())
+    if (err) TE(err.message);
+    if (!cart) TE("No cart updated");
+    return cart
+  }
+
+  // create cart if not exist
+  if (!cart) { // create new cart
+    [err, cart] = await to(carts.create({
+      productId: product._id.toString(),
+      quantity: updatedQty,
+      price: pricing.salePrice,
+      userId: user.id,
+    }))
+    if (err) TE("Error creating cart. " + err.message);
+    if (!cart) TE("No cart created")
+    return cart
+  }
+
+};
+
+exports.addToCartOld = async (param) => {
+
+  let err, pricing, cart, product;
+  const { productId, quantity, user } = param;
+
+  // no user
+  if (!user) TE("Unauthorized");
+
+  // find active product
   [err, product] = await to(Product.findOne({ _id: productId }));
   if (err) return err;
   if (!product) {

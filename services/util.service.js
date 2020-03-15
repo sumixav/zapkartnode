@@ -68,12 +68,15 @@ module.exports.formatValidationError = function (errorArray) {
   return errorMessage;
 };
 
-module.exports.TE = TE = function (err_message, log) {
+module.exports.TE = TE = function (err_message, log, status) {
   // TE stands for Throw Error
   if (log === true) {
     console.error(err_message);
   }
-  throw new Error(err_message);
+  const error = new Error(err_message)
+  Logger.info(status)
+  if (status) error.status = status
+  throw error
 };
 
 exports.deleteFile = async path => {

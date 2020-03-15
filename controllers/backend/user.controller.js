@@ -1,11 +1,14 @@
 const { users } = require('../../auth_models');
 const authService = require('../../services/auth.service');
 const userService = require('../../services/user.service');
+const wishlistService = require('../../services/wishlist.service');
 const { to, ReE, ReS } = require('../../services/util.service');
 const { status_codes_msg } = require('../../utils/appStatics');
 const prescriptionService = require("../../services/prescription.service")
+const { STRINGS } = require("../../utils/appStatics")
 const Logger = require("../../logger");
 const omit = require('lodash/omit')
+const parseStrings = require('parse-strings-in-object')
 
 const create = async function (req, res) {
 
@@ -237,7 +240,6 @@ exports.getUsers = async function (req, res) {
         , status_codes_msg.SUCCESS.code);
 }
 
-
 const getUserPerPage = async function (req, res) {
     [err, user] = await to(authService.getUserperPage(req.params));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
@@ -247,4 +249,32 @@ const getUserPerPage = async function (req, res) {
     }
 }
 module.exports.getUserPerPage = getUserPerPage;
+
+/**
+ * add to wishlist for logged in users
+ */
+exports.addToWishlist = async function (req, res) {
+    const params = { userId: req.user.id, productId: req.body.productId }
+    const [err, wishlist] = await to(wishlistService.addToWishlist(params))
+    if (err) return ReE(res, err, err.message === STRINGS.WISHLIST_DUPLICATE_PRODUCT ? 409 : 422);
+    if (wishlist) return ReS(res, { message: 'Added to wishlist', wishlist },)
+}
+
+/**
+ * remove from wishlist for logged in users
+ */
+exports.removeFromWishlist = async function (req, res) {
+    const params = { userId: req.user.id, productId: req.body.productId }
+    const [err, wishlist] = await to(wishlistService.removeFromWishlist(params))
+    if (err) return ReE(res, err);
+    if (wishlist) return ReS(res, { message: 'Removed from wishlist', wishlist },)
+}
+
+
+exports.getWishlist = async function (req, res) {
+    const params = { userId: req.user.id, productId: req.body.productId }
+    const [err, wishlist] = await to(wishlistService.getWishlist(params))
+    if (err) return ReE(res, err);
+    if (wishlist) return ReS(res, { message: 'Wishlist', wishlist },)
+}
 

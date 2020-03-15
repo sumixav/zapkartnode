@@ -68,6 +68,12 @@ router.patch('/users/address/restore/:addressId', passport.authenticate('jwt', {
 router.patch('/users/address/:addressId', passport.authenticate('jwt', { session: false }), formupload.none(), Validate.validateAddress, UserController.editAddress);
 router.delete('/users/address/:addressId', passport.authenticate('jwt', { session: false }), formupload.none(), UserController.deleteAddress);
 router.get('/users/address', passport.authenticate('jwt', { session: false }), UserController.getAddressesromUser);
+
+// users wishlist
+router.post('/users/wishlist/add', passport.authenticate('jwt', { session: false }), formupload.none(), UserController.addToWishlist);
+router.delete('/users/wishlist/delete', passport.authenticate('jwt', { session: false }), formupload.none(), UserController.removeFromWishlist);
+router.get('/users/wishlist', passport.authenticate('jwt', { session: false }), UserController.getWishlist);
+
 router.get('/users/all', UserController.getUsers);
 
 

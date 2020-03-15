@@ -127,3 +127,4 @@ module.exports.getUsers = async (params) => {
     if (!data) TE(STRINGS.NO_DATA)
     return { users: data.rows, count: data.count }
 }
+

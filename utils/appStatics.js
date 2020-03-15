@@ -115,7 +115,8 @@ module.exports.STRINGS = {
   NO_DATA_DELETE:"Nothing to delete.",
   NO_DATA_RESTORE:"Nothing to restore.",
   RETREIVE_ERROR:"Error while retreiving data.",
-  RESTORE_ERROR:"Error restoring data."
+  RESTORE_ERROR:"Error restoring data.",
+  WISHLIST_DUPLICATE_PRODUCT:"Product already in wishlist"
 };
 
 module.exports.PAGE_LIMIT = 0;
