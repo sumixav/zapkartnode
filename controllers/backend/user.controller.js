@@ -174,7 +174,6 @@ exports.savePrescriptions = async function (req, res) {
         , status_codes_msg.SUCCESS.code);
 }
 
-
 exports.updatePrescriptions = async function (req, res) {
     const [errUpdate, prescriptions] = await to(prescriptionService.updatePrescriptions(req));
     if (errUpdate) return ReE(res, errUpdate, status_codes_msg.INVALID_ENTITY.code);

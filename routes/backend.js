@@ -50,6 +50,7 @@ router.get('/city/:id', GeoLocationController.getCity);
 
 // router.post('/cart/create', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.create);
 router.post('/cart/addToCart', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.addToCart);
+router.post('/cart/create', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.create);
 router.get('/cart', passport.authenticate('jwt', { session: false }), CartController.getCart);
 router.patch('/updatecart/:id', formupload.none(), CartController.updateCart);
 router.delete('/deletecart/:id', formupload.none(), CartController.deleteCart);
@@ -75,12 +76,10 @@ router.delete('/users/wishlist/delete', passport.authenticate('jwt', { session: 
 router.get('/users/wishlist', passport.authenticate('jwt', { session: false }), UserController.getWishlist);
 
 router.get('/users/all', UserController.getUsers);
-
-
-router.post('/coupen/create', formupload.none(), CoupenController.create);
-router.get('/coupen', CoupenController.getAllCoupen);
-router.get('/coupen/:id', CoupenController.getCoupen);
-router.patch('/updatecoupen/:id', formupload.none(), CoupenController.updateCoupen);
-
+router.post(  '/coupen/create', formupload.none(),CoupenController.create);
+router.get(  '/coupen', CoupenController.getAllCoupen);
+router.get(   '/coupen/:id' ,CoupenController.getCoupen);
+router.patch(  '/updatecoupen/:id'  ,formupload.none(), CoupenController.updateCoupen);
+router.get(  '/coupensection', CoupenController.getAllCoupenSection);
 
 module.exports = router;
