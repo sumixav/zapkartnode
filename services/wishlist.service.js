@@ -30,7 +30,7 @@ module.exports.getWishlist = async params => {
     const [err, data] = await to(
         Wishlist.findOne({
             user: userId
-        }).populate("products")
+        }).populate({ path: "products", populate: "pricing" })
     );
     if (err) TE(STRINGS.DB_ERROR + err.message);
     if (!data) TE(STRINGS.NO_DATA);
@@ -43,7 +43,7 @@ module.exports.getWishlist = async params => {
  * @param {string} params.productId
  */
 exports.addToWishlist = async params => {
-    
+
     const { productId, userId } = params;
 
     Logger.info(productId, userId, Product);
@@ -83,7 +83,7 @@ exports.addToWishlist = async params => {
     if (errD) TE(errD.message);
     if (!updatedWishlist) TE("Error saving wishlist");
 
-    return Wishlist.populate(updatedWishlist, "products");
+    return Wishlist.populate(updatedWishlist, { path: "products", populate: "pricing" });
 };
 
 /**
@@ -130,5 +130,5 @@ exports.removeFromWishlist = async params => {
     if (errD) TE(errD.message);
     if (!updatedWishlist) TE("Error saving wishlist");
 
-    return Wishlist.populate(updatedWishlist, "products");
+    return Wishlist.populate(updatedWishlist, { path: "products", populate: "pricing" });
 };
