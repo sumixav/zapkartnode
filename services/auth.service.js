@@ -229,7 +229,7 @@ const authGbUser = async function (userInfo) {
         {
           email: userInfo.loginId,
           socialMediaId: userInfo.id,
-          socialType: "facebook"
+          socialType: "google"
         }
       ]
     })
