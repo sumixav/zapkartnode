@@ -63,7 +63,8 @@ module.exports.getPrescriptionsFromUser = async (userId) => {
         }
     }))
     if (err) TE(err.message);
-    if (!list || list.length === 0) TE(new Error('No prescriptions'));
+    // if (!list || list.length === 0) TE(new Error('No prescriptions'));
+    if (!list) TE(new Error('No prescriptions'));
     return list
 }
 
@@ -109,7 +110,7 @@ module.exports.updatePrescriptions = async (req) => {
 
 
     const [errDoc, pres] = await to(this.getPrescriptionsFromUser(req.user.id))
-    if (errDoc) TE("Error while fetching after updating")
+    if (errDoc) TE("Error while fetching after updating" + errDoc.message) 
     if (!pres) TE("No such data")
     return pres
 }
