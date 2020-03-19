@@ -4,6 +4,63 @@ const parseStrings = require("parse-strings-in-object");
 
 const cartService = require("../../services/cart.service");
 
+module.exports.removeFromCart = async(req, res, next) => {
+  
+  const param = { productId: req.body.productId, userId: req.user.id };
+  try {
+    [err, cart] = await to(cartService.removeFromCart(param));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (cart) {
+      return ReS(
+        res,
+        { message: "Deleted from cart", data: cart },
+        status_codes_msg.CREATED.code
+      );
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
+module.exports.restoreToCart = async(req, res, next) => {
+  const param = { productId: req.body.productId, userId: req.user.id };
+  try {
+    [err, cart] = await to(cartService.restoreToCart(param));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (cart) {
+      return ReS(
+        res,
+        { message: "Restored product to cart", data: cart },
+        status_codes_msg.CREATED.code
+      );
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+module.exports.addToCartGuestToLogged = async(req, res, next) => {
+  const user = req.user;
+  let {products} = req.body;
+
+  //each object - productId, quantity
+  products = products.map(i => ({...i, quantity: parseInt(i.quantity)}))
+  
+  const param = { products,userId: req.user.id };
+  try {
+    [err, cart] = await to(cartService.addToCartFromGuestToLogged(param));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (cart) {
+      return ReS(
+        res,
+        { message: "Cart added", data: cart },
+        status_codes_msg.CREATED.code
+      );
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
 module.exports.addToCart = async(req, res, next) => {
   const user = req.user;
   const qty = parseStrings({ quantity: req.body.quantity });

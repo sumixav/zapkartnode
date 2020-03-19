@@ -27,7 +27,8 @@ module.exports = function (sequelize, DataTypes) {
   },
     {
 
-      tableName: 'carts'
+      tableName: 'carts',
+      paranoid:true
     });
 
   Model.associate = function (models) {

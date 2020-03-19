@@ -50,6 +50,9 @@ router.get('/city/:id', GeoLocationController.getCity);
 
 // router.post('/cart/create', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.create);
 router.post('/cart/addToCart', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.addToCart);
+router.post('/cart/addMultipleToCart', passport.authenticate('jwt', { session: false }), CartController.addToCartGuestToLogged);
+router.post('/cart/removeFromCart', passport.authenticate('jwt', { session: false }), CartController.removeFromCart);
+router.post('/cart/restoreToCart', passport.authenticate('jwt', { session: false }), CartController.restoreToCart);
 router.get('/cart', passport.authenticate('jwt', { session: false }), CartController.getCart);
 router.patch('/updatecart/:id', formupload.none(), CartController.updateCart);
 router.delete('/deletecart/:id', formupload.none(), CartController.deleteCart);
