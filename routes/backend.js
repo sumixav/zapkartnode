@@ -6,6 +6,8 @@ const MerchantController 	    = require('../controllers/backend/merchant.control
 const GeoLocationController 	    = require('../controllers/backend/geolocation.controller');
 const CartController 	    = require('../controllers/backend/cart.controller');
 const CoupenController 	    = require('../controllers/backend/coupen.controller');
+const PaymentController     = require('../controllers/backend/payment.controller');
+const OrderController     = require('../controllers/backend/order.controller');
 const Validate                    = require('../services/validate');
 const multer  = require('multer')
 const formupload = multer()
@@ -68,5 +70,8 @@ router.get(  '/coupen', CoupenController.getAllCoupen);
 router.get(   '/coupen/:id' ,CoupenController.getCoupen);
 router.patch(  '/updatecoupen/:id'  ,formupload.none(), CoupenController.updateCoupen);
 router.get(  '/coupensection', CoupenController.getAllCoupenSection);
+router.get(  '/paymentmethod', PaymentController.getPaymentMethod);
+router.get(   '/coupenDetail/:name' ,CoupenController.getCoupenDetails);
+router.post(  '/order/create', passport.authenticate('jwt', { session: false }),formupload.none(),OrderController.create);
 
 module.exports = router;

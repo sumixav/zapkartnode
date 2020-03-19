@@ -23,6 +23,18 @@ module.exports = function(sequelize, DataTypes) {
       userId: {
       type: DataTypes.INTEGER(11),
       allowNull: true
+    },
+    prescriptionId: {
+      type: DataTypes.INTEGER(11),
+      allowNull: true
+    },
+    prescriptionUploded: {
+      type:   DataTypes.ENUM,
+      values: ['yes', 'no']
+    },
+    prescriptionRequired: {
+      type:   DataTypes.ENUM,
+      values: ['yes', 'no']
     }
 
     }, {
