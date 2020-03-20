@@ -86,7 +86,8 @@ const productsSchema = Schema(
       type: Number,
       required: function() {
         return this.returnable;
-      }
+      },
+      default:null
     },
     priorityOrder: {
       type: Number,

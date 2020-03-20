@@ -1,5 +1,5 @@
 
-const { users, address } = require("../auth_models");
+const { users, address, business_location_details: businessLocations, shipping_rates: shippingRates } = require("../auth_models");
 const { to, TE, paginate, getSearchQuery, getOrderQuery } = require("../services/util.service");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -89,9 +89,9 @@ module.exports.getAddressesFromUser = async (userId) => {
         },
         attributes: {
             exclude: ["deletedAt"]
-        }
-    }))
-    if (err) TE(STRINGS.DB_ERROR);
+        },
+    }));
+    if (err) TE(STRINGS.DB_ERROR + err.message);
     if (!addressList) TE(STRINGS.NO_DATA)
     return addressList
 }

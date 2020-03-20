@@ -68,7 +68,7 @@ module.exports = function (sequelize, DataTypes) {
       values: ['home', 'office', 'other'],
       allowNull: true,
       default:'other'
-    }
+    },
   },
     {
       tableName: 'address',

@@ -1021,9 +1021,14 @@ exports.editProduct = async (params, query) => {
   const promises = await Object.entries(params).map(async ([key, value]) => {
     switch (key) {
       case "returnable":
-        if (value === "false");
+
+        const boolRet = parseStrings({ returnable: value })
+        Logger.info(boolRet)
         // product.returnPeriod = undefined;
+        product.returnable = boolRet.returnable;
+        if (!boolRet.returnable)
         product.returnPeriod = null;
+        Logger.info(product)
         break;
       case "deletedImages":
         value.map(i => product.images.pull({ _id: i }));
@@ -1188,64 +1193,64 @@ exports.restoreProduct = async id => {
 };
 
 exports.getProductFilterAggregate = async (param) => {
-  const {category,brand,status, sort}= param;
+  const { category, brand, status, sort } = param;
   let brandItems = [];
-  let queryString = [{ $project:{ "_v": 0 }}];
-  let productsortlist, pricelookup, productmatch,categorylookup, categoryunwind, categorymatch, brandlookup, brandunwind, brandmatch, sortlist = {};
-   if(status) {
-    productmatch = [ {$match: { 'status': status}}];
-   }
-   if(sort) {
-    productsortlist = [ {$sort: {"pricing.salePrice" : sort.salePrice, "priorityOrder":sort.priorityOrder}}];
-   }
-   pricelookup = [
+  let queryString = [{ $project: { "_v": 0 } }];
+  let productsortlist, pricelookup, productmatch, categorylookup, categoryunwind, categorymatch, brandlookup, brandunwind, brandmatch, sortlist = {};
+  if (status) {
+    productmatch = [{ $match: { 'status': status } }];
+  }
+  if (sort) {
+    productsortlist = [{ $sort: { "pricing.salePrice": sort.salePrice, "priorityOrder": sort.priorityOrder } }];
+  }
+  pricelookup = [
     {
-      $lookup:{
-        from:'pricings',
-        localField:'pricing',
-        foreignField:'_id',
-        as:'pricing'
-    },
+      $lookup: {
+        from: 'pricings',
+        localField: 'pricing',
+        foreignField: '_id',
+        as: 'pricing'
+      },
     }
-   ];
-  if(category){
-    let categoryCondition = isValidId(category)?
-    mongoose.Types.ObjectId(category)
-    :category;
-  
-     categorylookup = [ {
+  ];
+  if (category) {
+    let categoryCondition = isValidId(category) ?
+      mongoose.Types.ObjectId(category)
+      : category;
+
+    categorylookup = [{
       $lookup: {
         from: 'categories',
         localField: 'category',
         foreignField: '_id',
         as: 'categories'
-        },
-      }
-      ];
-     categoryunwind = [ { $unwind: '$categories'} ];
-     categorymatch = [ {$match: { 'categories.slug':{$in: [categoryCondition]} }} ];
-     queryString = [...queryString,...categorylookup,...categoryunwind,...categorymatch];
+      },
+    }
+    ];
+    categoryunwind = [{ $unwind: '$categories' }];
+    categorymatch = [{ $match: { 'categories.slug': { $in: [categoryCondition] } } }];
+    queryString = [...queryString, ...categorylookup, ...categoryunwind, ...categorymatch];
   }
 
-  if(brand){
-    brand.map(i => (isValidId(i))?brandItems.push(mongoose.Types.ObjectId(i)):brandItems.push(i));
-    brandlookup = [ {
+  if (brand) {
+    brand.map(i => (isValidId(i)) ? brandItems.push(mongoose.Types.ObjectId(i)) : brandItems.push(i));
+    brandlookup = [{
       $lookup: {
         from: 'brands',
         localField: 'brand',
         foreignField: '_id',
         as: 'brand'
-        },
-      }
-      ];
-     brandunwind = [ { $unwind: '$brand'} ];
-     brandmatch = (isValidId(brand[0]))?[ {$match: { 'brand.id':{$in: brandItems} }} ]:[ {$match: { 'brand.slug':{$in: brandItems} }} ];
-     queryString = [...queryString,...brandlookup,...brandunwind,...brandmatch];
+      },
+    }
+    ];
+    brandunwind = [{ $unwind: '$brand' }];
+    brandmatch = (isValidId(brand[0])) ? [{ $match: { 'brand.id': { $in: brandItems } } }] : [{ $match: { 'brand.slug': { $in: brandItems } } }];
+    queryString = [...queryString, ...brandlookup, ...brandunwind, ...brandmatch];
   }
-  queryString = [...queryString,...pricelookup,...productmatch,...productsortlist];
-  
+  queryString = [...queryString, ...pricelookup, ...productmatch, ...productsortlist];
+
   const docs_collection = await Product.aggregate(queryString).exec();
-  
+
   return {
     products: docs_collection
   };

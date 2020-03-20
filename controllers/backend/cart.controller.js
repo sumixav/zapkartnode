@@ -1,6 +1,7 @@
 const { to, ReE, ReS } = require("../../services/util.service");
 const { status_codes_msg } = require("../../utils/appStatics");
 const parseStrings = require("parse-strings-in-object");
+const Logger= require("../../logger")
 
 const cartService = require("../../services/cart.service");
 
@@ -41,6 +42,8 @@ module.exports.restoreToCart = async(req, res, next) => {
 module.exports.addToCartGuestToLogged = async(req, res, next) => {
   const user = req.user;
   let {products} = req.body;
+
+  Logger.info('req.body', req.body)
 
   //each object - productId, quantity
   products = products.map(i => ({...i, quantity: parseInt(i.quantity)}))

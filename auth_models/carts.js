@@ -23,22 +23,37 @@ module.exports = function (sequelize, DataTypes) {
     userId: {
       type: DataTypes.INTEGER(11),
       allowNull: true
+    },
+    prescriptionId: {
+      type: DataTypes.INTEGER(11),
+      allowNull: true,
+      default: null
+    },
+    prescriptionUploded: {
+      type: DataTypes.ENUM,
+      values: ['yes', 'no'],
+      default: 'no'
+    },
+    prescriptionRequired: {
+      type: DataTypes.ENUM,
+      values: ['yes', 'no'],
+      default:'no'
     }
   },
-    {
+{
 
-      tableName: 'carts',
-      paranoid:true
-    });
+  tableName: 'carts',
+  paranoid: true
+});
 
-  Model.associate = function (models) {
-    this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
-  };
+Model.associate = function (models) {
+  this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
+};
 
-  Model.prototype.toWeb = function () {
-    let json = this.toJSON();
-    return json;
-  };
+Model.prototype.toWeb = function () {
+  let json = this.toJSON();
+  return json;
+};
 
-  return Model;
+return Model;
 };

@@ -4,6 +4,8 @@ const router = express.Router();
 const UserController = require('../controllers/backend/user.controller');
 const UserGroupController = require('../controllers/backend/userGroup.controller');
 const MerchantController = require('../controllers/backend/merchant.controller');
+const ShippingRateController = require('../controllers/backend/shippingRate.controller');
+const BusinessLocationController = require('../controllers/backend/businessLocation.controller');
 const GeoLocationController = require('../controllers/backend/geolocation.controller');
 const CartController = require('../controllers/backend/cart.controller');
 const CoupenController = require('../controllers/backend/coupen.controller');
@@ -43,6 +45,20 @@ router.get('/merchant', MerchantController.getAllMerchant);
 router.get('/merchant/:id', MerchantController.getMerchant);
 router.patch('/updatemerchant/:id', formupload.none(), MerchantController.updateMerchant);
 
+router.get('/shippingRate/', ShippingRateController.getAllShippingRates);
+router.post('/shippingRate/create', formupload.none(), ShippingRateController.createshippingRate);
+router.get('/shippingRate/:id', ShippingRateController.getshippingRate);
+router.patch('/shippingRate/:id', formupload.none(), ShippingRateController.editshippingRates);
+router.delete('/shippingRate/:id', ShippingRateController.deleteshippingRate);
+router.patch('/shippingRate/restore/:id', ShippingRateController.restoreShippingRate);
+
+router.get('/businessLocation/', BusinessLocationController.getAllbusinessLocations);
+router.post('/businessLocation/create', formupload.none(), BusinessLocationController.createbusinessLocation);
+router.get('/businessLocation/:id', BusinessLocationController.getbusinessLocation);
+router.patch('/businessLocation/:id', formupload.none(), BusinessLocationController.editbusinessLocations);
+router.delete('/businessLocation/:id', BusinessLocationController.deletebusinessLocation);
+router.patch('/businessLocation/restore/:id', BusinessLocationController.restorebusinessLocation);
+
 router.get('/country', GeoLocationController.getAllCountry);
 router.get('/state/:id', GeoLocationController.getState);
 router.get('/city/:id', GeoLocationController.getCity);
@@ -51,7 +67,7 @@ router.get('/city/:id', GeoLocationController.getCity);
 // router.post('/cart/create', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.create);
 router.post('/cart/addToCart', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.addToCart);
 router.post('/cart/addMultipleToCart', passport.authenticate('jwt', { session: false }), CartController.addToCartGuestToLogged);
-router.post('/cart/removeFromCart', passport.authenticate('jwt', { session: false }), CartController.removeFromCart);
+router.post('/cart/removeFromCart', formupload.none(), passport.authenticate('jwt', { session: false }), CartController.removeFromCart);
 router.post('/cart/restoreToCart', passport.authenticate('jwt', { session: false }), CartController.restoreToCart);
 router.get('/cart', passport.authenticate('jwt', { session: false }), CartController.getCart);
 router.patch('/updatecart/:id', formupload.none(), CartController.updateCart);
