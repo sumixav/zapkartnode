@@ -93,7 +93,8 @@ exports.createProduct = async param => {
     outOfStockStatus,
     subtract,
     textDescription,
-    organic
+    organic,
+    relatedProducts
   } = parsedParam;
 
   const attributes = JSON.parse(attributesJSON);
@@ -287,7 +288,8 @@ exports.createProduct = async param => {
     deleted: false,
     stock: stockDoc._id,
     textDescription,
-    productExtraInfo: productExtraInfoDoc._id
+    productExtraInfo: productExtraInfoDoc._id,
+    relatedProducts
 
     // mainImage: mainImageDoc
   });
@@ -318,7 +320,7 @@ exports.createProduct = async param => {
   Logger.info("prodExtraInfoDoc", prodExtraInfoDoc);
   return Product.populate(
     newProductDoc,
-    "category composition pricing medicineType stock productExtraInfo"
+    "category composition pricing medicineType stock productExtraInfo relatedProducts"
   );
 };
 
@@ -801,6 +803,12 @@ exports.getAllProducts = async query => {
   let select = {};
   Object.entries(queryParsed).forEach(([key, value]) => {
     switch (key) {
+      case "search":
+        console.log(key, value, value.name)
+        if (value.name)
+          dbQuery = { ...dbQuery, name: { $regex: value.name, $options: "i" } };
+        // db.getCollection('products').find({name:{$regex:/hea/,$options:"i"}, sku:{$regex:/h22/,$options:"i"}},{sku:1})
+        break;
       case "organic":
         dbQuery = { ...dbQuery, organic: { $in: organic } };
         break;
@@ -862,19 +870,21 @@ exports.getAllProducts = async query => {
 
   const products = await Product.find(dbQuery)
     .select(select)
-    .sort({ [sortField]: sortOrder })
+    // .sort({ [sortField]: sortOrder })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate("category", "name images seo")
     .populate("composition", "_id deleted name slug")
     .populate("organic", "_id deleted name slug")
     .populate("brand", "_id deleted name slug image")
-    .populate("pricing", "listPrice salePrice startDate endDate taxId")
+    // .populate({path: 'pricing', select:"listPrice salePrice startDate endDate taxId", options: { sort: { 'salePrice': -1 } } })
+    .populate({ path: 'pricing', select: "listPrice salePrice startDate endDate taxId" })
     .populate("attributes.attributeGroup", "name status attribute_group_code")
     .populate("attributes.value", "value status")
     .populate("medicineType")
-    .populate("stock")
-    .populate("productExtraInfo");
+    .populate({ path: "stock", options: { sort: { "quantity": -1 } } })
+    .populate("productExtraInfo")
+
   // if (!products || products.length === 0) {
   //   const err = new Error("No products");
   //   throw err;
@@ -979,7 +989,8 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
     .populate("attributes.value", "value status")
     .populate("medicineType")
     .populate("stock")
-    .populate("productExtraInfo");
+    .populate("productExtraInfo")
+    .populate("relatedProducts", "_id slug name");
   Logger.info(product);
   if (product.length === 0) throw new Error(STRINGS.NOT_EXIST);
   return product[0];
@@ -1027,7 +1038,7 @@ exports.editProduct = async (params, query) => {
         // product.returnPeriod = undefined;
         product.returnable = boolRet.returnable;
         if (!boolRet.returnable)
-        product.returnPeriod = null;
+          product.returnPeriod = null;
         Logger.info(product)
         break;
       case "deletedImages":

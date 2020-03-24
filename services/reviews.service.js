@@ -1,5 +1,5 @@
 
-const { users, address, business_location_details: businessLocations, shipping_rates: shippingRates } = require("../auth_models");
+const { reviews, users, order_masters } = require("../auth_models");
 const { to, TE, paginate, getSearchQuery, getOrderQuery } = require("../services/util.service");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -12,8 +12,8 @@ const parseStrings = require('parse-strings-in-object')
 
 const MAX_PAGE_LIMIT = 10;
 
-module.exports.addAddress = async (params, user) => {
-    const [err, newAddr] = await to(address.create({
+module.exports.addReview = async (params, user) => {
+    const [err, newAddr] = await to(review.create({
         ...params,
         userId: user.id
     }));
@@ -24,8 +24,8 @@ module.exports.addAddress = async (params, user) => {
 
 
 
-module.exports.updateAddress = async (params, user) => {
-    const [err, count] = await to(address.update(
+module.exports.updateReview = async (params, user) => {
+    const [err, count] = await to(review.update(
         { ...params },
         {
             where: {
@@ -37,7 +37,7 @@ module.exports.updateAddress = async (params, user) => {
     if (!count || count === 0) TE(STRINGS.NO_DATA_DELETE + ' ' + err.message)
     if (err) TE(STRINGS.UPDATE_ERROR + ' ' + err.message)
 
-    const [errFind, updatedAddr] = await to(address.findOne({
+    const [errFind, updatedAddr] = await to(review.findOne({
         where: {
             id: params.id,
             userId: user.id
@@ -48,8 +48,8 @@ module.exports.updateAddress = async (params, user) => {
     return updatedAddr;
 }
 
-module.exports.deleteAddress = async (id, user) => {
-    const [err, count] = await to(address.destroy(
+module.exports.deleteReview = async (id, user) => {
+    const [err, count] = await to(review.destroy(
         {
             where: {
                 userId: user.id,
@@ -63,8 +63,8 @@ module.exports.deleteAddress = async (id, user) => {
     return true
 }
 
-module.exports.restoreAddress = async (id, user) => {
-    const [errD, validData] = await to(address.findOne({
+module.exports.restoreReview = async (id, user) => {
+    const [errD, validData] = await to(review.findOne({
         where: {
             userId: user.id,
             id
@@ -82,8 +82,8 @@ module.exports.restoreAddress = async (id, user) => {
     return restored
 }
 
-module.exports.getAddressesFromUser = async (userId) => {
-    const [err, addressList] = await to(address.findAll({
+module.exports.getReviewesFromUser = async (userId) => {
+    const [err, reviewList] = await to(review.findAll({
         where: {
             userId
         },
@@ -95,19 +95,19 @@ module.exports.getAddressesFromUser = async (userId) => {
         ]
     }));
     if (err) TE(STRINGS.DB_ERROR + err.message);
-    if (!addressList) TE(STRINGS.NO_DATA)
-    return addressList
+    if (!reviewList) TE(STRINGS.NO_DATA)
+    return reviewList
 }
 
 /**
- * filter users from various parameters
+ * filter reviews from various parameters
  * @param {number} params.page
  * @param {number} params.limit
  * @param {string} params.search
  * @param {string} params.sort
  * @param {Object} params.query rest of query for filtering
  */
-module.exports.getUsers = async (params) => {
+module.exports.getReviews = async (params) => {
     const parsedParams = parseStrings(params);
     const { page = 1, limit = MAX_PAGE_LIMIT, search = {}, sort = {} } = parsedParams;
     Logger.info(parsedParams);
@@ -125,9 +125,9 @@ module.exports.getUsers = async (params) => {
     }
 
     // console.log(pick(dbQuery, 'where'))
-    const [err, data] = await to(users.findAndCountAll(dbQuery))
+    const [err, data] = await to(reviews.findAndCountAll(dbQuery))
     if (err) TE(STRINGS.DB_ERROR + err.message);
     if (!data) TE(STRINGS.NO_DATA)
-    return { users: data.rows, count: data.count }
+    return { reviews: data.rows, count: data.count }
 }
 
