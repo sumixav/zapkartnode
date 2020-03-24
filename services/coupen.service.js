@@ -102,3 +102,11 @@ exports.getAllCoupenSection = async () => {
   if(err) { return err; }
   return coupensectionlist;
 }
+
+const getCoupenDetail = async (id) => {
+  [err, coupenlist] = await to(coupens.find({where: { coupenCode: id }}));
+  if(err) { return err; }
+  return coupenlist;
+}
+
+module.exports.getCoupenDetail = getCoupenDetail;

@@ -1,5 +1,5 @@
 
-const { reviews, users, order_masters } = require("../auth_models");
+const { reviews, users, order_masters, order_items } = require("../auth_models");
 const { to, TE, paginate, getSearchQuery, getOrderQuery } = require("../services/util.service");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -12,47 +12,65 @@ const parseStrings = require('parse-strings-in-object')
 
 const MAX_PAGE_LIMIT = 10;
 
-module.exports.addReview = async (params, user) => {
-    const [err, newAddr] = await to(review.create({
-        ...params,
-        userId: user.id
+/**
+ * add new review
+ * @param {int} userId
+ * @param {object} params
+ * @param {int} params.orderId
+ * @param {int} params.productId
+ * @param {string} params.text
+ */
+module.exports.addReview = async (params, userId) => {
+    const { orderId, productId } = params;
+
+    // check if it is ordered product
+    const [errA, orderProduct] = await to(order_items.findOne({ where: { productId, orderMasterId: orderId } }));
+    if (errA) TE(errA.message)
+    if (!orderProduct) TE("Not authorisied to post review. Invalid order details")
+
+    // create review for ordered product
+    const [errB, review] = await to(reviews.create({
+        ...params, userId
     }));
-    if (!newAddr) TE(STRINGS.ADD_ERROR + ' ' + err.message)
-    if (err) TE(STRINGS.ADD_ERROR + ' ' + err.message)
-    return newAddr
+    if (errB) TE("Error creating review. " + errB.message);
+    if (!review) TE("Error creating review");
+    return review;
 }
 
-
-
-module.exports.updateReview = async (params, user) => {
-    const [err, count] = await to(review.update(
-        { ...params },
+/**
+ * edit review with review ID
+ * @param {int} reviewId
+ */
+module.exports.updateReview = async (params, reviewId) => {
+    const { text } = params;
+    const [errA, count] = await to(reviews.update(
+        { text },
         {
             where: {
-                id: params.id,
-                userId: user.id
+                id: reviewId,
+
             }
         },
     ));
     if (!count || count === 0) TE(STRINGS.NO_DATA_DELETE + ' ' + err.message)
-    if (err) TE(STRINGS.UPDATE_ERROR + ' ' + err.message)
+    if (errA) TE(STRINGS.UPDATE_ERROR + ' ' + errA.message)
 
-    const [errFind, updatedAddr] = await to(review.findOne({
+    const [errB, updatedAddr] = await to(review.findOne({
         where: {
             id: params.id,
             userId: user.id
         }
     }))
-    if (errFind) TE(STRINGS.RETREIVE_ERROR + errFind.message);
+    if (errB) TE(STRINGS.RETREIVE_ERROR + errB.message);
     if (!updatedAddr) TE(STRINGS.NO_DATA);
     return updatedAddr;
 }
 
-module.exports.deleteReview = async (id, user) => {
+module.exports.deleteReview = async (id) => {
     const [err, count] = await to(review.destroy(
         {
             where: {
-                userId: user.id,
+
                 id
             },
             paranoid: true
@@ -63,10 +81,10 @@ module.exports.deleteReview = async (id, user) => {
     return true
 }
 
-module.exports.restoreReview = async (id, user) => {
+module.exports.restoreReview = async (id) => {
     const [errD, validData] = await to(review.findOne({
         where: {
-            userId: user.id,
+            // userId: userId,
             id
         },
         paranoid: false
@@ -82,7 +100,7 @@ module.exports.restoreReview = async (id, user) => {
     return restored
 }
 
-module.exports.getReviewesFromUser = async (userId) => {
+module.exports.getUserReviews = async (userId) => {
     const [err, reviewList] = await to(review.findAll({
         where: {
             userId
@@ -90,7 +108,7 @@ module.exports.getReviewesFromUser = async (userId) => {
         attributes: {
             exclude: ["deletedAt"]
         },
-        order:[
+        order: [
             ['updatedAt', 'DESC']
         ]
     }));
@@ -103,22 +121,22 @@ module.exports.getReviewesFromUser = async (userId) => {
  * filter reviews from various parameters
  * @param {number} params.page
  * @param {number} params.limit
- * @param {string} params.search
  * @param {string} params.sort
- * @param {Object} params.query rest of query for filtering
+ * @param {int} productId 
  */
-module.exports.getReviews = async (params) => {
+module.exports.getProductReviews = async (params) => {
     const parsedParams = parseStrings(params);
     const { page = 1, limit = MAX_PAGE_LIMIT, search = {}, sort = {} } = parsedParams;
     Logger.info(parsedParams);
     const query = omit(parsedParams, ['page', 'limit', 'search', 'sort']);
     const dbQuery = {
         where: {
-            ...query, //filter by this query
-            ...getSearchQuery(search)
+            productId: params.productId
+            // ...query, //filter by this query
+            // ...getSearchQuery(search)
         },
         attributes: {
-            exclude: ["deletedAt", "password"]
+            exclude: ["deletedAt"]
         },
         ...getOrderQuery(sort),
         ...paginate(page, limit)

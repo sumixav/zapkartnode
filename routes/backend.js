@@ -5,13 +5,15 @@ const UserController = require('../controllers/backend/user.controller');
 const UserGroupController = require('../controllers/backend/userGroup.controller');
 const MerchantController = require('../controllers/backend/merchant.controller');
 const ShippingRateController = require('../controllers/backend/shippingRate.controller');
+const ReviewsController = require('../controllers/backend/review.controller');
 const BusinessLocationController = require('../controllers/backend/businessLocation.controller');
 const GeoLocationController = require('../controllers/backend/geolocation.controller');
 const CartController = require('../controllers/backend/cart.controller');
 const CoupenController = require('../controllers/backend/coupen.controller');
+const PaymentController = require('../controllers/backend/payment.controller');
+const OrderController = require('../controllers/backend/order.controller');
 const Validate = require('../services/validate');
 const multer = require('multer')
-
 
 const formupload = multer()
 const passport = require('passport');
@@ -51,6 +53,15 @@ router.get('/shippingRate/:id', ShippingRateController.getshippingRate);
 router.patch('/shippingRate/:id', formupload.none(), ShippingRateController.editshippingRates);
 router.delete('/shippingRate/:id', ShippingRateController.deleteshippingRate);
 router.patch('/shippingRate/restore/:id', ShippingRateController.restoreShippingRate);
+
+// reviews
+router.get('/reviews/:productId', ReviewsController.getProductReviews);
+router.get('/reviews/', passport.authenticate('jwt', { session: false }),ReviewsController.getUserReviews);
+router.get('/reviews/:userId', passport.authenticate('jwt', { session: false }),ReviewsController.getUserReviews);
+router.post('/reviews/create', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.addReview);
+router.patch('/reviews/:id', formupload.none(), ReviewsController.editReview);
+router.delete('/reviews/:id', ReviewsController.deleteReview);
+router.patch('/reviews/restore/:id', ReviewsController.restoreReview);
 
 router.get('/businessLocation/', BusinessLocationController.getAllbusinessLocations);
 router.post('/businessLocation/create', formupload.none(), BusinessLocationController.createbusinessLocation);
@@ -99,5 +110,8 @@ router.get(  '/coupen', CoupenController.getAllCoupen);
 router.get(   '/coupen/:id' ,CoupenController.getCoupen);
 router.patch(  '/updatecoupen/:id'  ,formupload.none(), CoupenController.updateCoupen);
 router.get(  '/coupensection', CoupenController.getAllCoupenSection);
+router.get(  '/paymentmethod', PaymentController.getPaymentMethod);
+router.get(   '/coupenDetail/:name' ,CoupenController.getCoupenDetails);
+router.post(  '/order/create', passport.authenticate('jwt', { session: false }),formupload.none(),OrderController.create);
 
 module.exports = router;
