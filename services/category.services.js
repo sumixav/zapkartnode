@@ -145,19 +145,23 @@ exports.getAllCategories = async query => {
   const { populateParent } = query;
 
   const parsedQuery = parseStrings(query);
-  console.log('parsedQuery',parsedQuery)
+  console.log("parsedQuery", parsedQuery);
   Object.entries(parsedQuery).forEach(([key, value]) => {
     switch (key) {
-      // case "parent":
-      //   dbQuery = { ...dbQuery, [key]: value };
-      //   break;
+      case "search":
+        if (value.name)
+          dbQuery = { ...dbQuery, name: { $regex: value.name, $options: "i" } };
+        // if (value._id) dbQuery = { ...dbQuery, _id: value._id };
+        // db.getCollection('products').find({name:{$regex:/hea/,$options:"i"}, sku:{$regex:/h22/,$options:"i"}},{sku:1})
+        break;
       case "sort":
         sortQuery = { ...value, updatedAt: -1 };
       case "page":
       case "limit":
         break;
       case "field": //field[]=name&field[]=slug
-        Logger.info(value)
+      case "fields":
+        Logger.info(value);
         if (value && value.length > 0) {
           value.forEach(i => (select[i] = 1));
         }
@@ -169,6 +173,7 @@ exports.getAllCategories = async query => {
 
   console.log(sortQuery);
   console.log(select);
+  console.log('dbQuery', dbQuery);
 
   const categories = populateParent
     ? await Category.find(dbQuery)
@@ -179,7 +184,8 @@ exports.getAllCategories = async query => {
         .sort(sortQuery)
         .select(select);
 
-  if (!categories || categories.length === 0) {
+  // if (!categories || categories.length === 0) {
+  if (!categories) {
     const err = new Error("No categories");
     throw err;
   }

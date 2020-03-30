@@ -24,6 +24,7 @@ const userUpload = upload('users').fields([{ name: 'avatarlocation' }])
 const prescriptionUpload = upload('prescriptions').fields([{ name: 'prescription', maxCount: 5 }])
 
 require('./../middleware/passport')(passport)
+const checkIsRole = require('./../middleware/checkRole')
 
 
 
@@ -55,13 +56,16 @@ router.delete('/shippingRate/:id', ShippingRateController.deleteshippingRate);
 router.patch('/shippingRate/restore/:id', ShippingRateController.restoreShippingRate);
 
 // reviews
-router.get('/reviews/:productId', ReviewsController.getProductReviews);
-router.get('/reviews/', passport.authenticate('jwt', { session: false }),ReviewsController.getUserReviews);
-router.get('/reviews/:userId', passport.authenticate('jwt', { session: false }),ReviewsController.getUserReviews);
 router.post('/reviews/create', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.addReview);
-router.patch('/reviews/:id', formupload.none(), ReviewsController.editReview);
-router.delete('/reviews/:id', ReviewsController.deleteReview);
-router.patch('/reviews/restore/:id', ReviewsController.restoreReview);
+router.get('/reviews/product/:productId', ReviewsController.getProductReviews);
+router.get('/reviews/user', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
+router.get('/reviews/user/:userId', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
+router.patch('/reviews/edit/:reviewId/', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.editReview);
+router.patch('/reviews/edit/:reviewId/:userId', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.editReview);
+router.delete('/reviews/delete/:reviewId', passport.authenticate('jwt', { session: false }), ReviewsController.deleteReview);
+router.delete('/reviews/delete/:reviewId/:userId', passport.authenticate('jwt', { session: false }), ReviewsController.deleteReview);
+router.patch('/reviews/restore/:reviewId/', passport.authenticate('jwt', { session: false }), ReviewsController.restoreReview);
+router.patch('/reviews/restore/:reviewId/:userId', passport.authenticate('jwt', { session: false }), ReviewsController.restoreReview);
 
 router.get('/businessLocation/', BusinessLocationController.getAllbusinessLocations);
 router.post('/businessLocation/create', formupload.none(), BusinessLocationController.createbusinessLocation);
@@ -83,6 +87,8 @@ router.post('/cart/restoreToCart', passport.authenticate('jwt', { session: false
 router.get('/cart', passport.authenticate('jwt', { session: false }), CartController.getCart);
 router.patch('/updatecart/:id', formupload.none(), CartController.updateCart);
 router.delete('/deletecart/:id', formupload.none(), CartController.deleteCart);
+
+router.get('/users/all', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), UserController.getUsers);
 router.post('/users/fblogin', formupload.none(), UserController.fblogin);
 router.post('/users/gblogin', formupload.none(), UserController.gblogin);
 router.post('/users/forgotPassword', formupload.none(), Validate.forgotPassword, UserController.forgotPassword);
@@ -103,15 +109,22 @@ router.get('/users/address', passport.authenticate('jwt', { session: false }), U
 router.post('/users/wishlist/add', passport.authenticate('jwt', { session: false }), formupload.none(), UserController.addToWishlist);
 router.delete('/users/wishlist/delete', passport.authenticate('jwt', { session: false }), formupload.none(), UserController.removeFromWishlist);
 router.get('/users/wishlist', passport.authenticate('jwt', { session: false }), UserController.getWishlist);
+router.get('/users/wishlist/:userId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), UserController.getWishlist);
+router.get('/users/:userId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), UserController.getUserDetails);
 
-router.get('/users/all', UserController.getUsers);
-router.post(  '/coupen/create', formupload.none(),CoupenController.create);
-router.get(  '/coupen', CoupenController.getAllCoupen);
-router.get(   '/coupen/:id' ,CoupenController.getCoupen);
-router.patch(  '/updatecoupen/:id'  ,formupload.none(), CoupenController.updateCoupen);
-router.get(  '/coupensection', CoupenController.getAllCoupenSection);
-router.get(  '/paymentmethod', PaymentController.getPaymentMethod);
-router.get(   '/coupenDetail/:name' ,CoupenController.getCoupenDetails);
-router.post(  '/order/create', passport.authenticate('jwt', { session: false }),formupload.none(),OrderController.create);
+router.post('/coupen/create', formupload.none(), CoupenController.create);
+router.get('/coupen', CoupenController.getAllCoupen);
+router.get('/coupen/:id', CoupenController.getCoupen);
+router.patch('/updatecoupen/:id', formupload.none(), CoupenController.updateCoupen);
+router.get('/coupensection', CoupenController.getAllCoupenSection);
+router.get('/paymentmethod', PaymentController.getPaymentMethod);
+router.get('/coupenDetail/:name', CoupenController.getCoupenDetails);
+
+// orders
+router.post('/order/create', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.create);
+router.get('/order/all', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getAllOrders);
+router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderDetails);
+router.get('/order', passport.authenticate('jwt', { session: false }), OrderController.getUserOrders);
+router.get('/order/user/:userId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getUserOrders);
 
 module.exports = router;

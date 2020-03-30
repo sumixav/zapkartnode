@@ -35,6 +35,7 @@ const { isObjectId } = require("./util.service");
 const { addCompositions } = require("./composition.service");
 const { addOrganics } = require("./organic.service");
 const { createOrganic } = require("./organic.service");
+const reduce = require("lodash/reduce")
 //use parse-strings-in-object
 
 const WIDTH = null;
@@ -782,7 +783,7 @@ exports.getAllProducts = async query => {
   let dbQuery = { deleted: false };
 
   let queryParsed = parseStrings(query);
-  // Logger.info(queryParsed);
+  Logger.info('queryParsed', queryParsed);
   let {
     fields,
     status,
@@ -791,6 +792,7 @@ exports.getAllProducts = async query => {
     sortField = "updatedAt",
     sortOrder = 1,
     organic,
+    sort,
     category, // slugs
     featured,
     brand,
@@ -801,12 +803,15 @@ exports.getAllProducts = async query => {
   // Object.entries(queryParsed).forEach(([key,value]) => {
   // })
   let select = {};
+  let sortQuery = {};
   Object.entries(queryParsed).forEach(([key, value]) => {
     switch (key) {
       case "search":
         console.log(key, value, value.name)
         if (value.name)
           dbQuery = { ...dbQuery, name: { $regex: value.name, $options: "i" } };
+        if (value._id)
+          dbQuery = { ...dbQuery, _id: value._id }
         // db.getCollection('products').find({name:{$regex:/hea/,$options:"i"}, sku:{$regex:/h22/,$options:"i"}},{sku:1})
         break;
       case "organic":
@@ -838,6 +843,12 @@ exports.getAllProducts = async query => {
       case "page":
       case "limit":
       case "sortField":
+      case "sort":
+        sortQuery = reduce(value, (result, value, key) => {
+          if (value === 'ascend') result[key] = 1;
+          else result[key] = -1;
+          return result
+        }, sortQuery)
         break;
       default:
         dbQuery = { ...dbQuery, [key]: value };
@@ -866,11 +877,12 @@ exports.getAllProducts = async query => {
 
   // sortOrder === "ascend" ? (sortOrder = 1) : (sortOrder = -1);
 
-  Logger.info(dbQuery, select, sortField, sortOrder, page, limit);
+  Logger.info('dbQuery', dbQuery);
+  Logger.info('sortQuery', sortQuery);
 
   const products = await Product.find(dbQuery)
     .select(select)
-    // .sort({ [sortField]: sortOrder })
+    .sort(sortQuery)
     .skip((page - 1) * limit)
     .limit(limit)
     .populate("category", "name images seo")
@@ -882,7 +894,8 @@ exports.getAllProducts = async query => {
     .populate("attributes.attributeGroup", "name status attribute_group_code")
     .populate("attributes.value", "value status")
     .populate("medicineType")
-    .populate({ path: "stock", options: { sort: { "quantity": -1 } } })
+    // .populate({ path: "stock", options: { sort: { "quantity": -1 } } })
+    .populate({ path: "stock" })
     .populate("productExtraInfo")
 
   // if (!products || products.length === 0) {
@@ -990,7 +1003,9 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
     .populate("medicineType")
     .populate("stock")
     .populate("productExtraInfo")
-    .populate("relatedProducts", "_id slug name");
+    // .populate("relatedProducts", "_id slug name images pricing");
+    .populate({ path: "relatedProducts", populate: { path: "pricing" }, select: " _id slug name images pricing" });
+
   Logger.info(product);
   if (product.length === 0) throw new Error(STRINGS.NOT_EXIST);
   return product[0];

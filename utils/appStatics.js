@@ -101,6 +101,7 @@ module.exports.status_codes_msg = {
 
 module.exports.STRINGS = {
   NOT_EXIST: "Resource does not exist",
+  USER_NOT_EXIST: "User does not exist",
   DB_ERROR: "Database Error",
   INVALID_PARENTID: "Invalid parent product ID",
   INVALID_ID: "Invalid ID",

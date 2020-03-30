@@ -23,10 +23,9 @@ const MAX_PAGE_LIMIT = 10;
 // need to add pagination $slice
 /**
  * get users wishlist from userId
- * @param {int} params.userId
+ * @param {number} userId
  */
-module.exports.getWishlist = async params => {
-    const { userId } = params;
+module.exports.getWishlist = async userId => {
     const [err, data] = await to(
         Wishlist.findOne({
             user: userId

@@ -353,7 +353,7 @@ const getCart = async userid => {
 
   if (!cart) TE("No cart available");
   // return cart.map(i=> i.toWeb())
-
+  Logger.info('cart', cart)
   if (cart) {
     cartResult = await Promise.all(
       cart.map(async function (item) {

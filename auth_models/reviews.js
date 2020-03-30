@@ -9,7 +9,15 @@ module.exports = function (sequelize, DataTypes) {
         autoIncrement: true
       },
       text: {
-        type: DataTypes.STRING(1000),
+        type: DataTypes.TEXT('medium'),
+        allowNull: false
+      },
+      rating: {
+        type: DataTypes.INTEGER(3),
+        allowNull: false
+      },
+      title: {
+        type: DataTypes.TEXT('tiny'),
         allowNull: false
       },
       orderId: {
@@ -54,5 +62,11 @@ module.exports = function (sequelize, DataTypes) {
   Model.associate = function (models) {
     this.userId = this.belongsTo(models.users, { foreignKey: "userId" });
   };
+
+  Model.prototype.toWeb = function () {
+    let json = this.toJSON();
+    return json;
+  };
+  
   return Model;
 };

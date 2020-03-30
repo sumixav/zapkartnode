@@ -19,8 +19,12 @@ exports.addReview = async function (req, res) {
 
 exports.editReview = async function (req, res) {
     const { user } = req;
-    if (!user || (user.userTypeId != 1)) TE("Not authorised to edit review");
-    const [err, review] = await to(reviewService.updateReview({ ...params }, req.params.id));
+    if (!user) ReE(res, "Not authorised to edit review", status_codes_msg.INVALID_ENTITY.code);
+    if (user.userTypeId === 1 && !req.params.userId) ReE(res, "Need userId param", status_codes_msg.INVALID_ENTITY.code);
+
+    const restParams = omit(req.body, ['status', 'priorityOrder'])
+    
+    const [err, review] = await to(reviewService.updateReview({ ...restParams, status: user.userTypeId === 1 ? req.body.status : undefined, priorityOrder: user.userTypeId === 1 ? req.body.priorityOrder : undefined }, req.params.reviewId, user.userTypeId === 1 ? req.params.userId : user.id));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!review) return ReE(res, new Error('Error editing review'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Review updated', data: review }
@@ -29,8 +33,9 @@ exports.editReview = async function (req, res) {
 
 exports.deleteReview = async function (req, res) {
     const { user } = req;
-    if (!user || (user.userTypeId != 1)) TE("Not authorised to delete review");
-    const [err, isDeleted] = await to(reviewService.deleteReview(req.params.reviewId));
+    if (!user) ReE(res, "Not authorised to delete review", status_codes_msg.INVALID_ENTITY.code);
+    if (user.userTypeId === 1 && !req.params.userId) ReE(res, "Need userId param", status_codes_msg.INVALID_ENTITY.code);
+    const [err, isDeleted] = await to(reviewService.deleteReview(req.params.reviewId, user.userTypeId === 1 ? req.params.userId : user.id));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!isDeleted) return ReE(res, new Error('Error deleting review'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Review deleted' }
@@ -39,10 +44,9 @@ exports.deleteReview = async function (req, res) {
 
 exports.restoreReview = async function (req, res) {
     const { user } = req;
-    if (!user || (user.userTypeId != 1)) TE("Not authorised to delete review")
-    
-
-    const [err, restoredAddr] = await to(reviewService.restoreReview(req.params.reviewId));
+    if (!user) ReE(res, "Not authorised to restore review", status_codes_msg.INVALID_ENTITY.code);
+    if (user.userTypeId === 1 && !req.params.userId) ReE(res, "Need userId param", status_codes_msg.INVALID_ENTITY.code);
+    const [err, restoredAddr] = await to(reviewService.restoreReview(req.params.reviewId, user.userTypeId === 1 ? req.params.userId : user.id));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!restoredAddr) return ReE(res, new Error('Error restoring review'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Review restored', data: restoredAddr }
@@ -51,14 +55,14 @@ exports.restoreReview = async function (req, res) {
 
 exports.getUserReviews = async function (req, res) {
     const { user } = req;
-    if (!user || (user.userTypeId != 1)) TE("Not authorised to delete review")
+    if (!user) ReE(res, "Not authorised to fetch reviews", status_codes_msg.INVALID_ENTITY.code);
     let userId = req.user.id;
     if (user.userTypeId === 1) userId = req.params.userId;
 
     const [err, reviews] = await to(reviewService.getUserReviews(userId));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-    if (!reviewes) return ReE(res, new Error('No reviews'), status_codes_msg.INVALID_ENTITY.code);
-    return ReS(res, { message: 'Review list', data: reviewes }
+    if (!reviews) return ReE(res, new Error('No reviews'), status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: 'Review list', data: reviews }
         , status_codes_msg.SUCCESS.code);
 }
 

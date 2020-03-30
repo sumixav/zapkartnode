@@ -11,7 +11,7 @@ module.exports = function(passport){
     passport.use(new Strategy(opts, async function(jwt_payload, done){
         let err, user;
         [err, user] = await to(users.findById(jwt_payload.user_id));
-        console.log("666666666666",user);
+        // console.log("666666666666",user);
         if(err) return done(err, false);
         if(user) {
             return done(null, user);

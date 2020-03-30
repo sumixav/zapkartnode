@@ -1,14 +1,12 @@
 const { users, user_types, address } = require("../auth_models");
 const validator = require("validator");
-const { to, TE, ReE } = require("../services/util.service");
+const { to, TE, omitUserProtectedFields } = require("../services/util.service");
 const { sendMail } = require("../services/mail.service");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const Logger = require("../logger");
-const { STRINGS } = require("../utils/appStatics")
 const cryptoRandomString = require("crypto-random-string")
 const parseStrings = require("parse-strings-in-object");
-const omit = require("lodash/omit")
 
 
 
@@ -341,17 +339,7 @@ exports.verifyPassword = async (params, user) => {
   Logger.info(u, !u)
   if (!u) TE("No user");
   u = u.toWeb();
-  return omitProtectedFields(u);
-}
-
-
-omitProtectedFields = (user) => {
-  return omit(user, ['password',
-    'passwordChangedAt',
-    'confirmationCode',
-    'remember_token',
-    'resetPasswordToken',
-    'resetPasswordExpiresIn'])
+  return omitUserProtectedFields(u);
 }
 
 

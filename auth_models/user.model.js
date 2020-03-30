@@ -131,9 +131,9 @@ module.exports = function (sequelize, DataTypes) {
   Model.associate = function (models) {
     this.coupen = this.hasMany(models.coupens);
   };
-
-
-
+  Model.associate = function (models) {
+    this.orders = this.hasMany(models.order_masters);
+  };
 
   Model.associate = function (models) {
 

@@ -2,6 +2,8 @@ const { users } = require('../../auth_models');
 const authService = require('../../services/auth.service');
 const userService = require('../../services/user.service');
 const wishlistService = require('../../services/wishlist.service');
+const ordersService = require('../../services/order.service');
+const reviewsService = require('../../services/reviews.service');
 const { to, ReE, ReS } = require('../../services/util.service');
 const { status_codes_msg } = require('../../utils/appStatics');
 const prescriptionService = require("../../services/prescription.service")
@@ -232,10 +234,44 @@ exports.getAddressesromUser = async function (req, res) {
 }
 
 exports.getUsers = async function (req, res) {
+    Logger.info(req.query)
     const [err, data] = await to(userService.getUsers(req.query));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!data) return ReE(res, new Error('No users'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Users list', users: data.users, total: data.count }
+        , status_codes_msg.SUCCESS.code);
+}
+
+exports.getUserDetails = async function (req, res) {
+    const { orders, wishlist, reviews } = parseStrings(req.query);
+    const { userId } = req.params
+    Logger.info('HELLO')
+    let [errA, data] = await to(userService.getUserDetails(userId));
+    if (errA) return ReE(res, errA, status_codes_msg.INVALID_ENTITY.code);
+    if (!data) return ReE(res, new Error('User does not exist'), status_codes_msg.INVALID_ENTITY.code);
+    let user = data.toWeb()
+    if (orders) {
+        const [errB, orders] = await to(ordersService.getUserOrders(userId));
+        if (errB) Logger.error(errB)
+        Logger.info('orders', orders)
+        if (orders)
+            user = { ...user, orders }
+    }
+
+    if (wishlist) {
+        const [errC, wishlistData] = await to(wishlistService.getWishlist(userId));
+        if (errC) Logger.error(errC)
+        Logger.info(wishlistData)
+        if (wishlistData) user = { ...user, wishlist: wishlistData }
+    }
+
+    if (reviews) {
+        const [errD, reviewsData] = await to(reviewsService.getUserReviews(userId));
+        if (errD) Logger.error(errD)
+        if (reviewsData) user = { ...user, reviews: reviewsData }
+    }
+
+    return ReS(res, { message: 'User details', user }
         , status_codes_msg.SUCCESS.code);
 }
 
@@ -256,7 +292,7 @@ exports.addToWishlist = async function (req, res) {
     const params = { userId: req.user.id, productId: req.body.productId }
     const [err, wishlist] = await to(wishlistService.addToWishlist(params))
     if (err) return ReE(res, err, err.message === STRINGS.WISHLIST_DUPLICATE_PRODUCT ? 409 : 422);
-    if (wishlist) return ReS(res, { message: 'Added to wishlist', wishlist },)
+    if (wishlist) return ReS(res, { message: 'Added to wishlist', wishlist })
 }
 
 /**
@@ -266,14 +302,16 @@ exports.removeFromWishlist = async function (req, res) {
     const params = { userId: req.user.id, productId: req.body.productId }
     const [err, wishlist] = await to(wishlistService.removeFromWishlist(params))
     if (err) return ReE(res, err);
-    if (wishlist) return ReS(res, { message: 'Removed from wishlist', wishlist },)
+    if (wishlist) return ReS(res, { message: 'Removed from wishlist', wishlist })
 }
 
 
 exports.getWishlist = async function (req, res) {
-    const params = { userId: req.user.id, productId: req.body.productId }
-    const [err, wishlist] = await to(wishlistService.getWishlist(params))
+    // const params = { userId: req.user.id, productId: req.body.productId }
+    const userId = req.params.userId ? req.params.userId : req.user.id;
+    // const { userId } = req.user.id;
+    const [err, wishlist] = await to(wishlistService.getWishlist(userId))
     if (err) return ReE(res, err);
-    if (wishlist) return ReS(res, { message: 'Wishlist', wishlist },)
+    if (wishlist) return ReS(res, { message: 'Wishlist', wishlist })
 }
 

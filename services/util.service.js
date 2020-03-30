@@ -4,6 +4,7 @@ const pe = require("parse-error");
 const fs = require("fs").promises;
 const gm = require("gm");
 const map = require("lodash/map");
+const omit = require("lodash/omit")
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 
@@ -267,6 +268,15 @@ exports.getSearchQuery = (searchObj = {}, searchOp = Op.like) => {
 
 exports.getOrderQuery = (orderObj = {}) => {
   return { order: Object.entries(orderObj) }
+}
+
+exports.omitUserProtectedFields = (user) => {
+  return omit(user, ['password',
+    'passwordChangedAt',
+    'confirmationCode',
+    'remember_token',
+    'resetPasswordToken',
+    'resetPasswordExpiresIn'])
 }
 
 // exports.saveThumbnail = imagePathArray => {

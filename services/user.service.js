@@ -99,6 +99,20 @@ module.exports.getAddressesFromUser = async (userId) => {
     return addressList
 }
 
+module.exports.getUserDetails = async (userId) => {
+    const [err, user] = await to(users.findOne({
+        where: {
+            id:userId
+        },
+        attributes: {
+            exclude: ["deletedAt", "password"]
+        }
+    }));
+    if (err) TE(STRINGS.DB_ERROR + err.message);
+    if (!user) TE(STRINGS.USER_NOT_EXIST)
+    return user;
+}
+
 /**
  * filter users from various parameters
  * @param {number} params.page
@@ -112,6 +126,7 @@ module.exports.getUsers = async (params) => {
     const { page = 1, limit = MAX_PAGE_LIMIT, search = {}, sort = {} } = parsedParams;
     Logger.info(parsedParams);
     const query = omit(parsedParams, ['page', 'limit', 'search', 'sort']);
+    Logger.info(query)
     const dbQuery = {
         where: {
             ...query, //filter by this query
