@@ -1,5 +1,5 @@
 const cleanDeep = require("clean-deep");
-const {coupens, coupen_types, coupen_user_mappings} = require("../auth_models");
+const {offers, offer_types, offer_user_mappings} = require("../auth_models");
 const validator = require("validator");
 const {
   to,
@@ -11,12 +11,14 @@ const {
 } = require("../services/util.service");
 const Logger = require("../logger");
 const parseStrings = require("parse-strings-in-object");
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 
 
 exports.createCoupen = async (param) => {
-  const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData} = param;
-  [err, coupenlists] = await to(coupens.create({createdBy:1,name,validFrom,validTo,coupenTypeId,status,coupenCode}));
+  const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData, amount} = param;
+  [err, coupenlists] = await to(coupens.create({createdBy:1,name,validFrom,validTo,coupenTypeId,status,coupenCode,amount}));
   if(err) { return err; }
   let usermapping = '';
   if(coupenlists) {
@@ -50,15 +52,21 @@ exports.searchCoupenAssign = async (search) => {
 exports.getAllCoupen = async (query) => {
   const {page, limit, search} = parseStrings(query);
   Logger.info("555",search);
-  const dbQuery = {
-    where: {
-        ...getSearchQuery(search)
-    }
-  }
+  const dbQuery = getSearchQuery(search)
+  Logger.info("rrr",{where:dbQuery,limit,offset:page});
   let coupenlist, err = '';
-  [err, coupenlist] = await to(coupens.findAndCountAll({where:{deleted:0},limit,offset:page}));
+  [err, coupenlist] = await to(coupens.findAndCountAll({
+    where: {
+      "name": {
+        [Op.like]: "%q0011wa1rrref%"
+      }
+    },
+    "limit": 10,
+    "offset": 0
+  }
+  ));
   if(err) { return err; }
-  return coupenlist;
+  return dbQuery;
 };
 
 const getCoupenId = async (id) => {
@@ -71,7 +79,7 @@ module.exports.getCoupenId = getCoupenId;
 
 const updatecoupen = async (id, param) => {
   
-    const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData,deleted} = param;
+    const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData,deleted,amount} = param;
   [err,coupenlists ] = await to(coupens.update(param, {where: {id: id} }));
   if(err) TE(err.message);
   let usermapping = '';
@@ -98,7 +106,7 @@ const updatecoupen = async (id, param) => {
 module.exports.updatecoupen = updatecoupen;
 
 exports.getAllCoupenSection = async () => {
-  [err, coupensectionlist] = await to(coupen_types.findAll());
+  [err, coupensectionlist] = await to(offer_types.findAll());
   if(err) { return err; }
   return coupensectionlist;
 }

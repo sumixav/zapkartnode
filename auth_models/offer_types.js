@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-    let Model = sequelize.define('coupen_types', {
+    let Model = sequelize.define('offer_types', {
       id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
@@ -14,11 +14,11 @@ module.exports = function(sequelize, DataTypes) {
     },
     },
      {
-      tableName: 'coupen_types'
+      tableName: 'offer_types'
     });
     
       Model.associate = function(models){
-        this.coupen = this.hasMany(models.coupens);
+        this.offer = this.hasMany(models.offers);
       };  
     return Model;
   };
