@@ -16,8 +16,8 @@ const Logger = require("../logger");
 
 
 exports.create = async (param) => {
-  console.log('order create param', param)
   [err, cartDetails] = await to(carts.findAll({ userId: param.user.id, deletedAt: null }));
+  Logger.info('order param', param);
   if (err) { TE(err.message) }
   let coupenDetails = shippingDetails = billingDetails = orderParam = updateOrderMaster = {};
   let totalPrice = totalQty = salePrice = 0;
@@ -47,7 +47,6 @@ exports.create = async (param) => {
       'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
       'shippingAmount': (param.shippingAmount) ? param.shippingAmount : 75
     };
-    Logger.info('orderParam', orderParam)
     [err, orderMasterDetails] = await to(order_masters.create(orderParam));
     Logger.info('orderMasterDetails', orderMasterDetails);
     if (err) { TE(err.message); }
@@ -78,7 +77,6 @@ exports.create = async (param) => {
           'subtotal': parseInt(item.price) * parseInt(item.quantity),
           'preceptionRequired': item.prescriptionRequired
         };
-        Logger.info('order item obj', obj)
         return obj;
       }));
       [err, orderItemDetails] = await to(order_items.bulkCreate(orderItemResult));
