@@ -17,7 +17,7 @@ const parseStrings = require("parse-strings-in-object");
 exports.createCoupen = async (param) => {
   const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData} = param;
   [err, coupenlists] = await to(coupens.create({createdBy:1,name,validFrom,validTo,coupenTypeId,status,coupenCode}));
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   let usermapping = '';
   if(coupenlists) {
     const usergroupData = JSON.parse(userData).map((values, index) => {
@@ -32,7 +32,7 @@ exports.createCoupen = async (param) => {
     });
     usermapping = usergroupData.concat(userD);
     [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
-    if(err) { return err; }
+    if(err) { TE(err.message); }
   }
   return coupenlists;
 };
@@ -57,13 +57,13 @@ exports.getAllCoupen = async (query) => {
   }
   let coupenlist, err = '';
   [err, coupenlist] = await to(coupens.findAndCountAll({where:{deleted:0},limit,offset:page}));
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   return coupenlist;
 };
 
 const getCoupenId = async (id) => {
   [err, coupenlist] = await to(coupens.find({where: { id: id },include: [{model: coupen_user_mappings}]}));
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   return coupenlist;
 }
 
@@ -77,7 +77,7 @@ const updatecoupen = async (id, param) => {
   let usermapping = '';
   if(coupenlists && (userData || usergroup )) {
     [err, deletecoupen] = await to(coupen_user_mappings.destroy({where: {coupenId:id,isApplied:'no'}}));
-    if(err) { return err; }
+    if(err) { TE(err.message); }
     const usergroupData = JSON.parse(userData).map((values, index) => {
       let aValue = values.value;
       let alabel = values.label;
@@ -90,7 +90,7 @@ const updatecoupen = async (id, param) => {
     });
     usermapping = usergroupData.concat(userD);
     [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
-    if(err) { return err; }
+    if(err) { TE(err.message); }
   }
   return coupenlists;
 }
@@ -99,13 +99,13 @@ module.exports.updatecoupen = updatecoupen;
 
 exports.getAllCoupenSection = async () => {
   [err, coupensectionlist] = await to(coupen_types.findAll());
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   return coupensectionlist;
 }
 
 const getCoupenDetail = async (id) => {
   [err, coupenlist] = await to(coupens.find({where: { coupenCode: id }}));
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   return coupenlist;
 }
 
