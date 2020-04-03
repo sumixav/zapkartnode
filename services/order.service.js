@@ -45,7 +45,7 @@ exports.create = async (param) => {
       'paymentType': (param.payment != 'cod') ? 'onlinePayment' : 'cod',
       'billingAddress': `${billingDetails.houseNo} ${billingDetails.street} ${billingDetails.landmark} ${billingDetails.city} ${billingDetails.state} ${billingDetails.pincode}`,
       'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
-      'shippingAmount': (param.shippingAmount) ? param.shippingAmount : ''
+      'shippingAmount': (param.shippingAmount) ? param.shippingAmount : 75
     };
     [err, orderMasterDetails] = await to(order_masters.create(orderParam));
     Logger.info('orderMasterDetails', orderMasterDetails);
