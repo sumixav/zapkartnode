@@ -41,7 +41,7 @@ exports.create = async (param) => {
       'orderNo': orderno,
       'userId': param.user.id,
       'coupenId': (isEmpty(coupenDetails)) ? null : coupenDetails.id,
-      'paymentSettingId': (param.payment != 'cod') ? param.payment : '',
+      'paymentSettingId': (param.payment != 'cod') ? param.payment : null,
       'paymentType': (param.payment != 'cod') ? 'onlinePayment' : 'cod',
       'billingAddress': `${billingDetails.houseNo} ${billingDetails.street} ${billingDetails.landmark} ${billingDetails.city} ${billingDetails.state} ${billingDetails.pincode}`,
       'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
