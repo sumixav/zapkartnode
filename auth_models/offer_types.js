@@ -16,10 +16,7 @@ module.exports = function(sequelize, DataTypes) {
      {
       tableName: 'offer_types'
     });
-    
-      Model.associate = function(models){
-        this.offer = this.hasMany(models.offers);
-      };  
+     
     return Model;
   };
   

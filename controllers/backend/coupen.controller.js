@@ -74,6 +74,8 @@ const updateCoupen = async function(req, res) {
 module.exports.updateCoupen = updateCoupen;
 
 exports.getAllCoupenSection = async (req, res, next) => {
+
+  
   try {
     const [err, Coupensection] = await to(coupenService.getAllCoupenSection());
 

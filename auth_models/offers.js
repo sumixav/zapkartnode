@@ -65,7 +65,7 @@ module.exports = function(sequelize, DataTypes) {
           type:   DataTypes.INTEGER(11),
           allowNull: true,
         },
-        max_usage_per_user: {
+        maximum_total_usage: {
           type:   DataTypes.INTEGER(11),
           allowNull: true,
         },
@@ -85,16 +85,13 @@ module.exports = function(sequelize, DataTypes) {
      {
       tableName: 'offers'
     });
-    Model.associate = function(models){
-      this.offerType = this.belongsTo(models.offer_types);
-    };
 
     Model.associate = function(models){
         this.createdby = this.belongsTo(models.users, {foreignKey: 'createdBy'});
       };
     
       Model.associate = function(models){
-        this.offerMapping = this.hasMany(models.offer_user_mappings);
+        this.offerMapping = this.hasMany(models.offer_user_mappings,{ foreignKey: 'offerId' });
       };  
 
       Model.associate = function(models){

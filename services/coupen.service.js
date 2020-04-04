@@ -1,5 +1,5 @@
 const cleanDeep = require("clean-deep");
-const {offers, offer_types, offer_user_mappings} = require("../auth_models");
+const {offers, offer_types, offer_user_mappings, offer_category_products,db} = require("../auth_models");
 const validator = require("validator");
 const {
   to,
@@ -17,24 +17,42 @@ const Op = Sequelize.Op;
 
 
 exports.createCoupen = async (param) => {
-  const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData, amount} = param;
-  [err, coupenlists] = await to(coupens.create({createdBy:1,name,validFrom,validTo,coupenTypeId,status,coupenCode,amount}));
+  const {description, type, method, minimum_cart, maximum_cart, offeritem, name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData, amount} = param;
+  [err, coupenlists] = await to(offers.create({method,minimum_cart,maximum_cart,type,description,createdBy:1,name,validFrom,validTo,status,coupenCode,amount}));
   if(err) { return err; }
+  Logger.info("00000",coupenlists,userData);
   let usermapping = '';
+  let usergroupData = {};
+  let userD = {};
   if(coupenlists) {
-    const usergroupData = JSON.parse(userData).map((values, index) => {
+    if(userData) {
+     usergroupData = JSON.parse(userData).map((values, index) => {
       let aValue = values.value;
       let alabel = values.label;
-      return {'coupenId':coupenlists.id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
+      return {'offerId':coupenlists.id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
     });
+  }
+  if(usergroup) {
     let Stringarray = usergroup.split(",")||usergroup;
-    const userD = Stringarray.map((values, index) => {
+      userD = Stringarray.map((values, index) => {
       let aValue = values;
-      return {'coupenId':coupenlists.id,'userMappingId':aValue,'mappingType':'userGroup'};
+      return {'offerId':coupenlists.id,'userMappingId':aValue,'mappingType':'userGroup'};
     });
     usermapping = usergroupData.concat(userD);
-    [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
+    [err, coupenmapping] = await to(offer_user_mappings.bulkCreate(usermapping));
     if(err) { return err; }
+  }
+  
+  if(offeritem) {
+    let Stringarray1 = offeritem.split(",")||offeritem;
+      userD1= Stringarray1.map((values, index) => {
+      let aValue = values;
+      return {'offerId':coupenlists.id,'type':coupenTypeId,'itemId':aValue};
+    });
+    
+    [err, coupenmapping] = await to(offer_category_products.bulkCreate(userD1));
+    if(err) { return err; }
+  }
   }
   return coupenlists;
 };
@@ -55,23 +73,24 @@ exports.getAllCoupen = async (query) => {
   const dbQuery = getSearchQuery(search)
   Logger.info("rrr",{where:dbQuery,limit,offset:page});
   let coupenlist, err = '';
-  [err, coupenlist] = await to(coupens.findAndCountAll({
-    where: {
-      "name": {
-        [Op.like]: "%q0011wa1rrref%"
-      }
-    },
+  [err, coupenlist] = await to(offers.findAndCountAll({
+    where: { 'deleted': 0 },
     "limit": 10,
     "offset": 0
   }
   ));
   if(err) { return err; }
-  return dbQuery;
+  return coupenlist;
 };
 
 const getCoupenId = async (id) => {
-  [err, coupenlist] = await to(coupens.find({where: { id: id },include: [{model: coupen_user_mappings}]}));
+  [err, offeruser] = await to(offer_user_mappings.findAll({where: { offerId: id }}));
   if(err) { return err; }
+  [err, offerlist] = await to(offers.findAll({where: { id: id }}));
+  if(err) { return err; }
+  [err, offerproduct] = await to(offer_category_products.findAll({where: { offerId: id }}));
+  if(err) { return err; }
+  let coupenlist = {"offer":offerlist,"offeruser":offeruser,"offerproduct":offerproduct};
   return coupenlist;
 }
 
@@ -79,25 +98,25 @@ module.exports.getCoupenId = getCoupenId;
 
 const updatecoupen = async (id, param) => {
   
-    const {name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData,deleted,amount} = param;
-  [err,coupenlists ] = await to(coupens.update(param, {where: {id: id} }));
+  const {description, type, method, minimum_cart, maximum_cart, offeritem, name, validFrom, validTo, coupenTypeId, status,coupenCode, usergroup, userData, amount} = param;
+  [err,coupenlists ] = await to(offers.update(param, {where: {id: id} }));
   if(err) TE(err.message);
   let usermapping = '';
   if(coupenlists && (userData || usergroup )) {
-    [err, deletecoupen] = await to(coupen_user_mappings.destroy({where: {coupenId:id,isApplied:'no'}}));
+    [err, deletecoupen] = await to(offer_user_mappings.destroy({where: {offerId:id,isApplied:'no'}}));
     if(err) { return err; }
     const usergroupData = JSON.parse(userData).map((values, index) => {
       let aValue = values.value;
       let alabel = values.label;
-      return {'coupenId':id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
+      return {'offerId':id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
     });
     let Stringarray = usergroup.split(",")||usergroup;
     const userD = Stringarray.map((values, index) => {
       let aValue = values;
-      return {'coupenId':id,'userMappingId':aValue,'mappingType':'userGroup'};
+      return {'offerId':id,'userMappingId':aValue,'mappingType':'userGroup'};
     });
     usermapping = usergroupData.concat(userD);
-    [err, coupenmapping] = await to(coupen_user_mappings.bulkCreate(usermapping));
+    [err, coupenmapping] = await to(offer_user_mappings.bulkCreate(usermapping));
     if(err) { return err; }
   }
   return coupenlists;
