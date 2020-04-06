@@ -9,7 +9,6 @@ const create = async (req, res, next) => {
   const param = { ...req.body, user };
   // return ReS(res,{ message: "Order added", data: {'orderId':1} },status_codes_msg.CREATED.code);
   try {
-
     [err, order] = await to(orderService.create(param));
 
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
