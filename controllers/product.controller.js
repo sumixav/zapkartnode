@@ -64,10 +64,10 @@ exports.getAllProducts = async (req, res, next) => {
           res,
           {
             message: "Product",
-            data: response.products,
             total: response.total,
             page,
-            limit
+            limit,
+            data: response.products,
           },
           status_codes_msg.SUCCESS.code
         );
@@ -86,10 +86,10 @@ exports.getAllProducts = async (req, res, next) => {
           res,
           {
             message: "Product",
-            data: response.products,
             total: response.total,
             page,
-            limit
+            limit,
+            data: response.products,
           },
           status_codes_msg.SUCCESS.code
         );

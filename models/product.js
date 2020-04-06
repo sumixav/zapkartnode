@@ -140,7 +140,7 @@ const productsSchema = Schema(
       type: String,
       default: ""
     },
-    productExtraInfo: { type: Schema.Types.ObjectId, ref: "ProductExtraInfo", required: true },
+    productExtraInfo: { type: Schema.Types.ObjectId, ref: "ProductExtraInfo"},
     // createdBy : {
     //   type: Schema.Types.ObjectId,
     //   ref:"User"
@@ -151,6 +151,8 @@ const productsSchema = Schema(
     selectPopulatedPaths: false
   }
 );
+
+// productsSchema.index({name: 'text'});
 
 // productsSchema.pre('deleteOne', async function(next){
 //   // const product = this.find
