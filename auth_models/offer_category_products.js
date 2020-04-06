@@ -1,45 +1,40 @@
 /* jshint indent: 2 */
 
 module.exports = function(sequelize, DataTypes) {
-    let Model = sequelize.define('coupen_user_mappings', {
+    let Model = sequelize.define('offer_category_products', {
       id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
         primaryKey: true,
         autoIncrement: true
       },
-      coupenId: {
+      offerId: {
         type: DataTypes.INTEGER(11),
         allowNull: true,
         references: {
-          model: ' coupens',
+          model: ' offers',
           key: 'id'
         }
       },
-      mappingType: {
+      type: {
         type:   DataTypes.ENUM,
-        values: ['userGroup', 'individualUser']
+        values: ['category', 'product']
       },
-      isApplied: {
-        type:   DataTypes.ENUM,
-        values: ['yes', 'no'],
-        default:'no'
-      },
-      userMappingId: {
+      itemId: {
         type: DataTypes.INTEGER(11),
         allowNull: true,
       },
-      label: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
+      status: {
+        type:   DataTypes.ENUM,
+        values: ['active', 'hold']
       },
     },
      {
-      tableName: 'coupen_user_mappings'
+      tableName: 'offer_category_products'
     });
     
       Model.associate = function(models){
-        this.coupen = this.belongsTo(models.coupens);
+        this.offer = this.belongsTo(models.offers);
       };   
     return Model;
   };
