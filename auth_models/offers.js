@@ -37,10 +37,6 @@ module.exports = function(sequelize, DataTypes) {
         type:   DataTypes.ENUM,
         values: ['flat', 'discount']
       },
-      discount: {
-        type:   DataTypes.INTEGER(11),
-        allowNull: true,
-      },
       minimum_cart: {
         type:   DataTypes.INTEGER(11),
         allowNull: true,
@@ -62,10 +58,6 @@ module.exports = function(sequelize, DataTypes) {
           values: ['active', 'hold']
         },
       totalUsedCount: {
-          type:   DataTypes.INTEGER(11),
-          allowNull: true,
-        },
-        maximum_total_usage: {
           type:   DataTypes.INTEGER(11),
           allowNull: true,
         },

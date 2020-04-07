@@ -98,11 +98,11 @@ exports.getAllCoupenSection = async (req, res, next) => {
 const getCoupenDetails = async function(req, res) {
   try {
       let id  = req.params.name;
-      [err, coupenlist] = await to(coupenService.getCoupenDetail(id));
+      [err, coupenlist] = await to(coupenService.getCoupenDetail(id,req.user));
           if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
           if (coupenlist) {
             
-              return ReS(res, { message:'coupen', data :coupenlist}
+              return ReS(res, { message:req.user, data :coupenlist}
                       , status_codes_msg.SUCCESS.code);
           }
   } catch (err) {

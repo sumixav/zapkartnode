@@ -253,22 +253,16 @@ exports.paginate = (page, pageSize) => {
   };
 };
 
-exports.getSearchQuery = (searchObj = {}, searchOp = '[Op.like]') => {
+exports.getSearchQuery = (searchObj = {}, searchOp = Op.like) => {
   let searchQuery = {};
   map(searchObj, (value, key) => {
-   
     searchQuery = {
+      ...searchQuery,
       [key]: {
         [searchOp]: "%" + value + "%"
       }
     };
-    //Logger.info("777",searchObj);
   });
-  // let y= "hh";
-  // let result = Object.entries(searchObj).map(([key, value])  => [{[key]:{
-  //   [searchOp]: "%" + value + "%"
-  // }}])
-  
   return searchQuery
 };
 
