@@ -34,6 +34,8 @@ exports.createCoupen = async (param) => {
       let alabel = values.label;
       return {'offerId':coupenlists.id,'userMappingId':aValue,'label':alabel,'mappingType':'individualUser'};
     });
+    [err, coupenmapping] = await to(offer_user_mappings.bulkCreate(usergroupData));
+    if(err) { return err; }
   }
   if(usergroup) {
     let Stringarray = usergroup.split(",")||usergroup;
@@ -41,8 +43,7 @@ exports.createCoupen = async (param) => {
       let aValue = values;
       return {'offerId':coupenlists.id,'userMappingId':aValue,'mappingType':'userGroup'};
     });
-    usermapping = usergroupData.concat(userD);
-    [err, coupenmapping] = await to(offer_user_mappings.bulkCreate(usermapping));
+    [err, coupenmapping] = await to(offer_user_mappings.bulkCreate(userD));
     if(err) { return err; }
   }
   
@@ -78,6 +79,9 @@ exports.getAllCoupen = async (query) => {
   let coupenlist, err = '';
   [err, coupenlist] = await to(offers.findAndCountAll({
     where: {...dbQuery,'deleted': 0 },
+    order: [
+      ['id', 'DESC'],
+  ],
     "limit": 10,
     "offset": 0
   }
@@ -122,9 +126,10 @@ const updatecoupen = async (id, param) => {
   if(err) TE(err.message);
   let usermapping = '';
   let userD = usergroupData = {};
-  if((JSON.parse(userData).length > 0)) {
-    [err, deletecoupen] = await to(offer_user_mappings.destroy({where: {offerId:id,isApplied:'no'}}));
+  Logger.info("7777",userData);
+  [err, deletecoupen] = await to(offer_user_mappings.destroy({where: {offerId:id,isApplied:'no'}}));
     if(err) { return err; }
+  if(!isEmpty(userData)&&userData!= 'null') {
     usergroupData = JSON.parse(userData).map((values, index) => {
       Logger.info("hhhhhh");
       let aValue = values.value;
@@ -154,7 +159,7 @@ const updatecoupen = async (id, param) => {
     let Stringarray1 = offeritem.split(",")||offeritem;
       userD1= Stringarray1.map((values, index) => {
       let aValue = values;
-      return {'offerId':id,'type':coupenTypeId,'itemId':aValue};
+      return (!isEmpty(aValue))?{'offerId':id,'type':coupenTypeId,'itemId':aValue}:{};
     });
     
     [err, coupenmapping] = await to(offer_category_products.bulkCreate(userD1));
@@ -201,7 +206,7 @@ const getCoupenDetail = async (id, user) => {
   [err, offerProductResult] = await to(offer_category_products.findAll({where: { offerId: coupenlist.id }}));
   if(err) { return err; }
 
-  if(offerProductResult) {
+  if(offerProductResult.length > 0) {
     let finalAmt = 0;
     offerproduct =  await Promise.all(
       offerProductResult.map(async function (item) {
@@ -229,7 +234,7 @@ const getCoupenDetail = async (id, user) => {
       );
       coupenlist.amount = offerproduct[0]
   }
-  
+  Logger.info("$$$$",offerProductResult.length);
 
   
   return  coupenlist;
