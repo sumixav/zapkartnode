@@ -89,7 +89,7 @@ exports.productsSchema = {
       "type": "boolean"
     },
     "returnPeriod": {
-      "type": "number"
+      "type": ["number", "null"]
     },
     "tag": {
       "type": "string"

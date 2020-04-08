@@ -276,7 +276,7 @@ exports.createProduct = async param => {
     prescriptionNeeded,
     returnable,
     featured,
-    returnPeriod,
+    returnPeriod: returnable ? returnPeriod : null,
     tag,
     attributes: attributesDoc,
     seo,
@@ -1054,6 +1054,7 @@ exports.editProduct = async (params, query) => {
         product.returnable = boolRet.returnable;
         if (!boolRet.returnable)
           product.returnPeriod = null;
+        else product.returnPeriod = parseInt(params.returnPeriod, 10)
         Logger.info(product)
         break;
       case "deletedImages":
@@ -1156,6 +1157,8 @@ exports.editProduct = async (params, query) => {
       case "safetyInfo":
       case "otherInfo":
         productExtraInfo[key] = value;
+        break;
+      case 'returnPeriod':
         break;
       default:
         product[key] = value;
