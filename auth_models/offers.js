@@ -2,7 +2,7 @@
 const SequelizeSlugify = require('sequelize-slugify');
 
 module.exports = function(sequelize, DataTypes) {
-    let Model = sequelize.define('coupens', {
+    let Model = sequelize.define('offers', {
       id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
@@ -29,13 +29,29 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.DATE,
         allowNull: false
       },
-      coupenTypeId: {
-        type: DataTypes.INTEGER(11),
+      method: {
+        type:   DataTypes.ENUM,
+        values: ['voucher', 'coupon']
+      },
+      type: {
+        type:   DataTypes.ENUM,
+        values: ['flat', 'discount']
+      },
+      minimum_cart: {
+        type:   DataTypes.INTEGER(11),
         allowNull: true,
-        references: {
-          model: ' coupen_types',
-          key: 'id'
-        }
+      },
+      maximum_cart: {
+        type:   DataTypes.INTEGER(11),
+        allowNull: true,
+      },
+      no_of_voucher: {
+        type:   DataTypes.INTEGER(11),
+        allowNull: true,
+      },
+      description: {
+        type:   DataTypes.STRING(255),
+        allowNull: true,
       },
       status: {
           type:   DataTypes.ENUM,
@@ -59,19 +75,20 @@ module.exports = function(sequelize, DataTypes) {
         },
       },
      {
-      tableName: 'coupens'
+      tableName: 'offers'
     });
-    Model.associate = function(models){
-      this.coupenType = this.belongsTo(models.coupen_types);
-    };
 
     Model.associate = function(models){
         this.createdby = this.belongsTo(models.users, {foreignKey: 'createdBy'});
       };
     
       Model.associate = function(models){
-        this.coupenMapping = this.hasMany(models.coupen_user_mappings);
+        this.offerMapping = this.hasMany(models.offer_user_mappings,{ foreignKey: 'offerId' });
       };  
+
+      Model.associate = function(models){
+        this.offerCategory = this.hasMany(models.offer_category_products);
+      }; 
     return Model;
   };
   

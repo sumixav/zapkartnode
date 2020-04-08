@@ -180,6 +180,7 @@ exports.getAllVariants = async (req, res, next) => {
           message: "Variants",
           data: response.products,
           total: response.total,
+          attributeslist: response.attributelist,
           page,
           limit
         },

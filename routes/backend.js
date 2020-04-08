@@ -118,7 +118,7 @@ router.get('/coupen/:id', CoupenController.getCoupen);
 router.patch('/updatecoupen/:id', formupload.none(), CoupenController.updateCoupen);
 router.get('/coupensection', CoupenController.getAllCoupenSection);
 router.get('/paymentmethod', PaymentController.getPaymentMethod);
-router.get('/coupenDetail/:name', CoupenController.getCoupenDetails);
+router.get('/coupenDetail/:name', passport.authenticate('jwt', { session: false }),CoupenController.getCoupenDetails);
 
 // orders
 router.post('/order/create', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.create);
