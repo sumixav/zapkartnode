@@ -2,6 +2,7 @@
 
 const Product = require("../models/product");
 const Pricing = require("../models/pricing");
+const Attribute = require("../models/attribute");
 const Stock = require("../models/stock");
 const ProductExtraInfo = require("../models/productExtraInfo");
 const Composition = require("../models/composition");
@@ -949,12 +950,50 @@ exports.getAllVariants = async (productId, query) => {
 
   Logger.info("dbQuery", dbQuery);
 
+  const attributeCode = await Product.aggregate([
+    { "$match": dbQuery },
+    {
+    $group: {
+    _id:"$attributes.attributeGroup"}},
+    
+    ]).exec();
+    // const attributeCode = attributeResult.map(item => {
+    //   return item._id;
+    // })
+
+    const attrproduct =  await Promise.all(
+      attributeCode.map(async function (item) {
+          //Object.assign(item, {key3: "value3"});
+          let attrQuery = {attributes:{$elemMatch: {attributeGroup:item._id}}};
+          dbQuery = { ...dbQuery, ...attrQuery};
+         let attrlistProduct = await Product.find(dbQuery)
+          .select(select)
+          .sort({ [sortField]: sortOrder })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("category", "name images seo")
+          .populate("parentId", "name parentId")
+          .populate("composition", "_id deleted name slug")
+          .populate("organic", "_id deleted name slug")
+          .populate("brand", "_id deleted name slug image")
+          .populate("pricing", "listPrice salePrice startDate endDate taxId")
+          .populate("attributes.attributeGroup", "name status attribute_group_code")
+          .populate("attributes.value", "value status")
+          .populate("medicineType")
+          .populate("stock");
+          
+          
+          return attrlistProduct;
+        })
+      );
+Logger.info("ff345",dbQuery);
   const products = await Product.find(dbQuery)
     .select(select)
     .sort({ [sortField]: sortOrder })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate("category", "name images seo")
+    .populate("parentId", "name parentId")
     .populate("composition", "_id deleted name slug")
     .populate("organic", "_id deleted name slug")
     .populate("brand", "_id deleted name slug image")
@@ -970,7 +1009,8 @@ exports.getAllVariants = async (productId, query) => {
   }
   return {
     products: products.map(i => transformProduct(i)),
-    total: await Product.countDocuments({ deleted: false, ...dbQuery })
+    total: await Product.countDocuments({ deleted: false, ...dbQuery }),
+    attributelist: attrproduct
     // total: await Product.estimatedDocumentCount({ deleted: false, ...dbQuery })
   };
   // return products
