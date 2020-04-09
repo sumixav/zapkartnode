@@ -804,7 +804,7 @@ exports.getAllProducts = async query => {
   // Object.entries(queryParsed).forEach(([key,value]) => {
   // })
   let select = {};
-  let sortQuery = {};
+  let sortQuery = {updatedAt:-1};
   Object.entries(queryParsed).forEach(([key, value]) => {
     switch (key) {
       case "search":
