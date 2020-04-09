@@ -9,7 +9,7 @@ CONFIG.db_dialect = process.env.DB_DIALECT || 'mysql';
 CONFIG.db_host = process.env.DB_HOST || 'localhost';
 CONFIG.db_port = process.env.DB_PORT || '3306';
 CONFIG.db_name = process.env.DB_NAME || 'zapkart-dev';
-CONFIG.sql_db_name = process.env.SQL_DB_NAME || 'zapkart-dev';
+CONFIG.sql_db_name = process.env.SQL_DB_NAME || 'demodb';
 
 // CONFIG.db_dialect = process.env.DB_DIALECT || 'mysql';
 // CONFIG.db_host = process.env.DB_HOST || '51.79.74.247';

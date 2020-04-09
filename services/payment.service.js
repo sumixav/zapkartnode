@@ -13,7 +13,13 @@ const Logger = require("../logger");
 
 
 exports.getPayment = async query => {
-  [err, paymentlist] = await to(payment_method.find({where:{'status':'active'}}));
+  [err, paymentlist] = await to(payment_method.findAll({where:{'status':'active'}}));
+  if(err) { return err; }
+  return paymentlist;
+};
+
+exports.getPaymentId = async (id) => {
+  [err, paymentlist] = await to(payment_method.findAll({where:{'id':id}}));
   if(err) { return err; }
   return paymentlist;
 };

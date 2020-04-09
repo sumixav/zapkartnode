@@ -122,3 +122,23 @@ const deleteCart = async function (req, res) {
 };
 
 module.exports.deleteCart = deleteCart;
+
+const update = async function (req, res) {
+  const user = req.user;
+  const param = { ...req.body, user };
+
+  try {
+    [err, updateOrderList] = await to(orderService.updateOrder(param));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (updateOrderList) {
+
+      return ReS(res, { message: 'Order has been updated', data: updateOrderList }
+        , status_codes_msg.SUCCESS.code);
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+
+};
+
+module.exports.update = update;

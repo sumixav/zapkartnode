@@ -126,5 +126,6 @@ router.get('/order/all', passport.authenticate('jwt', { session: false }), check
 router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderDetails);
 router.get('/order', passport.authenticate('jwt', { session: false }), OrderController.getUserOrders);
 router.get('/order/user/:userId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getUserOrders);
+router.post('/order/update', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.update);
 
 module.exports = router;

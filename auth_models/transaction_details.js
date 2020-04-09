@@ -2,32 +2,32 @@
 const SequelizeSlugify = require('sequelize-slugify');
 
 module.exports = function(sequelize, DataTypes) {
-    let Model = sequelize.define('payment_method', {
+    let Model = sequelize.define('transaction_details', {
       id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
         primaryKey: true,
         autoIncrement: true
       },
-      methodName: {
+      transactionId: {
         type: DataTypes.STRING(255),
         allowNull: false
       },
-      label: {
+      transactionResponseDetails: {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-      gatewayDetails: {
+      orderId: {
         type: DataTypes.STRING(255),
         allowNull: false
       },
       status: {
           type:   DataTypes.ENUM,
-          values: ['active', 'hold']
+          values: ['pending', 'failed','success']
         },
       },
      {
-      tableName: 'payment_settings'
+      tableName: 'transaction_details'
     }); 
     return Model;
   };
