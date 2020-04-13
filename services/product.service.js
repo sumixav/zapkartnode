@@ -9,6 +9,7 @@ const Composition = require("../models/composition");
 const Category = require("../models/category");
 const { shippingDimModel: ShippingDim } = require("../models/shippingDim");
 const validator = require("validator");
+const intersectionBy = require("lodash/intersectionBy");
 // const parseQuery = require("query-string")
 const {
   to,
@@ -22,7 +23,7 @@ const {
   getDimensions,
   getIdQuery,
   uniq,
-  isValidId
+  isValidId,
 } = require("../services/util.service");
 const mongoose = require("mongoose");
 const Logger = require("../logger");
@@ -36,7 +37,7 @@ const { isObjectId } = require("./util.service");
 const { addCompositions } = require("./composition.service");
 const { addOrganics } = require("./organic.service");
 const { createOrganic } = require("./organic.service");
-const reduce = require("lodash/reduce")
+const reduce = require("lodash/reduce");
 //use parse-strings-in-object
 
 const WIDTH = null;
@@ -44,7 +45,7 @@ const WIDTH = null;
 // const HEIGHT = 550;
 const HEIGHT = 340;
 
-exports.isParentIdValid = async id => {
+exports.isParentIdValid = async (id) => {
   Logger.info("isParentIdValid", id);
   const [err, parentProduct] = await to(Product.findOne({ _id: id }));
   if (err) throw err;
@@ -52,7 +53,7 @@ exports.isParentIdValid = async id => {
   return false;
 };
 
-exports.createProduct = async param => {
+exports.createProduct = async (param) => {
   Logger.info("createProduct");
   const parsedParam = parseStrings(param);
   Logger.info(parsedParam);
@@ -96,7 +97,8 @@ exports.createProduct = async param => {
     subtract,
     textDescription,
     organic,
-    relatedProducts
+    relatedProducts,
+    imageUrl,
   } = parsedParam;
 
   const attributes = JSON.parse(attributesJSON);
@@ -106,7 +108,7 @@ exports.createProduct = async param => {
   if (duplicateProduct && duplicateProduct.length > 0) {
     if (images && images.length > 0)
       // for variants maybe no images
-      images.map(i => deleteFile(i.path));
+      images.map((i) => deleteFile(i.path));
     const err = new Error("Duplicate product");
     err.status = 409;
     throw err;
@@ -128,21 +130,21 @@ exports.createProduct = async param => {
   // Logger.info(dimensions)
 
   // handling composition field
-  const newCompositions = composition.filter(i => !isObjectId(i));
+  const newCompositions = composition.filter((i) => !isObjectId(i));
   const newCompositionsDocs = addCompositions(newCompositions);
-  let toAddComps = composition.filter(i => isObjectId(i));
+  let toAddComps = composition.filter((i) => isObjectId(i));
   toAddComps = uniq([
-    ...(await newCompositionsDocs).map(i => i._id),
-    ...toAddComps
+    ...(await newCompositionsDocs).map((i) => i._id),
+    ...toAddComps,
   ]);
 
   // handling organic field
-  const newOrganics = organic.filter(i => !isObjectId(i));
+  const newOrganics = organic.filter((i) => !isObjectId(i));
   const newOrganicsDocs = addOrganics(newOrganics);
-  let toAddOrganicsId = organic.filter(i => isObjectId(i));
+  let toAddOrganicsId = organic.filter((i) => isObjectId(i));
   toAddOrganicsId = uniq([
-    ...(await newOrganicsDocs).map(i => i._id),
-    ...toAddOrganicsId
+    ...(await newOrganicsDocs).map((i) => i._id),
+    ...toAddOrganicsId,
   ]);
 
   // Logger.info('newCompositions raw', newCompositions)
@@ -162,12 +164,18 @@ exports.createProduct = async param => {
 
   // toAddComps = uniq([...toAddComps, ...newCompIds, ...existingCompIds]);
 
-  let imageDocs = parentId ? parentProdDoc.images : [];
+  let imageDocs = parentId
+    ? intersectionBy(
+        parentProdDoc.images,
+        imageUrl.map((i) => ({ url: i })),
+        'url'
+      )
+    : [];
   // let imageDocs = [];
   if (images && images.length > 0) {
     // for variants maybe no images
     const imageDocsNew = await Promise.all(
-      images.map(async i => {
+      images.map(async (i) => {
         const thumbnail = await saveThumbnail(i.path);
         const url = await resizeCrop(i.path, WIDTH, HEIGHT);
         const dimensions = await getDimensions(i.path);
@@ -175,7 +183,7 @@ exports.createProduct = async param => {
           url,
           thumbnail,
           width: dimensions.width,
-          height: dimensions.height
+          height: dimensions.height,
         });
       })
     );
@@ -193,33 +201,33 @@ exports.createProduct = async param => {
   const seo = new Seo({
     metaTitle,
     metaDescription,
-    metaKeywords
+    metaKeywords,
   });
 
   const shippingDim = new ShippingDim({
     dimensions: {
       length: {
         value: length,
-        unit: lengthClass
+        unit: lengthClass,
       },
       width: {
         value: width,
-        unit: lengthClass
+        unit: lengthClass,
       },
       height: {
         value: height,
-        unit: lengthClass
-      }
+        unit: lengthClass,
+      },
     },
     weight: {
       value: weight,
-      unit: weightClass
-    }
+      unit: weightClass,
+    },
   });
 
-  const attributesDoc = attributes.map(i => ({
+  const attributesDoc = attributes.map((i) => ({
     attributeGroup: i.attributeGroup,
-    value: i.value
+    value: i.value,
   }));
 
   // save pricing details to Pricing colln
@@ -228,7 +236,7 @@ exports.createProduct = async param => {
     endDate,
     listPrice,
     salePrice,
-    taxId
+    taxId,
   });
 
   const productExtraInfoDoc = new ProductExtraInfo({});
@@ -254,7 +262,7 @@ exports.createProduct = async param => {
   const stock = new Stock({
     subtract,
     outOfStockStatus,
-    quantity
+    quantity,
   });
   const [errStock, stockDoc] = await to(stock.save());
   if (errStock) throw new Error("Error while saving stock");
@@ -291,7 +299,7 @@ exports.createProduct = async param => {
     stock: stockDoc._id,
     textDescription,
     productExtraInfo: productExtraInfoDoc._id,
-    relatedProducts
+    relatedProducts,
 
     // mainImage: mainImageDoc
   });
@@ -657,7 +665,7 @@ exports.getProductsFromIds = async (ids, fields = []) => {
   Logger.info("hi", ids, fields);
   let select = {};
   if (fields && fields.length > 0) {
-    fields.forEach(i => (select[i] = 1));
+    fields.forEach((i) => (select[i] = 1));
   }
   const [err, prods] = await to(
     Product.find({ _id: { $in: ids } })
@@ -676,11 +684,11 @@ exports.getProductsFromIds = async (ids, fields = []) => {
   Logger.info(err, prods);
   if (err) throw err;
   return {
-    products: prods.map(i => transformProduct(i))
+    products: prods.map((i) => transformProduct(i)),
   };
 };
 
-exports.getAllProductsAggregate = async query => {
+exports.getAllProductsAggregate = async (query) => {
   let dbQuery = { deleted: false };
 
   // let queryParsed = parseStrings(query);
@@ -696,7 +704,7 @@ exports.getAllProductsAggregate = async query => {
     category, // slugs
     featured,
     brand,
-    noExtraInfo
+    noExtraInfo,
     // id
   } = queryParsed;
 
@@ -714,8 +722,8 @@ exports.getAllProductsAggregate = async query => {
         from: "brands",
         localField: "brand",
         foreignField: "_id",
-        as: "brand"
-      }
+        as: "brand",
+      },
     },
 
     // {
@@ -725,15 +733,15 @@ exports.getAllProductsAggregate = async query => {
     // },
     {
       $unwind: {
-        path: "$brand"
-      }
+        path: "$brand",
+      },
     },
     {
-      $skip: (page - 1) * limit
+      $skip: (page - 1) * limit,
     },
     {
-      $sort: { ...sort, updatedAt: -1 }
-    }
+      $sort: { ...sort, updatedAt: -1 },
+    },
     // {
     //   $count: "totalDoc"
     // },
@@ -763,12 +771,12 @@ exports.getAllProductsAggregate = async query => {
     { path: "pricing", select: "listPrice salePrice startDate endDate taxId" },
     {
       path: "attributes.attributeGroup",
-      select: "name status attribute_group_code"
+      select: "name status attribute_group_code",
     },
     { path: "attributes.value", select: "value status" },
     { path: "medicineType" },
     { path: "stock" },
-    { path: "productExtraInfo" }
+    { path: "productExtraInfo" },
   ]);
 
   Logger.info(a);
@@ -776,15 +784,15 @@ exports.getAllProductsAggregate = async query => {
   if (a && a.length > 0)
     return {
       products: a,
-      total: a.length
+      total: a.length,
     };
 };
 
-exports.getAllProducts = async query => {
+exports.getAllProducts = async (query) => {
   let dbQuery = { deleted: false };
 
   let queryParsed = parseStrings(query);
-  Logger.info('queryParsed', queryParsed);
+  Logger.info("queryParsed", queryParsed);
   let {
     fields,
     status,
@@ -797,22 +805,21 @@ exports.getAllProducts = async query => {
     category, // slugs
     featured,
     brand,
-    noExtraInfo
+    noExtraInfo,
     // id
   } = queryParsed;
 
   // Object.entries(queryParsed).forEach(([key,value]) => {
   // })
   let select = {};
-  let sortQuery = {updatedAt:-1};
+  let sortQuery = { updatedAt: -1 };
   Object.entries(queryParsed).forEach(([key, value]) => {
     switch (key) {
       case "search":
-        console.log(key, value, value.name)
+        console.log(key, value, value.name);
         if (value.name)
           dbQuery = { ...dbQuery, name: { $regex: value.name, $options: "i" } };
-        if (value._id)
-          dbQuery = { ...dbQuery, _id: value._id }
+        if (value._id) dbQuery = { ...dbQuery, _id: value._id };
         // db.getCollection('products').find({name:{$regex:/hea/,$options:"i"}, sku:{$regex:/h22/,$options:"i"}},{sku:1})
         break;
       case "organic":
@@ -820,7 +827,7 @@ exports.getAllProducts = async query => {
         break;
       case "fields":
         if (value && value.length > 0) {
-          value.forEach(i => (select[i] = 1));
+          value.forEach((i) => (select[i] = 1));
         }
         break;
       case "noExtraInfo":
@@ -832,24 +839,28 @@ exports.getAllProducts = async query => {
       case "brand":
         dbQuery = {
           ...dbQuery,
-          brand: { $in: Array.isArray(value) ? value : new Array(value) }
+          brand: { $in: Array.isArray(value) ? value : new Array(value) },
         };
         break;
       case "category":
         dbQuery = {
           ...dbQuery,
-          category: { $in: Array.isArray(value) ? value : new Array(value) }
+          category: { $in: Array.isArray(value) ? value : new Array(value) },
         };
         break;
       case "page":
       case "limit":
       case "sortField":
       case "sort":
-        sortQuery = reduce(value, (result, value, key) => {
-          if (value === 'ascend') result[key] = 1;
-          else result[key] = -1;
-          return result
-        }, sortQuery)
+        sortQuery = reduce(
+          value,
+          (result, value, key) => {
+            if (value === "ascend") result[key] = 1;
+            else result[key] = -1;
+            return result;
+          },
+          sortQuery
+        );
         break;
       default:
         dbQuery = { ...dbQuery, [key]: value };
@@ -878,8 +889,8 @@ exports.getAllProducts = async query => {
 
   // sortOrder === "ascend" ? (sortOrder = 1) : (sortOrder = -1);
 
-  Logger.info('dbQuery', dbQuery);
-  Logger.info('sortQuery', sortQuery);
+  Logger.info("dbQuery", dbQuery);
+  Logger.info("sortQuery", sortQuery);
 
   const products = await Product.find(dbQuery)
     .select(select)
@@ -891,13 +902,16 @@ exports.getAllProducts = async query => {
     .populate("organic", "_id deleted name slug")
     .populate("brand", "_id deleted name slug image")
     // .populate({path: 'pricing', select:"listPrice salePrice startDate endDate taxId", options: { sort: { 'salePrice': -1 } } })
-    .populate({ path: 'pricing', select: "listPrice salePrice startDate endDate taxId" })
+    .populate({
+      path: "pricing",
+      select: "listPrice salePrice startDate endDate taxId",
+    })
     .populate("attributes.attributeGroup", "name status attribute_group_code")
     .populate("attributes.value", "value status")
     .populate("medicineType")
     // .populate({ path: "stock", options: { sort: { "quantity": -1 } } })
     .populate({ path: "stock" })
-    .populate("productExtraInfo")
+    .populate("productExtraInfo");
 
   // if (!products || products.length === 0) {
   //   const err = new Error("No products");
@@ -909,8 +923,8 @@ exports.getAllProducts = async query => {
   }
 
   return {
-    products: products.map(i => transformProduct(i)),
-    total: await Product.countDocuments({ deleted: false, ...dbQuery })
+    products: products.map((i) => transformProduct(i)),
+    total: await Product.countDocuments({ deleted: false, ...dbQuery }),
     // total: await Product.estimatedDocumentCount({ deleted: false, ...dbQuery })
   };
   // return products
@@ -927,7 +941,7 @@ exports.getAllVariants = async (productId, query) => {
     page = 1,
     limit = PAGE_LIMIT,
     sortField = "updatedAt",
-    sortOrder = 1
+    sortOrder = 1,
     // category // slugs
 
     // id
@@ -941,7 +955,7 @@ exports.getAllVariants = async (productId, query) => {
   // if (query.sort) sortQuery = { [query.sort]: -1 };
   let select = {};
   if (fields && fields.length > 0) {
-    fields.forEach(i => (select[i] = 1));
+    fields.forEach((i) => (select[i] = 1));
   }
 
   sortOrder === "ascend" ? (sortOrder = 1) : (sortOrder = -1);
@@ -951,42 +965,47 @@ exports.getAllVariants = async (productId, query) => {
   Logger.info("dbQuery", dbQuery);
 
   const attributeCode = await Product.aggregate([
-    { "$match": dbQuery },
+    { $match: dbQuery },
     {
-    $group: {
-    _id:"$attributes.attributeGroup"}},
-    
-    ]).exec();
-    // const attributeCode = attributeResult.map(item => {
-    //   return item._id;
-    // })
+      $group: {
+        _id: "$attributes.attributeGroup",
+      },
+    },
+  ]).exec();
+  // const attributeCode = attributeResult.map(item => {
+  //   return item._id;
+  // })
 
-    const attrproduct =  await Promise.all(
-      attributeCode.map(async function (item) {
-          //Object.assign(item, {key3: "value3"});
-          let attrQuery = {attributes:{$elemMatch: {attributeGroup:item._id}}};
-          dbQuery = { ...dbQuery, ...attrQuery};
-         let attrlistProduct = await Product.find(dbQuery)
-          .select(select)
-          .sort({ [sortField]: sortOrder })
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .populate("category", "name images seo")
-          .populate("parentId", "name parentId")
-          .populate("composition", "_id deleted name slug")
-          .populate("organic", "_id deleted name slug")
-          .populate("brand", "_id deleted name slug image")
-          .populate("pricing", "listPrice salePrice startDate endDate taxId")
-          .populate("attributes.attributeGroup", "name status attribute_group_code")
-          .populate("attributes.value", "value status")
-          .populate("medicineType")
-          .populate("stock");
-          
-          
-          return attrlistProduct;
-        })
-      );
-Logger.info("ff345",dbQuery);
+  const attrproduct = await Promise.all(
+    attributeCode.map(async function (item) {
+      //Object.assign(item, {key3: "value3"});
+      let attrQuery = {
+        attributes: { $elemMatch: { attributeGroup: item._id } },
+      };
+      dbQuery = { ...dbQuery, ...attrQuery };
+      let attrlistProduct = await Product.find(dbQuery)
+        .select(select)
+        .sort({ [sortField]: sortOrder })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("category", "name images seo")
+        .populate("parentId", "name parentId")
+        .populate("composition", "_id deleted name slug")
+        .populate("organic", "_id deleted name slug")
+        .populate("brand", "_id deleted name slug image")
+        .populate("pricing", "listPrice salePrice startDate endDate taxId")
+        .populate(
+          "attributes.attributeGroup",
+          "name status attribute_group_code"
+        )
+        .populate("attributes.value", "value status")
+        .populate("medicineType")
+        .populate("stock");
+
+      return attrlistProduct;
+    })
+  );
+  Logger.info("ff345", dbQuery);
   const products = await Product.find(dbQuery)
     .select(select)
     .sort({ [sortField]: sortOrder })
@@ -1008,9 +1027,9 @@ Logger.info("ff345",dbQuery);
     throw err;
   }
   return {
-    products: products.map(i => transformProduct(i)),
+    products: products.map((i) => transformProduct(i)),
     total: await Product.countDocuments({ deleted: false, ...dbQuery }),
-    attributelist: attrproduct
+    attributelist: attrproduct,
     // total: await Product.estimatedDocumentCount({ deleted: false, ...dbQuery })
   };
   // return products
@@ -1024,7 +1043,7 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
   let select = {};
 
   if (fields && fields.length > 0) {
-    fields.forEach(i => (select[i] = 1));
+    fields.forEach((i) => (select[i] = 1));
   }
 
   Logger.info("noExtraInfo", noExtraInfo);
@@ -1044,7 +1063,11 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
     .populate("stock")
     .populate("productExtraInfo")
     // .populate("relatedProducts", "_id slug name images pricing");
-    .populate({ path: "relatedProducts", populate: { path: "pricing" }, select: " _id slug name images pricing" });
+    .populate({
+      path: "relatedProducts",
+      populate: { path: "pricing" },
+      select: " _id slug name images pricing",
+    });
 
   Logger.info(product);
   if (product.length === 0) throw new Error(STRINGS.NOT_EXIST);
@@ -1072,7 +1095,7 @@ exports.editProduct = async (params, query) => {
 
   const pricing = await Pricing.findOne({ _id: product.pricing._id });
   let productExtraInfo = await ProductExtraInfo.findOne({
-    productId: product._id
+    productId: product._id,
   });
   if (!productExtraInfo) {
     productExtraInfo = new ProductExtraInfo({ productId: product._id });
@@ -1082,29 +1105,27 @@ exports.editProduct = async (params, query) => {
   const seoModel = new Seo({
     metaTitle: product.seo.metaTitle,
     metaDescription: product.seo.metaDescription,
-    metaKeywords: product.seo.metaKeywords
+    metaKeywords: product.seo.metaKeywords,
   });
   const promises = await Object.entries(params).map(async ([key, value]) => {
     switch (key) {
       case "returnable":
-
-        const boolRet = parseStrings({ returnable: value })
-        Logger.info(boolRet)
+        const boolRet = parseStrings({ returnable: value });
+        Logger.info(boolRet);
         // product.returnPeriod = undefined;
         product.returnable = boolRet.returnable;
-        if (!boolRet.returnable)
-          product.returnPeriod = null;
-        else product.returnPeriod = parseInt(params.returnPeriod, 10)
-        Logger.info(product)
+        if (!boolRet.returnable) product.returnPeriod = null;
+        else product.returnPeriod = parseInt(params.returnPeriod, 10);
+        Logger.info(product);
         break;
       case "deletedImages":
-        value.map(i => product.images.pull({ _id: i }));
+        value.map((i) => product.images.pull({ _id: i }));
         // return Promise.resolve(1)
         break;
       case "images":
         Logger.info(value);
         const imageDocs = await Promise.all(
-          value.map(async i => {
+          value.map(async (i) => {
             const thumbnail = await saveThumbnail(i.path);
             const url = await resizeCrop(i.path, WIDTH, HEIGHT);
             const dimensions = await getDimensions(i.path);
@@ -1113,12 +1134,12 @@ exports.editProduct = async (params, query) => {
               url,
               thumbnail,
               width: dimensions.width,
-              height: dimensions.height
+              height: dimensions.height,
             });
           })
         );
         Logger.info(imageDocs);
-        return imageDocs.map(i => product.images.push(i));
+        return imageDocs.map((i) => product.images.push(i));
         // return Promise.resolve(1);
         break;
       case "parentId":
@@ -1156,10 +1177,10 @@ exports.editProduct = async (params, query) => {
         // product.attributes
         //     .filter(i => i.attributeGroup !== attr.attributeGroup)
         //     .map(i => product.attributes.pull({ attributeGroup: i.attributeGroup }));
-        attr.map(i =>
+        attr.map((i) =>
           product.attributes.push({
             attributeGroup: i.attributeGroup,
-            value: i.value
+            value: i.value,
           })
         );
         // return Promise.resolve(1)
@@ -1172,22 +1193,22 @@ exports.editProduct = async (params, query) => {
         break;
       case "composition":
         Logger.info(key, value);
-        const newCompositions = value.filter(i => !isObjectId(i));
+        const newCompositions = value.filter((i) => !isObjectId(i));
         const newCompositionsDocs = addCompositions(newCompositions);
-        let toAddComps = value.filter(i => isObjectId(i));
+        let toAddComps = value.filter((i) => isObjectId(i));
         toAddComps = uniq([
-          ...(await newCompositionsDocs).map(i => i._id),
-          ...toAddComps
+          ...(await newCompositionsDocs).map((i) => i._id),
+          ...toAddComps,
         ]);
         product["composition"] = toAddComps;
         break;
       case "organic":
-        const newOrganics = params.organic.filter(i => !isObjectId(i));
+        const newOrganics = params.organic.filter((i) => !isObjectId(i));
         const newOrganicsDocs = addOrganics(newOrganics);
-        let toAddOrganicsId = params.organic.filter(i => isObjectId(i));
+        let toAddOrganicsId = params.organic.filter((i) => isObjectId(i));
         toAddOrganicsId = uniq([
-          ...(await newOrganicsDocs).map(i => i._id),
-          ...toAddOrganicsId
+          ...(await newOrganicsDocs).map((i) => i._id),
+          ...toAddOrganicsId,
         ]);
         product["organic"] = toAddOrganicsId;
         break;
@@ -1198,7 +1219,7 @@ exports.editProduct = async (params, query) => {
       case "otherInfo":
         productExtraInfo[key] = value;
         break;
-      case 'returnPeriod':
+      case "returnPeriod":
         break;
       default:
         product[key] = value;
@@ -1221,7 +1242,7 @@ exports.editProduct = async (params, query) => {
   return transformProduct(populatedProd);
 };
 
-exports.deleteProduct = async id => {
+exports.deleteProduct = async (id) => {
   const a = await Product.findOne({ _id: id });
   Logger.info(a);
   if (!a) throw new Error(STRINGS.INVALID_ID);
@@ -1233,7 +1254,7 @@ exports.deleteProduct = async id => {
     const variants = await Product.find({ parentId: id });
     Logger.info("variants", variants);
     if (variants.length > 0) {
-      const variantIds = variants.map(i => i._id);
+      const variantIds = variants.map((i) => i._id);
       Logger.info(variantIds);
       const b = await Product.updateMany(
         { _id: { $in: variantIds } },
@@ -1252,7 +1273,7 @@ exports.deleteProduct = async id => {
   return false;
 };
 
-exports.restoreProduct = async id => {
+exports.restoreProduct = async (id) => {
   const restoredData = await Product.findOneAndUpdate(
     { _id: id, deleted: true },
     { $set: { deleted: false } }
@@ -1264,63 +1285,104 @@ exports.restoreProduct = async id => {
 exports.getProductFilterAggregate = async (param) => {
   const { category, brand, status, sort } = param;
   let brandItems = [];
-  let queryString = [{ $project: { "_v": 0 } }];
-  let productsortlist, pricelookup, productmatch, categorylookup, categoryunwind, categorymatch, brandlookup, brandunwind, brandmatch, sortlist = {};
+  let queryString = [{ $project: { _v: 0 } }];
+  let productsortlist,
+    pricelookup,
+    productmatch,
+    categorylookup,
+    categoryunwind,
+    categorymatch,
+    brandlookup,
+    brandunwind,
+    brandmatch,
+    sortlist = {};
   if (status) {
-    productmatch = [{ $match: { 'status': status } }];
+    productmatch = [{ $match: { status: status } }];
   }
   if (sort) {
-    productsortlist = [{ $sort: { "pricing.salePrice": sort.salePrice, "priorityOrder": sort.priorityOrder } }];
+    productsortlist = [
+      {
+        $sort: {
+          "pricing.salePrice": sort.salePrice,
+          priorityOrder: sort.priorityOrder,
+        },
+      },
+    ];
   }
   pricelookup = [
     {
       $lookup: {
-        from: 'pricings',
-        localField: 'pricing',
-        foreignField: '_id',
-        as: 'pricing'
+        from: "pricings",
+        localField: "pricing",
+        foreignField: "_id",
+        as: "pricing",
       },
-    }
+    },
   ];
   if (category) {
-    let categoryCondition = isValidId(category) ?
-      mongoose.Types.ObjectId(category)
+    let categoryCondition = isValidId(category)
+      ? mongoose.Types.ObjectId(category)
       : category;
 
-    categorylookup = [{
-      $lookup: {
-        from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'categories'
+    categorylookup = [
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "categories",
+        },
       },
-    }
     ];
-    categoryunwind = [{ $unwind: '$categories' }];
-    categorymatch = [{ $match: { 'categories.slug': { $in: [categoryCondition] } } }];
-    queryString = [...queryString, ...categorylookup, ...categoryunwind, ...categorymatch];
+    categoryunwind = [{ $unwind: "$categories" }];
+    categorymatch = [
+      { $match: { "categories.slug": { $in: [categoryCondition] } } },
+    ];
+    queryString = [
+      ...queryString,
+      ...categorylookup,
+      ...categoryunwind,
+      ...categorymatch,
+    ];
   }
 
   if (brand) {
-    brand.map(i => (isValidId(i)) ? brandItems.push(mongoose.Types.ObjectId(i)) : brandItems.push(i));
-    brandlookup = [{
-      $lookup: {
-        from: 'brands',
-        localField: 'brand',
-        foreignField: '_id',
-        as: 'brand'
+    brand.map((i) =>
+      isValidId(i)
+        ? brandItems.push(mongoose.Types.ObjectId(i))
+        : brandItems.push(i)
+    );
+    brandlookup = [
+      {
+        $lookup: {
+          from: "brands",
+          localField: "brand",
+          foreignField: "_id",
+          as: "brand",
+        },
       },
-    }
     ];
-    brandunwind = [{ $unwind: '$brand' }];
-    brandmatch = (isValidId(brand[0])) ? [{ $match: { 'brand.id': { $in: brandItems } } }] : [{ $match: { 'brand.slug': { $in: brandItems } } }];
-    queryString = [...queryString, ...brandlookup, ...brandunwind, ...brandmatch];
+    brandunwind = [{ $unwind: "$brand" }];
+    brandmatch = isValidId(brand[0])
+      ? [{ $match: { "brand.id": { $in: brandItems } } }]
+      : [{ $match: { "brand.slug": { $in: brandItems } } }];
+    queryString = [
+      ...queryString,
+      ...brandlookup,
+      ...brandunwind,
+      ...brandmatch,
+    ];
   }
-  queryString = [...queryString, ...pricelookup, ...productmatch, ...productsortlist];
+  queryString = [
+    ...queryString,
+    ...pricelookup,
+    ...productmatch,
+    ...productsortlist,
+  ];
 
   const docs_collection = await Product.aggregate(queryString).exec();
 
   return {
-    products: docs_collection
+    products: docs_collection,
   };
 };
