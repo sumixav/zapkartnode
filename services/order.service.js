@@ -1,5 +1,5 @@
 const cleanDeep = require("clean-deep");
-const { carts, order_masters, order_items, coupens, address, users } = require("../auth_models");
+const { transaction_details, carts, order_masters, order_items, offers, address, users } = require("../auth_models");
 const Product = require("../models/product");
 const validator = require("validator");
 const {
@@ -12,26 +12,33 @@ const {
 } = require("../services/util.service");
 const Logger = require("../logger");
 //use parse-strings-in-object
-
+const paymentService = require("../services/payment.service");
+const crypto = require("crypto");
 
 
 exports.create = async (param) => {
+
   [err, cartDetails] = await to(carts.findAll({ where: { userId: param.user.id, deletedAt: null } }));
   Logger.info('order param', param);
   if (err) { TE(err.message) }
   let coupenDetails = shippingDetails = billingDetails = orderParam = updateOrderMaster = {};
   let totalPrice = totalQty = salePrice = 0;
-  if (param.coupen) {
-    [err, coupenDetails] = await to(coupens.findOne({ coupenCode: param.coupen }));
+  Logger.info('1111');
+  if (param.coupen > 0) {
+    Logger.info('2222');
+    [err, coupenDetails] = await to(offers.findOne({where:{ coupenCode: param.coupen }}));
     if (err) { TE(err.message) }
   }
-  
+  Logger.info('3333');
   if (param.shippingId) {
-    [err, shippingDetails] = await to(address.findOne({ id: param.shippingId }));
+    Logger.info('rrrr');
+    [err, shippingDetails] = await to(address.findOne({where:{ id: param.shippingId }}));
     if (err) { TE(err.message) }
+    Logger.info('rrrr',shippingDetails);
   }
+  Logger.info('4444');
   if (param.billingId) {
-    [err, billingDetails] = await to(address.findOne({ id: param.billingId }));
+    [err, billingDetails] = await to(address.findOne({where:{ id: param.billingId }}));
     if (err) { TE(err.message) }
   }
   let orderno = `zapOrd${new Date().getUTCMilliseconds()}`;
@@ -42,8 +49,9 @@ exports.create = async (param) => {
       'orderNo': orderno,
       'userId': param.user.id,
       'coupenId': (isEmpty(coupenDetails)) ? null : coupenDetails.id,
-      'paymentSettingId': (param.payment != 'cod') ? param.payment : null,
-      'paymentType': (param.payment != 'cod') ? 'onlinePayment' : 'cod',
+      'paymentSettingId': param.payment,
+      'orderStatus':(param.payment == 2)?'processing':'hold',
+      'paymentType': (param.payment != 2) ? 'onlinePayment' : 'cod',
       'billingAddress': `${billingDetails.houseNo} ${billingDetails.street} ${billingDetails.landmark} ${billingDetails.city} ${billingDetails.state} ${billingDetails.pincode}`,
       'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
       'shippingAmount': (param.shippingAmount) ? param.shippingAmount : 75
@@ -52,8 +60,12 @@ exports.create = async (param) => {
     Logger.info('orderMasterDetails', orderMasterDetails);
     if (err) { TE(err.message); }
     if (!orderMasterDetails) TE("Order could not be created");
-
+    let productDetails = '';
+    let paymentJson = {};
     if (orderMasterDetails && cartDetails.length > 0) {
+      const payments = await to(paymentService.getPaymentId(param.payment));
+      let pyMent = (payments)?payments[1]:{}
+      
       orderItemResult = await Promise.all(cartDetails.map(async function (item) {
         product = await Product.findOne({ _id: item.productId }).populate("category", "name images seo")
           .populate("composition", "_id deleted name slug")
@@ -65,6 +77,8 @@ exports.create = async (param) => {
           .populate("medicineType")
           .populate("stock")
           .populate("productExtraInfo");
+          productDetails =productDetails.concat(',', product.name)
+          Logger.info('product3422', item.productId,'#--#');
         totalPrice += parseInt(product.pricing.listPrice, 10) * parseInt(item.quantity);
         totalQty += parseInt(item.quantity, 10);
         salePrice += parseInt(item.price, 10) * parseInt(item.quantity);
@@ -93,7 +107,33 @@ exports.create = async (param) => {
 
       // remove items from cart - to do
 
-      return updateOrderMaster;
+      if(!isEmpty(param.payment)&& param.payment == 1) {
+        let gateway = pyMent[0].gatewayDetails;	
+        let resGateWay = JSON.parse(gateway);
+        let cryp = crypto.createHash('sha512');
+		    let text = `${resGateWay.key}|${orderno}|${totalPrice}|${productDetails}|${param.user.firstName}|${param.user.email}|||||BOLT_KIT_NODE_JS||||||${resGateWay.salt}`;
+        // let text = `${resGateWay.key}|${orderno}|${totalPrice}|${productDetails}|${param.user.firstName}|${param.user.email}`;
+        cryp.update(text);
+        let hash = cryp.digest('hex');
+        paymentJson.key=resGateWay.key;
+        paymentJson.txnid=orderno;
+        paymentJson.hash=hash;
+        paymentJson.amount=totalPrice;
+        paymentJson.firstname=param.user.firstName;
+        paymentJson.email=param.user.email;
+        paymentJson.phone=param.user.phone;
+        paymentJson.productinfo=productDetails;
+        paymentJson.udf5="BOLT_KIT_NODE_JS";
+        paymentJson.surl="localhost:3000/test";
+        paymentJson.furl="localhost:3000/test";
+      }
+
+      if(param.payment == 2) {
+        [err, cart] = await to(carts.destroy({ where: { userId: param.user.id } }));
+        if (err) { return err; }
+      }
+
+      return {updateOrderMaster,"payment":paymentJson};
     }
 
   }
@@ -238,6 +278,28 @@ const deleteCart = async (id) => {
   [err, cart] = await to(carts.destroy({ where: { id: id } }));
   if (err) { return err; }
   return cart;
+}
+
+exports.updateOrder = async (param) => {
+  let paramRes = JSON.parse(param.paymentResponse);
+  const [errA, order] = await to(order_masters.findOne({
+    where: { orderNo: paramRes.txnid },
+  }));
+  let paymentStatus = (paramRes.status!=='success')?'failed':'success';
+  const [err, updateOrderMaster] = await to(order_masters.update({paymentStatus,'orderStatus':'processing','transactionId':paramRes.txnid}, { where: { orderNo: paramRes.txnid } }));
+  if (err) { return err; }
+  let transactionParam = {
+    'transactionId': paramRes.txnid,
+    'transactionResponseDetails': param.paymentResponse,
+    'orderId': paramRes.txnid,
+    'status': paymentStatus
+  };
+  let transactionDetails = await to(transaction_details.create(transactionParam));
+  if (err) { return err; }
+  if(paramRes.status==='success') {
+  let cart = await to(carts.destroy({ where: { userId: param.user.id } }));
+  }
+  return updateOrderMaster;
 }
 
 
