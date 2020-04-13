@@ -361,7 +361,7 @@ const getCart = async userid => {
         product = await Product.findOne({ _id: item.productId }).populate(
           "pricing stock"
         ).select("id slug name maxOrderQty minOrderQty prescriptionNeeded deleted status pricing stock images");
-        let obj = { ...item.toWeb(), product: { ...product } };
+        let obj = { ...item.toWeb(), product: { ...product._doc } };
         return obj;
       })
     );
