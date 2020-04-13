@@ -78,7 +78,7 @@ exports.createProduct = async (param) => {
     minOrderQty,
     maxOrderQty,
     shipping,
-    composition,
+    composition =[],
     prescriptionNeeded,
     returnable,
     featured,
@@ -96,7 +96,7 @@ exports.createProduct = async (param) => {
     outOfStockStatus,
     subtract,
     textDescription,
-    organic,
+    organic =[],
     relatedProducts,
     imageUrl,
   } = parsedParam;
