@@ -12,6 +12,7 @@ const CartController = require('../controllers/backend/cart.controller');
 const CoupenController = require('../controllers/backend/coupen.controller');
 const PaymentController = require('../controllers/backend/payment.controller');
 const OrderController = require('../controllers/backend/order.controller');
+const ShipmentController = require('../controllers/backend/shipment.controller');
 const Validate = require('../services/validate');
 const multer = require('multer')
 
@@ -43,7 +44,7 @@ router.get('/userGroup/list/:role', passport.authenticate('jwt', { session: fals
 router.get('/userGroup/:id', passport.authenticate('jwt', { session: false }), UserGroupController.getUserGroup);
 router.patch('/userGroup/updateuserGroup/:id', formupload.none(), passport.authenticate('jwt', { session: false }), UserGroupController.updateUserGroup);
 
-router.post('/merchant/create', formupload.none(), MerchantController.create);
+router.post('/merchant/create', passport.authenticate('jwt', { session: false }), formupload.none(), MerchantController.create);
 router.get('/merchant', MerchantController.getAllMerchant);
 router.get('/merchant/:id', MerchantController.getMerchant);
 router.patch('/updatemerchant/:id', formupload.none(), MerchantController.updateMerchant);
@@ -118,14 +119,31 @@ router.get('/coupen/:id', CoupenController.getCoupen);
 router.patch('/updatecoupen/:id', formupload.none(), CoupenController.updateCoupen);
 router.get('/coupensection', CoupenController.getAllCoupenSection);
 router.get('/paymentmethod', PaymentController.getPaymentMethod);
-router.get('/coupenDetail/:name', passport.authenticate('jwt', { session: false }),CoupenController.getCoupenDetails);
+router.get('/coupenDetail/:name', passport.authenticate('jwt', { session: false }), CoupenController.getCoupenDetails);
 
 // orders
 router.post('/order/create', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.create);
 router.get('/order/all', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getAllOrders);
-router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderDetails);
 router.get('/order', passport.authenticate('jwt', { session: false }), OrderController.getUserOrders);
+// n
+router.patch('/order/orderItem/:orderItemId', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.updateOrderItem);
 router.get('/order/user/:userId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getUserOrders);
+router.post('/order/update/:orderId/add-order-item', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), formupload.none(), OrderController.addOrderItem);
+router.patch('/order/update/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), formupload.none(), OrderController.updateOrderAdmin);
+
 router.post('/order/update', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.update);
+// n
+router.post('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.assignMerchantToOrder);
+router.patch('/order/assign/:merchantOrderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.updateAssignedMerchantToOrder);
+router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderDetails);
+
+// shipments
+router.post('/shipment/create', passport.authenticate('jwt', { session: false }), formupload.none(), ShipmentController.createShipment);
+router.get('/shipment/all', passport.authenticate('jwt', { session: false }), ShipmentController.getShipments);
+router.get('/shipment/:shipmentId', passport.authenticate('jwt', { session: false }), ShipmentController.getShipmentDetails);
+router.patch('/shipment/:shipmentId', passport.authenticate('jwt', { session: false }), formupload.none(), ShipmentController.editShipment);
+// router.get('/shipment/unshipped/:masterOrderId', passport.authenticate('jwt', { session: false }), ShipmentController.getUnshippedOrderItems);
+router.get('/shipment/unshipped/:masterOrderId', passport.authenticate('jwt', { session: false }), ShipmentController.getUnshippedOrderItems);
+
 
 module.exports = router;

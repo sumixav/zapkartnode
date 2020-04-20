@@ -1,6 +1,6 @@
-const cleanDeep = require("clean-deep");
-const {merchants} = require("../auth_models");
-const validator = require("validator");
+
+const {merchants, users} = require("../auth_models");
+
 const {
   to,
   TE,
@@ -9,25 +9,29 @@ const {
   isEmpty
 } = require("../services/util.service");
 const Logger = require("../logger");
+const pick =  require("lodash/pick");
 //use parse-strings-in-object
 
 
 
 exports.createmerchant = async (param) => {
-  [err, merchantlists] = await to(merchants.create(param));
-  if(err) { return err; }
-  return merchantlists;
+  let intParams = pick(param, ['countryId', 'cityId', 'stateId', 'languageId', 'merchantTypeId']);
+  [err, merchant] = await to(merchants.create({...param, ...intParams}));
+  if(err) { TE(err.message); }
+  if (!merchant) TE("Error while creating merchant")
+  const merchanePopulated = merchants.findOne({where:{id:merchant.id}, include:[{model:users}]})
+  return merchant;
 };
 
 exports.getAllMerchant = async query => {
   [err, merchantlist] = await to(merchants.findAll());
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   return merchantlist;
 };
 
 const getMerchantId = async (id) => {
   [err, merchantlist] = await to(merchants.findById(id));
-  if(err) { return err; }
+  if(err) { TE(err.message); }
   return merchantlist;
 }
 

@@ -1,6 +1,8 @@
-const { to, ReE, ReS } = require("../../services/util.service");
+const { to, ReE, ReS, parseJSONparams } = require("../../services/util.service");
 const { status_codes_msg } = require("../../utils/appStatics");
 const Logger = require("../../logger");
+const pick = require("lodash/pick")
+const parseStrings = require("parse-strings-in-object")
 
 const orderService = require("../../services/order.service");
 
@@ -62,6 +64,34 @@ exports.getAllOrders = async (req, res, next) => {
     if (orders) {
       return ReS(res, { message: "Orders", data: orders }, status_codes_msg.SUCCESS.code);
     }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+}
+
+exports.assignMerchantToOrder = async (req, res, next) => {
+  try {
+    const intParams = parseStrings(pick(req.body, 'merchantId',
+      'masterOrderId',
+      'orderItemIds'));
+    Logger.info('intParams', intParams)
+
+    const params = { ...req.body, ...intParams };
+
+    Logger.info('params', params)
+
+    const [err, assigned] = await to(orderService.assignMerchantToOrder(params))
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: "Assigned merchant to order", data: assigned }, status_codes_msg.SUCCESS.code);
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+}
+exports.updateAssignedMerchantToOrder = async (req, res, next) => {
+  try {
+    const [err, updated] = await to(orderService.updateAssignedMerchantToOrder(req.body, req.params.merchantOrderId))
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: "Updated merchant assignment details", data: updated }, status_codes_msg.SUCCESS.code);
   } catch (err) {
     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
   }
@@ -142,3 +172,55 @@ const update = async function (req, res) {
 };
 
 module.exports.update = update;
+
+exports.updateOrderAdmin = async (req, res) => {
+  const parsedParams = parseJSONparams(req.body)
+  Logger.info('parsedParams', parsedParams)
+  const { orderId } = req.params;
+  try {
+    [err, updatedOrder] = await to(orderService.updateOrderA(parsedParams, orderId));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (updatedOrder) {
+
+      return ReS(res, { message: 'Order has been updated', data: updatedOrder }
+        , status_codes_msg.SUCCESS.code);
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+}
+
+exports.updateOrderItem = async (req, res) => {
+
+  const { orderItemId } = req.params;
+  try {
+    [err, updated] = await to(orderService.updateOrderItem(req.body, orderItemId));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (updated) {
+      return ReS(res, { message: 'Order item has been updated', data: updated }
+        , status_codes_msg.SUCCESS.code);
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+}
+
+exports.addOrderItem = async (req, res) => {
+  const { orderId: orderMasterId } = req.params;
+  const { productId, quantity } = req.body;
+  const intQuantity = parseInt(quantity, 10);
+  try {
+    [err, updated] = await to(orderService.addOrderItem({
+      orderMasterId, productId, quantity: intQuantity
+    }));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (updated) {
+      return ReS(res, { message: 'Order item has been created', data: updated }
+        , status_codes_msg.SUCCESS.code);
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+}
+
+

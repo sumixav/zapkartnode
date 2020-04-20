@@ -270,6 +270,33 @@ exports.getOrderQuery = (orderObj = {}) => {
   return { order: Object.entries(orderObj) }
 }
 
+exports.parseJSONparams = (obj) => {
+  const newObj = {}
+  Object.entries(obj).forEach(([key, value]) => {
+    if (this.isJsonStr(value)) newObj[key] = this.getJsonObject(value)
+    else newObj[key] = value
+  })
+  return newObj;
+}
+
+// check if string is json string
+exports.isJsonStr = (text) => { 
+  if (typeof text !== "string") { 
+      return false; 
+  } 
+  try { 
+      JSON.parse(text); 
+      return true; 
+  } catch (error) { 
+      return false; 
+  } 
+} 
+
+// get js object from json string
+exports.getJsonObject = (text) => {
+  return JSON.parse(text)
+}
+
 exports.omitUserProtectedFields = (user) => {
   return omit(user, ['password',
     'passwordChangedAt',
@@ -278,6 +305,16 @@ exports.omitUserProtectedFields = (user) => {
     'resetPasswordToken',
     'resetPasswordExpiresIn'])
 }
+
+exports.convertArrayToObject = (array, key) => {
+  const initialValue = {};
+  return array.reduce((obj, item) => {
+    return {
+      ...obj,
+      [item[key]]: item,
+    };
+  }, initialValue);
+};
 
 // exports.saveThumbnail = imagePathArray => {
 //     Logger.info(imagePathArray);

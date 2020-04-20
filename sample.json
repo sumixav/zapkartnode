@@ -1,0 +1,39 @@
+{
+    "masterOrderId": 1,
+    "orderItems": [
+        {
+            "id": 1,
+            "quantity": 2
+        },
+        {
+            "id": 2,
+            "quantity": 2
+        }
+    ],
+    "comment": "test",
+    "shipmentOriginDetails": {
+        "merchantName": "John Doe",
+        "merchantAddress1": "abc",
+        "merchantAddress2": "abc",
+        "city": "Kochi",
+        "country": "India",
+        "state": "Kerala",
+        "zip": "667676"
+    },
+    "shipmentDestinationAddress": {
+        "shippingFname": "Abc",
+        "shippingLname": "Def",
+        "shippingAddress1": "Abc",
+        "shippingAddress2": "Abc",
+        "shippingCity": "Kerala",
+        "shippingProvince": "Abc",
+        "shippingZip": "Abc",
+        "shippingState": "Abc",
+        "shippingCountry": "Abc",
+        "shippingPhone": "Abc",
+        "shippingEmail": "abc@gmail.com"
+    },
+    "grossWeight": "ss",
+    "carrier": "ss",
+    "shipmentCreatedDate": "ss"
+}

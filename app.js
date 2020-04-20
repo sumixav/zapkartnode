@@ -5,16 +5,18 @@ const passport = require("passport");
 const pe = require("parse-error");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const fileUpload = require("express-fileupload");
+// const fileUpload = require("express-fileupload");
 const multer = require("multer");
-const upload = multer();
+// const upload = multer();
 const Logger = require("./logger");
-const { ReE } = require("./services/util.service");
+const { ReE, to, TE } = require("./services/util.service");
+const {order_items, order_merchant_assign_items} = require("./auth_models")
+const compression = require("compression");
 
-const Composition = require("./models/composition");
 
-const catalog = require('./routes/catalog');
-const backend = require('./routes/backend');
+
+const catalog = require("./routes/catalog");
+const backend = require("./routes/backend");
 
 const app = express();
 const { status_codes_msg } = require("./utils/appStatics");
@@ -26,6 +28,7 @@ const { status_codes_msg } = require("./utils/appStatics");
 
 const CONFIG = require("./config/config");
 
+app.use(compression());
 app.use(logger("dev"));
 
 // for parsing application/xwww-
@@ -40,17 +43,19 @@ app.use(passport.initialize());
 
 
 
-
 //DATABASE
 const authmodels = require("./auth_models");
 authmodels.sequelize
   .authenticate()
   .then(() => {
     console.log("Connected to SQL database:", CONFIG.sql_db_name);
-
   })
-  .catch(err => {
-    console.error("Unable to connect to SQL database:", CONFIG.sql_db_name, err);
+  .catch((err) => {
+    console.error(
+      "Unable to connect to SQL database:",
+      CONFIG.sql_db_name,
+      err
+    );
   });
 if (CONFIG.app === "dev") {
   //models.sequelize.sync();//creates table if they do not already exist
@@ -64,12 +69,12 @@ mongoose
   .connect(CONFIG.mongodb_uri, {
     dbName: CONFIG.db_name,
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   })
   .then(() => {
     Logger.info(`📖  Connected to MongoDB database: ${CONFIG.db_name}`);
   })
-  .catch(err => Logger.error("❗  Could not connect to MongoDB...", err));
+  .catch((err) => Logger.error("❗  Could not connect to MongoDB...", err));
 
 if (CONFIG.app === "dev") {
   //models.sequelize.sync();//creates table if they do not already exist
@@ -85,14 +90,34 @@ app.use(bodyParser.json());
 app.use("/api/catalog/v1", catalog);
 app.use("/api/backend/v1", backend);
 
-app.use("/", function(req, res) {
+app.use("/", function (req, res) {
   res
     .status(status_codes_msg.NO_RECORD_FOUND.code)
     .json(status_codes_msg.NO_RECORD_FOUND);
 });
 
+// const bootstrap = async () => {
+
+//   const [errJ, orderItemWithMerchant] = await to(order_items.findOne({
+//     where:{
+//       id:10
+//     },
+//     include:[
+//       {
+//         model:order_merchant_assign_items,
+//         as:'assignedMerchant'
+//       }
+//     ]
+//   }))
+
+//   if (errJ) Logger.error(errJ.message);
+//   Logger.info('other one')
+//   Logger.info(orderItemWithMerchant)
+// }
+// bootstrap();
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   console.log("err.status");
   var err = new Error("Not Found");
   err.status = 404;
@@ -119,7 +144,7 @@ app.use((err, req, res, next) => {
 module.exports = app;
 
 //This is here to handle all the uncaught promise rejections
-process.on("unhandledRejection", error => {
+process.on("unhandledRejection", (error) => {
   console.error("Uncaught Error", pe(error));
 });
 

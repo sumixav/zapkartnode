@@ -51,22 +51,57 @@ module.exports = function (sequelize, DataTypes) {
     paymentStatus: {
       type: DataTypes.ENUM,
       values: ['pending', 'failed', 'success']
+      // values:['pending', 'denied', 'received', 'refunded', 'error']
     },
     orderStatus: {
       type: DataTypes.ENUM,
       values: ['hold', 'pending', 'processing', 'completed']
+      // values:['pending', 'processed', 'cancelled', 'error', 'backordered']
     },
     transactionId: {
       type: DataTypes.STRING(255),
       allowNull: true
     },
     billingAddress: {
-      type: DataTypes.STRING(255),
-      allowNull: true
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get: function () {
+        const dataValue = this.getDataValue("billingAddress");
+        console.log('getter billingAddress', dataValue)
+        if (dataValue)
+          return JSON.parse(dataValue);
+      },
+      set: function (value) {
+
+        console.log('setter billingAddress', value)
+        if (value) this.setDataValue("billingAddress", JSON.stringify(value));
+
+      },
     },
+    // billingAddressId:{
+    //   type:DataTypes.INTEGER(11),
+    //   allowNull:true
+    // },
+    // shippingAddressId:{
+    //   type:DataTypes.INTEGER(11),
+    //   allowNull:true
+    // },
     shippingAddress: {
-      type: DataTypes.STRING(255),
-      allowNull: true
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get: function () {
+        const dataValue = this.getDataValue("shippingAddress");
+        console.log('getter shippingAddress', dataValue)
+        if (dataValue)
+
+          return JSON.parse(dataValue);
+      },
+      set: function (value) {
+        console.log('setter shippingAddress', value)
+        console.log('setter json shippingAddress', JSON.stringify(value))
+        if (value) this.setDataValue("shippingAddress", JSON.stringify(value));
+
+      },
     },
     shippingAmount: {
       type: DataTypes.INTEGER(11),
@@ -79,12 +114,21 @@ module.exports = function (sequelize, DataTypes) {
   });
 
   Model.associate = function (models) {
-    this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
+    // this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
+    Model.belongsTo(models.users, { foreignKey: 'userId' });
+    Model.hasMany(models.order_items);
+    Model.hasMany(models.shipment, { as: 'shipments', foreignKey: 'masterOrderId' })
+    Model.hasMany(models.order_merchant_assign,
+      { as: 'assignedMerchants', foreignKey: 'masterOrderId' }
+    )
+    Model.hasMany(models.order_status_history,
+      { as: 'orderHistory', foreignKey: 'orderId' }
+    )
     // this.userId = this.belongsTo(models.users, { foreignKey: 'id', sourceKey:'userId' });
   };
-  Model.associate = function (models) {
-    this.orderItems = this.hasMany(models.order_items);
-  };
+  // Model.associate = function (models) {
+  //   this.orderItems = this.hasMany(models.order_items);
+  // };
 
   Model.prototype.toWeb = function () {
     let json = this.toJSON();
