@@ -80,7 +80,7 @@ module.exports = function (sequelize, DataTypes) {
   Model.associate = function (models) {
     Model.belongsTo(models.users, { foreignKey: "userId" });
     Model.belongsTo(models.order_masters, { foreignKey: "orderMasterId" });
-    Model.hasMany(models.shipment_order_item, { as: "shipping", foreignKey:"orderItemId" });
+    Model.hasOne(models.shipment_order_item, { as: "shipping", foreignKey:"orderItemId" });
     // Model.hasMany(models.shipment_order_item, { as: "shipping", foreignKey:"orderItemId" });
     Model.hasOne(models.order_merchant_assign_items, 
        { as: "assignedMerchant", foreignKey:"orderItemId" }

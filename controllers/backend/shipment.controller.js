@@ -1,5 +1,5 @@
 const shipmentService = require('../../services/shipment.service');
-const { to, ReE, ReS } = require('../../services/util.service');
+const { to, ReE, ReS, isJsonStr, getJsonObject } = require('../../services/util.service');
 const { status_codes_msg } = require('../../utils/appStatics');
 const Logger = require("../../logger");
 
@@ -8,8 +8,17 @@ const Logger = require("../../logger");
 exports.createShipment = async function (req, res) {
     const createdBy = req.user.id;
     const createdByType = req.user.userTypeId;
-    const [err, shipment] = await to(shipmentService.createShipment({...req.body, createdBy,
-        createdByType}));
+    const shipmentOriginDetails = isJsonStr(req.body.shipmentOriginDetails) ? getJsonObject(req.body.shipmentOriginDetails) : req.body.shipmentOriginDetails;
+    const shipmentDestinationAddress = isJsonStr(req.body.shipmentDestinationAddress) ? getJsonObject(req.body.shipmentDestinationAddress) : req.body.shipmentDestinationAddress;
+    const orderItems = isJsonStr(req.body.orderItems) ? getJsonObject(req.body.orderItems) : req.body.orderItems;
+    console.log('orderItems', orderItems)
+    console.log('shipmentOriginDetails', shipmentOriginDetails)
+    console.log('shipmentDestinationAddress', shipmentDestinationAddress)
+    const [err, shipment] = await to(shipmentService.createShipment({
+        ...req.body, shipmentOriginDetails,
+        shipmentDestinationAddress, orderItems, createdBy,
+        createdByType
+    }));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!shipment) return ReE(res, new Error('Error creating shipment'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Shipment created', data: shipment }

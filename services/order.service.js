@@ -87,6 +87,8 @@ exports.create = async (param) => {
       // 'billingAddress': `${billingDetails.houseNo} ${billingDetails.street} ${billingDetails.landmark} ${billingDetails.city} ${billingDetails.state} ${billingDetails.pincode}`,
       // 'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
       billingAddress: {
+        fullName: billingDetails.fullName,
+        mobileNo: billingDetails.mobileNo,
         houseNo: billingDetails.houseNo,
         street: billingDetails.street,
         landmark: billingDetails.landmark,
@@ -95,6 +97,8 @@ exports.create = async (param) => {
         pincode: billingDetails.pincode,
       },
       shippingAddress: {
+        fullName: shippingDetails.fullName,
+        mobileNo: shippingDetails.mobileNo,
         houseNo: shippingDetails.houseNo,
         street: shippingDetails.street,
         landmark: shippingDetails.landmark,
@@ -436,7 +440,7 @@ exports.addOrderItem = async (params) => {
       if (errD) TE("Error updating master order. " + errD.message);
       if (!orderMasterU) TE("Error updating master order");
       if (orderMasterU && orderMasterU[0] === 0) {
-        TE("Error updating order") 
+        TE("Error updating order")
       }
       return true;
     })

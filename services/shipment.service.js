@@ -44,6 +44,7 @@ var status = {
 };
 
 module.exports.createShipment = async (params) => {
+  Logger.info(params);
   const transaction = await sequelize.transaction();
   try {
     const shipmentCreatedDate = new Date().toISOString();
