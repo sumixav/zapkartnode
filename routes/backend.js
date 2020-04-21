@@ -136,7 +136,7 @@ router.post('/order/update', passport.authenticate('jwt', { session: false }), f
 router.post('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.assignMerchantToOrder);
 router.delete('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.deleteAssignedMerchantToItem);
 // router.patch('/order/assign/:merchantOrderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.updateAssignedMerchantToOrder);
-router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderDetails);
+router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), OrderController.getOrderDetails);
 
 // shipments
 router.post('/shipment/create', passport.authenticate('jwt', { session: false }), formupload.none(), ShipmentController.createShipment);
