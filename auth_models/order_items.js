@@ -85,6 +85,9 @@ module.exports = function (sequelize, DataTypes) {
     Model.hasOne(models.order_merchant_assign_items, 
        { as: "assignedMerchant", foreignKey:"orderItemId" }
       );
+    Model.hasOne(models.orderitem_merchant, 
+       { as: "merchantassigned", foreignKey:"orderItemId" }
+      );
     // this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
   };
   // Model.associate = function (models) {

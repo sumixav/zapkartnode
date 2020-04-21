@@ -1,15 +1,14 @@
 
 const {
-  shipments,
   users,
   order_masters,
   order_items,
   shipment,
   shipment_order_item,
   user_types,
-  order_merchant_assign_items,
-  order_merchant_assign,
-  sequelize
+  orderitem_merchant,
+  sequelize,
+  merchants
 } = require("../auth_models");
 const {
   to,
@@ -139,130 +138,67 @@ module.exports.getShipments = async (params) => {
 };
 
 module.exports.getShipmentDetails = async (shipmentId) => {
-  const [err, shipmentDetails] = await to(shipment.findOne({
-    where: { id: shipmentId }, include: [
+  let errA, products, shipmentDetails;
+  [err, shipmentDetails] = await to(shipment.findOne({
+    where: { id: shipmentId },
+    include: [
       {
         model: shipment_order_item, as: 'orderItems',
-
         include: [
+
           {
             model: order_items,
-            include: {
-              model: order_masters
-            }
 
-          }
+
+            include: [
+              {
+                model: order_masters
+              },
+              {
+                model: orderitem_merchant,
+
+                as: "merchantassigned",
+
+                // where: sequelize.or({ 'status': 'shipment-created' }, { 'status': 'pending' }),
+                // where: sequelize.and({ '$order_merchant_assign.status$': null }),
+                // required: false,
+                include: [
+                  {
+                    model: merchants,
+                  
+                   
+                  }
+                ]
+              }
+            ],
+
+          },
+
+
         ]
+      },
+      {
+        model: order_masters,
+        as: 'masterOrder'
       }
     ]
   }));
   if (err) TE(err.message);
   if (!shipmentDetails) TE(STRINGS.NOT_EXIST);
+  const prodArr = shipmentDetails.orderItems.map(i => i.order_item.productId);
+
+
+  [errA, products] = await to(Product.find({ _id: { $in: prodArr } }).populate('pricing').select('name shipping images slug sku pricing'));
+  if (errA) TE("Error fetching products", errA.message);
+  if (!products) TE("Error fetching products");
+  products = convertArrayToObject(products, '_id');
+
+  shipmentDetails = { ...shipmentDetails.toWeb(), orderItems: shipmentDetails.orderItems.map(i => ({ ...i.toWeb(), order_item: { ...i.order_item.toWeb(), product: products[i.order_item.productId] } })) }
+
   return shipmentDetails;
 };
 
-//conside qty in orderitems as well from mapping table 
-module.exports.getUnshippedOrderItemsA = async (orderMasterId) => {
-  let [errA, orderItems] = await to(order_items.findAll({
-    where: {
-      orderMasterId
-    },
-    raw: true
-  }));
-  if (errA) TE(errA.message);
-  if (!orderItems) TE(STRINGS.NOT_EXIST);
-  // const orderItemIds = orderItems.map(i=> i.id);
 
-  Logger.info(orderItems.map(i => ({ orderItemId: i.id })));
-  // find if orderItems present in 'shipment_order_item'
-  let [errB, shippedItems] = await to(shipment_order_item.findAll({
-    where: {
-      [Op.or]: orderItems.map(i => ({ orderItemId: i.id }))
-    },
-    raw: true
-  }))
-  if (errB) TE(errB.message);
-  if (!shippedItems) return order_items;
-
-  // shippedItems = shippedItems.toWeb();
-  // orderItems = orderItems.toWeb();
-
-
-  let unshippedItems = [];
-  if (shippedItems.length > 0) {
-    const transOrderItems = orderItems.map(i => ({ ...i, orderItemId: i.id }));
-    const newItems = differenceBy(transOrderItems, shippedItems, 'orderItemId');
-
-    const newItemsA = omit(newItems, 'orderItemId');
-    // console.log('newItemsA', newItemsA)
-    unshippedItems = [...unshippedItems, ...newItems];
-
-    const transShippedItems = shippedItems.map(i => ({ [i.orderItemId]: { ...i } }));
-    // console.log('shippedItems', shippedItems);
-    const groupByArr = groupBy(shippedItems, 'orderItemId');
-    // console.log('groupby', groupByArr)
-    const transformObj = transform(groupByArr, function (result, value, key) {
-      let qty = 0
-      value.forEach(i => qty = i.quantity + qty)
-      return result[key] = { quantity: qty }
-    }, {})
-    // console.log('transformObj', transformObj)
-    // console.log('transformObj[2]', transformObj['2'])
-
-    const existOrderItems = intersectionBy(transOrderItems, shippedItems, 'orderItemId');
-    const filtered = existOrderItems.filter(i => i.quantity !== transShippedItems[i.id]);
-
-    const existingQtyChanged = filtered.map(i => ({ ...i, quantity: i.quantity - transformObj[i.id].quantity }));
-    unshippedItems = [...unshippedItems, ...existingQtyChanged];
-  }
-
-  return unshippedItems;
-
-
-}
-
-
-/**
- * to get order items list from master order, where merchant isn't assigned (merchant)
- * order_merchant_assign status -  ['rejected'] &
- * where order_items in master order don't have shipment 
- * @param {integer} orderMasterId
- */
-exports.getUnassignedUnshippedOrderItemsA = async (orderMasterId) => {
-  let err, orderItems, products;
-
-  [err, orderItems] = await to(order_items.findAll({
-    where: {
-      orderMasterId,
-      // 'totalqty': { [Op.ne]: null }
-      // [Op.and]: [
-      //   { 'shipping.totalqty': { [Op.ne]: null } },
-      //   // { quantity: 5 }
-      // ]
-    },
-
-    // group: ['order_items.id'],
-    // raw:true,
-    // attributes: [[sequelize.fn('SUM', sequelize.col('shipping.quantity')), 'totalqty']],
-    include: [
-      {
-        model: shipment_order_item,
-        as: 'shipping',
-        include: [
-          { model: shipment }
-        ]
-      },
-      {
-        model: order_merchant_assign_items,
-        as: 'assignedMerchant'
-      }
-    ]
-  }));
-  if (err) TE(err.message);
-  if (!orderItems) TE(STRINGS.NOT_EXIST)
-  return orderItems
-
-}
 /**
  * to get order items list from master order, where merchant isn't assigned (merchant)
  * or order_merchant_assign status -  ['rejected'] &
@@ -298,11 +234,11 @@ exports.getUnshippedOrderItems = async (orderMasterId) => {
       ]
     },
     {
-      model: order_merchant_assign_items,
-      as: 'assignedMerchant',
+      model: orderitem_merchant,
+      as: 'merchantassigned',
       include: [
         {
-          model: order_merchant_assign
+          model: merchants
         }
       ]
     }
@@ -316,8 +252,8 @@ exports.getUnshippedOrderItems = async (orderMasterId) => {
         { '$shipping.id$': { [Op.eq]: null } },
         {
           [Op.or]: [
-            { '$assignedMerchant.id$': { [Op.eq]: null } },
-            { '$assignedMerchant.order_merchant_assign.status$': { [Op.in]: ['rejected'] } },
+            { '$merchantassigned.id$': { [Op.eq]: null } },
+            { '$merchantassigned.status$': { [Op.in]: ['rejected'] } },
 
           ]
         }
@@ -341,7 +277,7 @@ exports.getUnshippedOrderItems = async (orderMasterId) => {
       orderMasterId,
       [Op.and]: [
         { '$shipping.id$': { [Op.eq]: null } },
-        { '$assignedMerchant.order_merchant_assign.status$': { [Op.eq]: ['shipment-to-admin'] } },
+        { '$merchantassigned.status$': { [Op.eq]: ['shipment-to-admin'] } },
         // { quantity: 5 }
       ]
     },

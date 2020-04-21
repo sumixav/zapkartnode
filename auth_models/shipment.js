@@ -229,6 +229,11 @@ module.exports = function (sequelize, DataTypes) {
     // Shipment.belongsTo(models.user_types,{foreignKey:"createdByType"});
   };
 
+  Shipment.prototype.toWeb = function () {
+    let json = this.toJSON();
+    return json;
+  };
+
   return Shipment;
 };
 

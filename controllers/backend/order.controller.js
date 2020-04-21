@@ -69,33 +69,44 @@ exports.getAllOrders = async (req, res, next) => {
   }
 }
 
-exports.assignMerchantToOrder = async (req, res, next) => {
+exports.assignMerchantToOrder = async (req, res) => {
   try {
     const intParams = parseStrings(pick(req.body, 'merchantId',
-      'masterOrderId',
-      'orderItemIds'));
+      
+      'orderItemId'));
     Logger.info('intParams', intParams)
 
     const params = { ...req.body, ...intParams };
 
     Logger.info('params', params)
 
-    const [err, assigned] = await to(orderService.assignMerchantToOrder(params))
+    const [err, assigned] = await to(orderService.assignOrderItem(params))
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: "Assigned merchant to order", data: assigned }, status_codes_msg.SUCCESS.code);
   } catch (err) {
     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
   }
 }
-exports.updateAssignedMerchantToOrder = async (req, res, next) => {
+
+exports.deleteAssignedMerchantToItem = async (req, res) => {
   try {
-    const [err, updated] = await to(orderService.updateAssignedMerchantToOrder(req.body, req.params.merchantOrderId))
+    const {orderItemId} = req.params;
+    const [err, data] = await to(orderService.deleteAssignedMerchant(orderItemId))
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-    return ReS(res, { message: "Updated merchant assignment details", data: updated }, status_codes_msg.SUCCESS.code);
+    return ReS(res, { message: "Deleted assigned merchant", data: data }, status_codes_msg.SUCCESS.code);
   } catch (err) {
     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
   }
 }
+// exports.updateAssignedMerchantToOrder = async (req, res, next) => {
+//   try {
+//     const [err, updated] = await to(orderService.updateAssignedMerchantToOrder(req.body, req.params.merchantOrderId))
+//     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+//     return ReS(res, { message: "Updated merchant assignment details", data: updated }, status_codes_msg.SUCCESS.code);
+//   } catch (err) {
+//     return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+//   }
+// }
 
 const getCart = async function (req, res) {
   try {

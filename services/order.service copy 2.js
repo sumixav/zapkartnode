@@ -1,4 +1,5 @@
 
+const cleanDeep = require("clean-deep");
 const {
   transaction_details,
   carts,
@@ -8,7 +9,6 @@ const {
   address,
   users,
   order_merchant_assign_items,
-  orderitem_merchant,
   order_merchant_assign,
   shipment_order_item,
   shipment,
@@ -287,7 +287,7 @@ exports.getUserOrders = async (userId) => {
 // update quantity of order item
 exports.updateOrderItem = async (params, orderItemId) => {
   Logger.info(params);
-  let err, validItem, count, product, update;
+  let err, validItem, count, product, update,updatedMerchant, merchantAssignId;
 
   [err, validItem] = await to(
     order_items.findOne({
@@ -303,6 +303,24 @@ exports.updateOrderItem = async (params, orderItemId) => {
   const [errM, updated] = await to(
     sequelize.transaction(async (t) => {
       let updateParams = params;
+
+      // if (params.merchantId) {
+      //   [err, merchantAssign] = await to(order_merchant_assign_items.findOne({
+      //     where:{orderItemId}
+      //   }));
+      //   if (err) TE("Error fetching assign details. ", err.message);
+      //   if (!merchantAssign) TE("Error"); ////
+      //   Logger.info('AAAA', params.merchantId, merchantAssign.merchantAssignId);
+      //   [err, updatedMerchant] = await to(order_merchant_assign.update(
+      //     { merchantId:params.merchantId, status:'pending' },
+      //     {
+      //       where: { id:merchantAssign.merchantAssignId },
+      //       transaction: t
+      //     }
+      //   ));
+      //   if (err) TE(err.message);
+      //   if (!updatedMerchant || updatedMerchant[0] === 0) TE("Error updating merchant");
+      // }
 
       if (params.quantity) {
         // need to fetch products sale price? (could have be updated)
@@ -452,7 +470,7 @@ exports.addOrderItem = async (params) => {
 
 };
 
-exports.getOrderDetailsSS = async (orderId) => {
+exports.getOrderDetails = async (orderId) => {
   const [errA, order] = await to(
     order_masters.findOne({
       where: { id: orderId },
@@ -532,6 +550,43 @@ exports.getOrderDetailsSS = async (orderId) => {
   };
 };
 
+const getCart = async (userid) => {
+  [err, cart] = await to(carts.findAll({ where: { userId: userid } }));
+  if (err) {
+    return err;
+  }
+  let cartResult = {};
+  //console.log(cart[0].id);
+
+  if (cart) {
+    cartResult = await Promise.all(
+      cart.map(async function (item) {
+        //Object.assign(item, {key3: "value3"});
+        product = await Product.findOne({ _id: item.productId });
+        let obj = { item, product: { ...product._doc } };
+        return obj;
+      })
+    );
+    console.log(cartResult);
+  }
+  return cartResult;
+};
+
+const updateCart = async (id, param) => {
+  console.log("hh", param);
+  [err, cart] = await to(carts.update(param, { where: { id: id } }));
+  if (err) TE(err.message);
+  return cart;
+};
+
+const deleteCart = async (id) => {
+  console.log("hh", param);
+  [err, cart] = await to(carts.destroy({ where: { id: id } }));
+  if (err) {
+    return err;
+  }
+  return cart;
+};
 
 exports.updateOrder = async (param) => {
   let paramRes = JSON.parse(param.paymentResponse);
@@ -610,148 +665,101 @@ exports.updateOrderA = async (params, orderId) => {
   return order;
 };
 
-exports.bulkAssignOrderItems = async (params, merchantId) => {
-  let err, bulkAssign;
+/**
+ * assign order with order items to merchant
+ * @param {int} param.merchantId
+ * @param {int} param.masterOrderId
+ * @param {array<Integer>} param.orderItemIds
+ * @param {string} param.comment
+ */
+exports.assignMerchantToOrder = async (param) => {
+  Logger.info(param);
 
-  const { orderTtems } = params;
+  const [errA, assignedDetails] = await to(order_merchant_assign.create(param));
+  if (errA) TE(errA.message);
+  if (!assignedDetails) TE("Error while assigning order");
 
-  [err, bulkAssign] = await to(orderitem_merchant.bulkCreate(orderTtems.map(i => ({
-    ...i, orderItemId: i.orderItemId, merchantId
-  }))))
+  [err, alreadyAssignedOrderItem] = await to(
+    order_merchant_assign_items.findAll({
+      where: {
+        [Op.or]: param.orderItemIds.map((i) => ({ orderItemId: i })),
+      },
+    })
+  );
+
   if (err) TE(err.message);
-  if (!bulkAssign) TE("Error creating data");
-  return bulkAssign
-}
+  Logger.info(alreadyAssignedOrderItem);
 
-exports.deleteAssignedMerchant = (orderItemId) => {
-  let err, deleted;
-  [err, deleted] = orderitem_merchant.destroy({where:{orderItemId}});
-  if (err) TE("Error deleting", +err.message);
-  if (!deleted || deleted === 0) TE(STRINGS.NO_DATA_DELETE);
-}
+  const orderItemsInsert = param.orderItemIds.map((i) => ({
+    merchantAssignId: assignedDetails.id,
+    orderItemId: i,
+  }));
+
+  const [errB, assignedOrderItems] = await to(
+    order_merchant_assign_items.bulkCreate(orderItemsInsert)
+  );
+  if (errB) TE(errB.message);
+  if (!assignedOrderItems) TE("Error while assigning items");
+
+  // const [errJ, orderItemWithMerchant] = await to(order_items.findOne({
+  //   where:{
+  //     id:param.orderItemIds[0]
+  //   },
+  //   include:[
+  //     {
+  //       model:order_merchant_assign_items,
+  //       as:'assignedMerchant'
+  //     }
+  //   ]
+  // }))
+
+  // if (errJ) Logger.error(errJ.message);
+  // Logger.info('other one')
+  // Logger.info(orderItemWithMerchant)
+
+  return this.getAssignedMerchantOrder(assignedDetails.id);
+};
 
 /**
- * @param params.orderId
- * @param params.merchantId
- * @param params.comment
+ * assign order with order items to merchant
+ * @param {int} param.merchantOrderId
  */
-exports.assignOrderItem = async (params) => {
-  // status
-  //  values: ['shipment-created', 'shipment-to-admin', 'rejected', 'pending'],
-  let err, existing, newData, updatedData;
-  const { orderItemId } = params;
-
-  [err, orderItem] = await to(order_items.findOne(
-    {
-      where: {
-        id: orderItemId,
-        [Op.or]: [
-          { '$merchantassigned.id$': { [Op.eq]: null } },
-          {
-            '$merchantassigned.status$': { [Op.notIn]: ['shipment-to-admin', 'shipment-created'] }
-          }
-
-        ],
-
+exports.updateAssignedMerchantToOrder = async (params, merchantOrderId) => {
+  const [errA, updated] = await to(
+    order_merchant_assign.update(
+      {
+        ...params,
       },
-      include: {
-        model:orderitem_merchant,
-        as:'merchantassigned'
+      {
+        where: {
+          id: merchantOrderId,
+        },
       }
-    }));
-  if (err) TE(err.message)
-  if (!orderItem) TE("Invalid update");
+    )
+  );
+  if (errA) TE(errA.message);
+  if (!updated || updated[0] === 0) TE("Unable to update");
+  return this.getAssignedMerchantOrder(merchantOrderId);
+};
 
-  [err, existing] = await to(orderitem_merchant.findOne({ where: { orderItemId } }));
-  if (err) TE(err.message);
-  if (!existing) {
-    [err, newData] = await to(orderitem_merchant.create({ ...params, status: 'pending' }))
-    if (err) TE(err.message);
-    if (!newData) TE("Error creating data");
-    return this.getOrderDetails(orderItem.orderMasterId);
-  }
-  else {
-    [err, updatedData] = await to(orderitem_merchant.update({ ...params, status: 'pending' }, { where: { orderItemId } }))
-    if (err) TE(err.message)
-    if (!updatedData || updatedData[0] === 0) TE("Not updated");
-    return this.getOrderDetails(orderItem.orderMasterId)
-  }
-}
-
-exports.getOrderDetails = async (id) => {
-  let err, orderData, ordersWithDetails;
-
-  [err, orderData] = await to(order_masters.findOne(
-    {
+exports.getAssignedMerchantOrder = async (id) => {
+  const [errM, assignedDetailsPop] = await to(
+    order_merchant_assign.findOne({
       where: { id },
       include: [
         {
-          model: order_items,
+          model: order_merchant_assign_items,
+          as: "orderItems",
           include: [
             {
-              model: shipment_order_item,
-              as: "shipping",
-              // exclude: ["id"],
-              include: [
-                {
-                  model: shipment,
-                },
-              ],
+              model: order_items,
             },
-            {
-              model: orderitem_merchant,
-              as: 'merchantassigned',
-              include: {
-                model: merchants
-              }
-            }
-          ]
+          ],
         },
-        {
-          model: order_status_history,
-          as: "orderHistory",
-          // order:[
-          //   [order_status_history,'createdAt', 'DESC']
-          // ]
-        },
-      ]
-    },
-
-  ));
-  Logger.info(orderData)
-  if (err) TE(err.message);
-  if (!orderData) TE('No order data');
-
-  // need to be removed, since include not working - workaround
-  const [errN, user] = await to(users.findOne({ where: { id: orderData.userId } }));
-  if (errN) TE(errN.message);
-  if (!user) TE("No user exists");
-
-  [err, orderItemDetails] = await to(
-    Promise.all(
-      orderData.order_items.map(async (i) => {
-        const [errB, prod] = await to(
-          Product.findById(i.productId).populate("brand", "name")
-        );
-        if (errB) TE(errB.message);
-        if (!prod) return { ...i.toWeb(), product: {} };
-        return { ...i.toWeb(), product: prod };
-      })
-    )
+      ],
+    })
   );
-
-  if (err) TE("Error fetching products" + err.message);
-
-  if (!orderItemDetails) TE("Error fetching data");
-  return {
-    ...orderData.toWeb(),
-    order_items: orderItemDetails,
-    // need to be removed
-    user: omitUserProtectedFields(user.toWeb()),
-  }
-  // return orderData
-}
-
-
-
-
+  if (errM) Logger.error(errM.message);
+  if (!assignedDetailsPop) TE(STRINGS.NOT_EXIST);
+  return assignedDetailsPop;
+};
