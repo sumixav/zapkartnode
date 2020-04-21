@@ -57,8 +57,8 @@ exports.getOrderDetails = async (req, res, next) => {
 }
 exports.getAllOrders = async (req, res, next) => {
   try {
-
-    [err, orders] = await to(orderService.getAllOrders(req.query));
+    let user = req.user;
+    [err, orders] = await to(orderService.getAllOrders(req.query,user));
 
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (orders) {

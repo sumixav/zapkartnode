@@ -386,7 +386,7 @@ exports.addressSchema = {
     },
     mobileNo: {
       type: "string",
-      pattern: "^([9]{1})([234789]{1})([0-9]{8})$",
+      pattern: "[0-9 -()+]+$",
       maxLength: 10,
 
     },
