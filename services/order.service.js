@@ -304,6 +304,9 @@ exports.updateOrderItem = async (params, orderItemId) => {
     sequelize.transaction(async (t) => {
       let updateParams = params;
 
+
+      updateParams = omit(updateParams,'merchantId')
+
       if (params.quantity) {
         // need to fetch products sale price? (could have be updated)
         const subtotal = params.quantity * validItem.price;
@@ -353,6 +356,10 @@ exports.updateOrderItem = async (params, orderItemId) => {
         );
         if (err) TE(err.message);
         if (!update || update[0] === 0) TE("Error updating master order");
+
+
+        
+
         return true;
       }
     })
@@ -623,9 +630,9 @@ exports.bulkAssignOrderItems = async (params, merchantId) => {
   return bulkAssign
 }
 
-exports.deleteAssignedMerchant = (orderItemId) => {
+exports.deleteAssignedMerchant = async (orderItemId) => {
   let err, deleted;
-  [err, deleted] = orderitem_merchant.destroy({where:{orderItemId}});
+  [err, deleted] = await to(orderitem_merchant.destroy({where:{orderItemId}}));
   if (err) TE("Error deleting", +err.message);
   if (!deleted || deleted === 0) TE(STRINGS.NO_DATA_DELETE);
 }
@@ -635,7 +642,7 @@ exports.deleteAssignedMerchant = (orderItemId) => {
  * @param params.merchantId
  * @param params.comment
  */
-exports.assignOrderItem = async (params) => {
+exports.assignOrderItem = async (params, returnData = false) => {
   // status
   //  values: ['shipment-created', 'shipment-to-admin', 'rejected', 'pending'],
   let err, existing, newData, updatedData;
@@ -668,13 +675,13 @@ exports.assignOrderItem = async (params) => {
     [err, newData] = await to(orderitem_merchant.create({ ...params, status: 'pending' }))
     if (err) TE(err.message);
     if (!newData) TE("Error creating data");
-    return this.getOrderDetails(orderItem.orderMasterId);
+    return returnData ? this.getOrderDetails(orderItem.orderMasterId) : true;
   }
   else {
     [err, updatedData] = await to(orderitem_merchant.update({ ...params, status: 'pending' }, { where: { orderItemId } }))
     if (err) TE(err.message)
     if (!updatedData || updatedData[0] === 0) TE("Not updated");
-    return this.getOrderDetails(orderItem.orderMasterId)
+    return returnData ? this.getOrderDetails(orderItem.orderMasterId) : true;
   }
 }
 

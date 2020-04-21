@@ -90,8 +90,7 @@ exports.assignMerchantToOrder = async (req, res) => {
 
 exports.deleteAssignedMerchantToItem = async (req, res) => {
   try {
-    const {orderItemId} = req.params;
-    const [err, data] = await to(orderService.deleteAssignedMerchant(orderItemId))
+    const [err, data] = await to(orderService.deleteAssignedMerchant(req.body.orderItemId))
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: "Deleted assigned merchant", data: data }, status_codes_msg.SUCCESS.code);
   } catch (err) {

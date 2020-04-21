@@ -134,6 +134,7 @@ router.patch('/order/update/:orderId', passport.authenticate('jwt', { session: f
 router.post('/order/update', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.update);
 // n
 router.post('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.assignMerchantToOrder);
+router.delete('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.deleteAssignedMerchantToItem);
 // router.patch('/order/assign/:merchantOrderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.updateAssignedMerchantToOrder);
 router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderDetails);
 
