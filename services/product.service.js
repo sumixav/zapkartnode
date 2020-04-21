@@ -931,10 +931,12 @@ exports.getAllProducts = async (query) => {
 };
 
 exports.getAllVariants = async (productId, query) => {
-  let dbQuery = { deleted: false, parentId: productId };
-
+  let dbQuery_intial = { deleted: false, parentId: productId };
+  const productList = await Product.find(dbQuery_intial).distinct('_id');
   let queryParsed = parseStrings(query);
-  // Logger.info(queryParsed);
+  productList.push(productId);
+   Logger.info("jjjjj",productList);
+   let dbQuery = { deleted: false, parentId: productId };
   let {
     fields,
     status,
@@ -948,7 +950,7 @@ exports.getAllVariants = async (productId, query) => {
   } = queryParsed;
 
   Logger.info("queryParsed", queryParsed);
-
+ let dbQueryIn = {"_id" :{$in :productList}};
   if (status) dbQuery = { ...dbQuery, status };
   // if (query.priorityOrder)
   //     dbQuery = { ...dbQuery, priorityOrder: -1 }
@@ -977,13 +979,15 @@ exports.getAllVariants = async (productId, query) => {
   // })
 
   const attrproduct = await Promise.all(
-    attributeCode.map(async function (item) {
+    attributeCode.map(async function (item,index) {
       //Object.assign(item, {key3: "value3"});
+      Logger.info("indexxxxx", index);
       let attrQuery = {
         attributes: { $elemMatch: { attributeGroup: item._id } },
       };
-      dbQuery = { ...dbQuery, ...attrQuery };
-      let attrlistProduct = await Product.find(dbQuery)
+      let dbQueryResult = { ...dbQueryIn, ...attrQuery };
+      Logger.info("2233",dbQueryResult);
+      let attrlistProduct = await Product.find(dbQueryResult)
         .select(select)
         .sort({ [sortField]: sortOrder })
         .skip((page - 1) * limit)
@@ -1005,8 +1009,8 @@ exports.getAllVariants = async (productId, query) => {
       return attrlistProduct;
     })
   );
-  Logger.info("ff345", dbQuery);
-  const products = await Product.find(dbQuery)
+  Logger.info("ff345", attributeCode);
+  const products = await Product.find()
     .select(select)
     .sort({ [sortField]: sortOrder })
     .skip((page - 1) * limit)
@@ -1026,6 +1030,7 @@ exports.getAllVariants = async (productId, query) => {
     const err = new Error("No variants");
     throw err;
   }
+  
   return {
     products: products.map((i) => transformProduct(i)),
     total: await Product.countDocuments({ deleted: false, ...dbQuery }),
