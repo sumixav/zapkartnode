@@ -2,6 +2,7 @@ const { ExtractJwt, Strategy } = require('passport-jwt');
 const { users, user_types } 	    = require('../auth_models');
 const CONFIG        = require('../config/config');
 const {to}          = require('../services/util.service');
+const Logger = require("../logger");
 
 module.exports = function(passport){
     var opts = {};
@@ -11,7 +12,7 @@ module.exports = function(passport){
     passport.use(new Strategy(opts, async function(jwt_payload, done){
         let err, user;
         [err, user] = await to(users.findById(jwt_payload.user_id));
-        // console.log("666666666666",user);
+        Logger.info("666666666666",user);
         if(err) return done(err, false);
         if(user) {
             return done(null, user);

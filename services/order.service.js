@@ -21,8 +21,6 @@ const validator = require("validator");
 const {
   to,
   TE,
-  ReE,
-  ReS,
   isEmpty,
   omitUserProtectedFields,
 } = require("../services/util.service");
@@ -207,8 +205,45 @@ exports.create = async (param) => {
   }
 };
 
-exports.getAllOrders = async (query) => {
-  const [errA, orders] = await to(
+exports.getAllOrders = async (query,userDetails) => {
+  let orders = {};
+  if(userDetails.userTypeId === 3) {
+    [err, merchantlist] = await to(merchants.find({
+      where: { userId: userDetails.id }
+    }));
+  if(err) { TE(err.message); }
+    [errA, ordersMerchant] = await to(
+      orderitem_merchant.findAll({
+        where: { merchantId: merchantlist.id },
+        include: [
+          {
+            model: order_items,
+          },
+        ],
+      })
+    );
+    if(ordersMerchant) {
+      let orderItem = [];
+      Object.entries(ordersMerchant).map(([key, value]) => {
+        orderItem.push(value.order_item.id);
+    });
+    
+    [errA, orders] = await to(
+      order_masters.findAll({
+        include: [
+          {
+            model: order_items,
+            where: { id: { [Op.or]: orderItem } }
+          },
+        ],
+      })
+    );
+    if (errA) TE(errA.message);
+
+  }
+}
+  else {
+  [errA, orders] = await to(
     order_masters.findAll({
       where: {
         ...query,
@@ -221,6 +256,8 @@ exports.getAllOrders = async (query) => {
     })
   );
   if (errA) TE(errA.message);
+  }
+  
   if (!orders) TE("No orders placed");
 
   // const [errB, ordersWithDetails] = await to(Promise.all(orders.map(async a => {
@@ -237,7 +274,7 @@ exports.getAllOrders = async (query) => {
 
   // })));
   // if (errB) TE(errB.message);
-  // Logger.info(ordersWithDetails)
+  
 
   return orders;
 };

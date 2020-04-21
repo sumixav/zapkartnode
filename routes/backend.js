@@ -123,7 +123,7 @@ router.get('/coupenDetail/:name', passport.authenticate('jwt', { session: false 
 
 // orders
 router.post('/order/create', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.create);
-router.get('/order/all', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getAllOrders);
+router.get('/order/all', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), OrderController.getAllOrders);
 router.get('/order', passport.authenticate('jwt', { session: false }), OrderController.getUserOrders);
 // n
 router.patch('/order/orderItem/:orderItemId', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.updateOrderItem);
