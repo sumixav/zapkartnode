@@ -931,7 +931,7 @@ exports.getAllProducts = async (query) => {
 };
 
 exports.getAllVariants = async (productId, query) => {
-  let dbQuery_intial = { deleted: false, parentId: productId };
+  let dbQuery_intial = { deleted: false,status: active, parentId: productId };
   const productList = await Product.find(dbQuery_intial).distinct('_id');
   let queryParsed = parseStrings(query);
   productList.push(productId);
