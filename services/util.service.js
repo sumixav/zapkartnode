@@ -244,7 +244,7 @@ exports.isValidId = id => {
   return mongoose.Types.ObjectId.isValid(id);
 };
 
-exports.paginate = (page, pageSize) => {
+exports.paginate = (page = 1, pageSize = null) => {
   const offset = (page - 1) * pageSize;
   const limit = pageSize;
   return {
