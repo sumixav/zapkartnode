@@ -9,7 +9,7 @@ const create = async (req, res, next) => {
   let param = req.body;
  
   try {
-      [err, user] = await to(authService.createUser({...param,userTypeId:3}));
+      [err, user] = await to(authService.createUser({...param,roleId:3}));
       if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
       let merchantParam = {...param,"userId":user.id,"createdBy":req.user.id};
      [err, merchant] = await to(merchantService.createmerchant(merchantParam));
