@@ -128,8 +128,8 @@ router.get('/order', passport.authenticate('jwt', { session: false }), OrderCont
 // n
 router.patch('/order/orderItem/:orderItemId', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.updateOrderItem);
 router.get('/order/user/:userId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getUserOrders);
-router.post('/order/update/:orderId/add-order-item', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), formupload.none(), OrderController.addOrderItem);
-router.patch('/order/update/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), formupload.none(), OrderController.updateOrderAdmin);
+router.post('/order/update/:orderId/add-order-item', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), formupload.none(), OrderController.addOrderItem);
+router.patch('/order/update/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), formupload.none(), OrderController.updateOrderAdmin);
 
 router.post('/order/update', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.update);
 // n
