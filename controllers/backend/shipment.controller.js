@@ -37,8 +37,8 @@ exports.editShipment = async function (req, res) {
 exports.getShipments = async function (req, res) {
     const [err, shipments] = await to(shipmentService.getShipments(req.query));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-    if (!shipment) return ReE(res, new Error('No shipments'), status_codes_msg.INVALID_ENTITY.code);
-    return ReS(res, { message: 'Shipment list', data: shipments }
+    if (!shipments) return ReE(res, new Error('No shipments'), status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: 'Shipment list', data: shipments.rows, count:shipments.count }
         , status_codes_msg.SUCCESS.code);
 }
 

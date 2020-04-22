@@ -92,6 +92,8 @@ module.exports.createShipment = async (params) => {
 };
 
 module.exports.updateShipment = async (params, shipmentId) => {
+  params = parseStrings(params);
+  Logger.info(params)
   const [errA, count] = await to(
     shipment.update(
       { ...params },
@@ -119,6 +121,7 @@ module.exports.updateShipment = async (params, shipmentId) => {
 };
 
 module.exports.getShipments = async (params) => {
+
   const parsedParams = parseStrings(params);
   const query = omit(parsedParams, ["page", "limit", "search", "sort"]);
   const { page, limit } = parsedParams;
@@ -127,13 +130,26 @@ module.exports.getShipments = async (params) => {
     where: {
       ...query,
     },
+    include:!query.masterOrderId && [
+      {
+        model:order_masters,
+        as:'masterOrder',
+        include:[
+          {model:users,attributes:['firstName', 'lastName','email','phone']}
+        ]
+      }
+    ],
     order: [["updatedAt", "DESC"]],
     ...paginate(page, limit),
+    
   };
+
+  Logger.info(dbQuery)
 
   const [err, shipmentList] = await to(shipment.findAndCountAll(dbQuery));
   if (err) TE(err.message);
   if (!shipmentList) TE("No shipments");
+  Logger.info(shipmentList)
   return shipmentList;
 };
 
@@ -155,6 +171,10 @@ module.exports.getShipmentDetails = async (shipmentId) => {
                 model: order_masters
               },
               {
+                model: shipment_order_item,
+                as: "shipping"
+              },
+              {
                 model: orderitem_merchant,
 
                 as: "merchantassigned",
@@ -165,8 +185,8 @@ module.exports.getShipmentDetails = async (shipmentId) => {
                 include: [
                   {
                     model: merchants,
-                  
-                   
+
+
                   }
                 ]
               }
