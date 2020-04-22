@@ -723,9 +723,69 @@ exports.assignOrderItem = async (params, returnData = false) => {
   }
 }
 
-exports.getOrderDetails = async (id) => {
+exports.getOrderDetails = async (id, userDetails) => {
   let err, orderData, ordersWithDetails;
-
+  if(userDetails.userTypeId === 3) {
+    [err, merchantlist] = await to(merchants.find({
+      where: { userId: userDetails.id }
+    }));
+  if(err) { TE(err.message); }
+    [errA, ordersMerchant] = await to(
+      orderitem_merchant.findAll({
+        where: { merchantId: merchantlist.id },
+        include: [
+          {
+            model: order_items,
+          },
+        ],
+      })
+    );
+    if(ordersMerchant) {
+      let orderItem = [];
+      Object.entries(ordersMerchant).map(([key, value]) => {
+        orderItem.push(value.order_item.id);
+    });
+    [err, orderData] = await to(order_masters.findOne(
+      {
+        where: { id },
+        include: [
+          {
+            model: order_items,
+            where: { id: { [Op.or]: orderItem } },
+            include: [
+              {
+                model: shipment_order_item,
+                as: "shipping",
+                // exclude: ["id"],
+                include: [
+                  {
+                    model: shipment,
+                  },
+                ],
+              },
+              {
+                model: orderitem_merchant,
+                as: 'merchantassigned',
+                include: {
+                  model: merchants
+                }
+              }
+            ]
+          },
+          {
+            model: order_status_history,
+            as: "orderHistory",
+            // order:[
+            //   [order_status_history,'createdAt', 'DESC']
+            // ]
+          },
+        ]
+      },
+  
+    ));
+  }
+  }
+  else {
   [err, orderData] = await to(order_masters.findOne(
     {
       where: { id },
@@ -763,6 +823,7 @@ exports.getOrderDetails = async (id) => {
     },
 
   ));
+}
   Logger.info(orderData)
   if (err) TE(err.message);
   if (!orderData) TE('No order data');

@@ -45,7 +45,7 @@ exports.getOrderDetails = async (req, res, next) => {
 
   try {
 
-    [err, order] = await to(orderService.getOrderDetails(orderId));
+    [err, order] = await to(orderService.getOrderDetails(orderId,req.user));
 
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (order) {
