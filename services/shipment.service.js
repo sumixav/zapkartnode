@@ -258,7 +258,8 @@ exports.getUnshippedOrderItems = async (orderMasterId) => {
       as: 'merchantassigned',
       include: [
         {
-          model: merchants
+          model: merchants,
+          group:['id']
         }
       ]
     }
@@ -333,7 +334,7 @@ exports.getUnshippedOrderItems = async (orderMasterId) => {
   }
   );
   orderItemsUA = orderItemsUA.map(i => ({ ...i.toWeb(), product: products[i.productId] }));
-
+  // orderItemsUA = groupBy(orderItemsUA.map(i => ({ ...i.toWeb(), product: products[i.productId] })),'merchantassigned.merchantId')
   return {
     unassigned: orderItemsUU,
     assigned: orderItemsUA,
