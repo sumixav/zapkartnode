@@ -259,7 +259,7 @@ exports.getUnshippedOrderItems = async (orderMasterId) => {
       include: [
         {
           model: merchants,
-          group:['id']
+          // group:['id']
         }
       ]
     }
