@@ -220,7 +220,7 @@ module.exports.getProductReviews = async params => {
   const parsedParams = parseStrings(params);
   const {
     page = 1,
-    limit = MAX_PAGE_LIMIT,
+    limit,
     search = {},
     sort = {}
   } = parsedParams;
