@@ -13,7 +13,7 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.INTEGER(11),
       allowNull: true,
       references: {
-        model: 'merchant_types',
+        model: 'user_groups',
         key: 'id'
       }
     },
@@ -174,7 +174,7 @@ module.exports = function (sequelize, DataTypes) {
   };
 
   Model.associate = function (models) {
-    this.merchanttypes = this.belongsTo(models.merchant_types);
+    this.merchanttypes = this.belongsTo(models.user_groups);
   };
 
   Model.associate = function (models) {

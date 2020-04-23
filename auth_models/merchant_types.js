@@ -34,9 +34,7 @@ module.exports = function(sequelize, DataTypes) {
         this.createdby = this.belongsTo(models.users, {foreignKey: 'createdBy'});
       };
 
-      Model.associate = function(models){
-        this.merchants = this.hasMany(models.merchants);
-      };
+      
     return Model;
   };
   
