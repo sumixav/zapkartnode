@@ -1,5 +1,5 @@
 
-const { users, address, business_location_details: businessLocations, shipping_rates: shippingRates } = require("../auth_models");
+const { users, address, business_location_details: businessLocations, order_masters, shipping_rates: shippingRates } = require("../auth_models");
 const { to, TE, paginate, getSearchQuery, getOrderQuery } = require("../services/util.service");
 const Sequelize = require("sequelize");
 const Op = Sequelize.Op;
@@ -90,7 +90,7 @@ module.exports.getAddressesFromUser = async (userId) => {
         attributes: {
             exclude: ["deletedAt"]
         },
-        order:[
+        order: [
             ['updatedAt', 'DESC']
         ]
     }));
@@ -102,7 +102,7 @@ module.exports.getAddressesFromUser = async (userId) => {
 module.exports.getUserDetails = async (userId) => {
     const [err, user] = await to(users.findOne({
         where: {
-            id:userId
+            id: userId
         },
         attributes: {
             exclude: ["deletedAt", "password"]
@@ -123,17 +123,23 @@ module.exports.getUserDetails = async (userId) => {
  */
 module.exports.getUsers = async (params) => {
     const parsedParams = parseStrings(params);
-    const { page = 1, limit = MAX_PAGE_LIMIT, search = {}, sort = {} } = parsedParams;
+    const { page = 1, limit, search = {}, sort = {} } = parsedParams;
     Logger.info(parsedParams);
     const query = omit(parsedParams, ['page', 'limit', 'search', 'sort']);
     Logger.info(query)
     const dbQuery = {
         where: {
             ...query, //filter by this query
-            ...getSearchQuery(search)
+            ...getSearchQuery(search),
+
         },
+        // include: [
+        //     { model: order_masters, as:'orders' }
+
+        // ],
         attributes: {
-            exclude: ["deletedAt", "password"]
+            exclude: ["deletedAt", "password"],
+            // include: [Sequelize.literal('COUNT(DISTINCT(product))'), 'noOfOrders']
         },
         ...getOrderQuery(sort),
         ...paginate(page, limit)
