@@ -28,6 +28,14 @@ module.exports = function (sequelize, DataTypes) {
           key: "id"
         }
       },
+      // orderItemId:{
+      //   type: DataTypes.INTEGER(11),
+      //   allowNull: true,
+      //   references: {
+      //     model: "order_items",
+      //     key: "id"
+      //   }
+      // },
       productId: {
         type: DataTypes.STRING(50),
         allowNull: false,
@@ -56,17 +64,16 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Model.associate = function (models) {
-    this.orderId = this.belongsTo(models.order_masters, { foreignKey: "orderId" });
+    Model.belongsTo(models.order_masters, { foreignKey: "orderId" });
+    // Model.belongsTo(models.order_items, { foreignKey: "orderItemId" });
+    Model.belongsTo(models.users, { foreignKey: "userId" });
   };
 
-  Model.associate = function (models) {
-    this.userId = this.belongsTo(models.users, { foreignKey: "userId" });
-  };
 
   Model.prototype.toWeb = function () {
     let json = this.toJSON();
     return json;
   };
-  
+
   return Model;
 };

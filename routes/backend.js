@@ -37,6 +37,7 @@ router.get('/get-heart-beat-admin', function (req, res, next) {
 router.post('/users/register', userUpload, Validate.registerUser, UserController.create);
 router.post('/users/login', formupload.none(), UserController.login);
 router.patch('/users/update', userUpload, passport.authenticate('jwt', { session: false }), UserController.update);
+router.patch('/users/update/:userId', userUpload, passport.authenticate('jwt', { session: false }), checkIsRole('admin'), UserController.updateUser);
 router.get('/users', passport.authenticate('jwt', { session: false }), UserController.getUser);
 router.get('/usersperpage/:pagelimit/:offset', passport.authenticate('jwt', { session: false }), UserController.getUserPerPage);
 router.post('/userGroup/create/:role', formupload.none(), passport.authenticate('jwt', { session: false }), UserGroupController.create);

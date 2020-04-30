@@ -102,7 +102,10 @@ const authUser = async function (userInfo) {
     if (err) TE(err.message);
   }
 
-  if (!user) TE("user not registered");
+  if (!user) TE("User not registered");
+  if (user.active === 0) {
+    TE("Insufficient privileges to login to this account");
+  }
 
   [err, user] = await to(user.comparePassword(userInfo.password));
   if (err) TE(err.message);
@@ -110,10 +113,14 @@ const authUser = async function (userInfo) {
 };
 module.exports.authUser = authUser;
 
-const updateUser = async function (user, userData) {
-  userData = userBodyParam(param.body);
-  [err, user] = await to(user.update(userData, { where: { id: user.id } }));
+const updateUser = async function (userData, userId) {
+  let err, user;
+  // userData = userBodyParam(param.body);
+  userData = parseStrings(userData);
+  Logger.info(userData, userId);
+  [err, user] = await to(users.update(userData, { where: { id: userId, userTypeId:2 } }));
   if (err) TE(err.message);
+  if (!user || (user && user[0] === 0))TE("Unable to update")
   Logger.info(user);
   return user;
 };

@@ -2,6 +2,7 @@
 
 const Product = require("../models/product");
 const Pricing = require("../models/pricing");
+const Brand = require("../models/brand");
 const Attribute = require("../models/attribute");
 const Stock = require("../models/stock");
 const ProductExtraInfo = require("../models/productExtraInfo");
@@ -9,6 +10,7 @@ const Composition = require("../models/composition");
 const Category = require("../models/category");
 const { shippingDimModel: ShippingDim } = require("../models/shippingDim");
 const validator = require("validator");
+const find = require("lodash/find")
 const intersectionBy = require("lodash/intersectionBy");
 // const parseQuery = require("query-string")
 const {
@@ -78,7 +80,7 @@ exports.createProduct = async (param) => {
     minOrderQty,
     maxOrderQty,
     shipping,
-    composition =[],
+    composition = [],
     prescriptionNeeded,
     returnable,
     featured,
@@ -96,7 +98,7 @@ exports.createProduct = async (param) => {
     outOfStockStatus,
     subtract,
     textDescription,
-    organic =[],
+    organic = [],
     relatedProducts,
     imageUrl,
   } = parsedParam;
@@ -166,10 +168,10 @@ exports.createProduct = async (param) => {
 
   let imageDocs = parentId
     ? intersectionBy(
-        parentProdDoc.images,
-        imageUrl.map((i) => ({ url: i })),
-        'url'
-      )
+      parentProdDoc.images,
+      imageUrl.map((i) => ({ url: i })),
+      'url'
+    )
     : [];
   // let imageDocs = [];
   if (images && images.length > 0) {
@@ -809,8 +811,46 @@ exports.getAllProducts = async (query) => {
     // id
   } = queryParsed;
 
-  // Object.entries(queryParsed).forEach(([key,value]) => {
-  // })
+  Logger.info("QUERYAAAAAAA", getIdQuery(queryParsed.category))
+  let categoryQuery = {};
+  let brandQuery = {};
+  if (queryParsed.category) {
+    if (getIdQuery(queryParsed.category).slug) {
+
+      const { category } = queryParsed;
+      const [errM, categories] = await to(Category.find({ slug: { $in: Array.isArray(category) ? category : new Array(category) } }))
+      if (errM) TE("Error fetching categories", errM.message);
+      if (!categories) TE("Error fetching categories");
+      Logger.info(categories.map(i => i._id));
+      categoryQuery = { category: { $in: categories.map(i => i._id) } }
+    }
+    else {
+      categoryQuery = {
+        category: { $in: Array.isArray(queryParsed.category) ? queryParsed.category : new Array(queryParsed.category) },
+      }
+    }
+  }
+  if (queryParsed.brand) {
+    Logger.info('queryParsed.brand', queryParsed.brand)
+
+    if ((Array.isArray(queryParsed.brand) && find(queryParsed.brand, i => typeof getIdQuery(i).slug !== "undefined") ||
+      (!Array.isArray(queryParsed.brand) && getIdQuery(queryParsed.brand).slug)
+    )) {
+      const { brand } = queryParsed;
+      const [errM, brands] = await to(Brand.find({ slug: { $in: Array.isArray(brand) ? brand : new Array(brand) } }))
+      if (errM) TE("Error fetching brands", errM.message);
+      if (!brands) TE("Error fetching categories");
+      Logger.info(brands.map(i => i._id));
+      brandQuery = { brand: { $in: brands.map(i => i._id) } }
+    }
+    else {
+      brandQuery = {
+        brand: { $in: Array.isArray(queryParsed.brand) ? queryParsed.brand : new Array(queryParsed.brand) },
+      }
+    }
+  }
+
+
   let select = {};
   let sortQuery = { updatedAt: -1 };
   Object.entries(queryParsed).forEach(([key, value]) => {
@@ -839,18 +879,22 @@ exports.getAllProducts = async (query) => {
       case "brand":
         dbQuery = {
           ...dbQuery,
-          brand: { $in: Array.isArray(value) ? value : new Array(value) },
+          // brand: { $in: Array.isArray(value) ? value : new Array(value) },
+          ...brandQuery
         };
         break;
-      case "category":
+      case "category": {
         dbQuery = {
           ...dbQuery,
-          category: { $in: Array.isArray(value) ? value : new Array(value) },
+          // category: { $in: Array.isArray(value) ? value : new Array(value) },
+          ...categoryQuery
         };
+      }
         break;
       case "page":
       case "limit":
       case "sortField":
+        break;
       case "sort":
         sortQuery = reduce(
           value,
@@ -931,12 +975,12 @@ exports.getAllProducts = async (query) => {
 };
 
 exports.getAllVariants = async (productId, query) => {
-  let dbQuery_intial = { deleted: false,status: "active", parentId: productId };
+  let dbQuery_intial = { deleted: false, status: "active", parentId: productId };
   const productList = await Product.find(dbQuery_intial).distinct('_id');
   let queryParsed = parseStrings(query);
   productList.push(productId);
-   Logger.info("jjjjj",productList);
-   let dbQuery = { deleted: false,status: "active", parentId: productId };
+  Logger.info("jjjjj", productList);
+  let dbQuery = { deleted: false, status: "active", parentId: productId };
   let {
     fields,
     status,
@@ -950,7 +994,7 @@ exports.getAllVariants = async (productId, query) => {
   } = queryParsed;
 
   Logger.info("queryParsed", queryParsed);
- let dbQueryIn = {"_id" :{$in :productList}};
+  let dbQueryIn = { "_id": { $in: productList } };
   if (status) dbQuery = { ...dbQuery, status };
   // if (query.priorityOrder)
   //     dbQuery = { ...dbQuery, priorityOrder: -1 }
@@ -979,14 +1023,14 @@ exports.getAllVariants = async (productId, query) => {
   // })
 
   const attrproduct = await Promise.all(
-    attributeCode.map(async function (item,index) {
+    attributeCode.map(async function (item, index) {
       //Object.assign(item, {key3: "value3"});
       Logger.info("indexxxxx", index);
       let attrQuery = {
         attributes: { $elemMatch: { attributeGroup: item._id } },
       };
       let dbQueryResult = { ...dbQueryIn, ...attrQuery };
-      Logger.info("2233",dbQueryResult);
+      Logger.info("2233", dbQueryResult);
       let attrlistProduct = await Product.find(dbQueryResult)
         .select(select)
         .sort({ [sortField]: sortOrder })
@@ -1030,7 +1074,7 @@ exports.getAllVariants = async (productId, query) => {
     const err = new Error("No variants");
     throw err;
   }
-  
+
   return {
     products: products.map((i) => transformProduct(i)),
     total: await Product.countDocuments({ deleted: false, ...dbQuery }),

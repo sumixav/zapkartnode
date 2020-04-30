@@ -83,8 +83,9 @@ module.exports.addReview = async (params, userId) => {
  * @param {String} params.text
  * @param {int} params.priorityOrder
  */
-module.exports.updateReview = async (params, reviewId, userId) => {
-
+module.exports.updateReview = async (params, reviewId, userId, fromUser=false) => {
+  Logger.info(params, reviewId, userId);
+  // if (fromUser) params.status = 'pending'
   const [errA, count] = await to(
     reviews.update(
       { ...params },
@@ -177,7 +178,7 @@ module.exports.getUserReviews = async userId => {
   const [errM, userDetails] = await to(
     users.findOne({
       where: {
-        id:userId
+        id: userId
       }
     })
   )
@@ -187,14 +188,14 @@ module.exports.getUserReviews = async userId => {
   if (err) TE(STRINGS.DB_ERROR + err.message);
   if (!reviewList) TE(STRINGS.NO_DATA);
   const [errA, reviewsWithProdDetails] = await to(Promise.all(reviewList.rows.map(async i => {
-    const [errA, product] = await to(Product.findOne({_id: i.productId}).select("_id slug images name"));
+    const [errA, product] = await to(Product.findOne({ _id: i.productId }).select("_id slug images name"));
     if (errA) TE(errA.message);
     if (!product) return {};
-    return {...i.toWeb(), product}
+    return { ...i.toWeb(), product }
   })));
   if (errA) TE(errA.message);
   return {
-    reviews: reviewsWithProdDetails, 
+    reviews: reviewsWithProdDetails,
     user: omitUserProtectedFields(userDetails.toWeb()),
     count: reviewList.count
   }

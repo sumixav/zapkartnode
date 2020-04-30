@@ -175,8 +175,10 @@ exports.addToCartFromGuestToLoggedBulk = async params => {
  * @param {int} param.user
  */
 exports.addToCart = async param => {
-  let err, pricing, cart, product;
+  let err, pricing, cart, product,userCartProds;
   const { productId, quantity, user } = param;
+
+  Logger.info('param', param)
 
   // no user
   if (!user) TE("Unauthorized");
@@ -189,7 +191,7 @@ exports.addToCart = async param => {
   if (!product) {
     TE("Product not found");
   }
-  if (product.status === "hold") TE("Product no longer active");
+  if (!(product.status === "active")) TE("Product no longer active");
 
   [err, pricing] = await to(Pricing.findOne({ _id: product.pricing }));
   if (err) TE(err.message);
@@ -201,32 +203,38 @@ exports.addToCart = async param => {
   );
   if (err) TE(err.message);
 
-  Logger.info(cart);
+  // Logger.info(cart);
 
-  let updatedQty = cart && cart !== null ? cart.quantity + quantity : quantity;
+  let updatedQty = (cart && cart !== null) ? (cart.quantity + quantity) : quantity;
   if (updatedQty > product.maxOrderQty) {
     updatedQty = product.maxOrderQty;
-    // TE("Max limit reached")
+    TE("Max limit reached")
   }
-
+  
   if (updatedQty < product.minOrderQty)
-    updatedQty = product.minOrderQty;
+  updatedQty = product.minOrderQty;
   // TE(`Minimum ${product.minOrderQty} required`);
-
-  Logger.info("will save/ create cart");
+  
+  Logger.info('updatedQty', updatedQty);
+  Logger.info(cart ? 'Will update cart' : "Will create cart");
+  Logger.info('old cart',cart);
   // if existing cart
   if (cart) {
     // existing cart
     // cart.price = pricing.salePrice;
-    cart.quantity = updatedQty;
-    cart.prescriptionRequired = product.prescriptionNeeded ? "yes" : "no"
-    [err, cart] = await to(cart.save());
-    if (err) TE(err.message);
-    if (!cart) TE("No cart updated");
-    [err, userCartProds] = await to(carts.findAll({ userId: user.id }))
-    if (err) TE(err.message);
-    if (!userCartProds) TE("No cart for user")
+    // cart.quantity = updatedQty;
+    // cart.prescriptionRequired = product.prescriptionNeeded ? "yes" : "no"
+    // [err, cart] = await to(cart.save());
+
+    const [errA, cartUp] = await to(carts.update({quantity:updatedQty, prescriptionRequired: product.prescriptionNeeded ? "yes" : "no"},{where:{userId:user.id, id:cart.id}}))
+    if (errA) TE(errA.message);
+    if (!cartUp || cartUp[0] === 0) TE("No cart updated");
+    Logger.info('updated cart', cart);
+    // [err, userCartProds] = await to(carts.findAll({ where:{userId: user.id} }))
+    // if (err) TE(err.message);
+    // if (!userCartProds) TE("No cart for user")
     return this.getCart(user.id);
+    // return null;
   }
 
   // create cart if not exist
@@ -365,7 +373,7 @@ const getCart = async userid => {
         return obj;
       })
     );
-    console.log(cartResult);
+    // console.log(cartResult);
   }
   return cartResult;
 };

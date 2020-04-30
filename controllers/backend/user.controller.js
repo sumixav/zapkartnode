@@ -86,9 +86,8 @@ const update = async function (req, res) {
         'resetPasswordExpiresIn'
     ]);
     if (err)
-        return ReE(res, new Error('nope'), 422);
-    return ReS(res, { user }
-        , status_codes_msg.CREATED.code);
+        return ReS(res, { user }
+            , status_codes_msg.CREATED.code);
 }
 module.exports.update = update;
 
@@ -239,6 +238,16 @@ exports.getUsers = async function (req, res) {
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!data) return ReE(res, new Error('No users'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Users list', users: data.users, total: data.count }
+        , status_codes_msg.SUCCESS.code);
+}
+
+exports.updateUser = async function (req, res) {
+    const { userId } = req.params;
+    Logger.info(userId)
+    const [err, data] = await to(authService.updateUser(req.body, userId));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (!data) return ReE(res, new Error('Unable to update'), status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: 'User updated', users: data.users, total: data.count }
         , status_codes_msg.SUCCESS.code);
 }
 

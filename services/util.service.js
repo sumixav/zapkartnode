@@ -203,7 +203,9 @@ exports.getDimensions = async filePath => {
 
 exports.isObjectId = id => {
   const regEx = /^[0-9a-fA-F]{24}$/;
-  return id.match(regEx) && mongoose.Types.ObjectId.isValid(id);
+  if (id)
+    return id.match(regEx) && mongoose.Types.ObjectId.isValid(id);
+  return null;
 };
 
 exports.getIdQuery = (value, queryField = "slug") => {
@@ -280,17 +282,17 @@ exports.parseJSONparams = (obj) => {
 }
 
 // check if string is json string
-exports.isJsonStr = (text) => { 
-  if (typeof text !== "string") { 
-      return false; 
-  } 
-  try { 
-      JSON.parse(text); 
-      return true; 
-  } catch (error) { 
-      return false; 
-  } 
-} 
+exports.isJsonStr = (text) => {
+  if (typeof text !== "string") {
+    return false;
+  }
+  try {
+    JSON.parse(text);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 // get js object from json string
 exports.getJsonObject = (text) => {

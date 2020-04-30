@@ -130,6 +130,7 @@ module.exports.getUsers = async (params) => {
     const dbQuery = {
         where: {
             ...query, //filter by this query
+            // userTypeId:2,
             ...getSearchQuery(search),
 
         },

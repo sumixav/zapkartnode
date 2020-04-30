@@ -91,6 +91,7 @@ router.post(
 // router.get("/products/query", ProductController.getAllProductsAggregate);
 router.get("/products/:productId", ProductController.getProduct);
 router.get("/products", ProductController.getAllProducts);
+// router.get("/products", ProductController.getProductFilter);
 router.get("/products/variants/:productId", ProductController.getAllVariants);
 router.patch(
   "/products/:productId",

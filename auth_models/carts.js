@@ -47,7 +47,7 @@ module.exports = function (sequelize, DataTypes) {
 });
 
 Model.associate = function (models) {
-  this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
+  Model.belongsTo(models.users, { foreignKey: 'userId' });
 };
 
 Model.prototype.toWeb = function () {

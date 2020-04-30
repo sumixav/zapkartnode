@@ -37,7 +37,7 @@ const getMerchantId = async (id) => {
 
 module.exports.getMerchantId = getMerchantId;
 
-const updatemerchant = async (id, param) => {
+exports.updatemerchant = async (id, param) => {
   
   console.log("hh",param);
   [err,merchantdetails ] = await to(merchants.update(param, {where: {id: id} }));
@@ -45,4 +45,67 @@ const updatemerchant = async (id, param) => {
   return merchantdetails;
 }
 
-module.exports.updatemerchant = updatemerchant;
+exports.updatemerchantNew = async (id, param) => {
+  let err, updateMerchantCount, updateUserCount, errA, updated;
+
+  Logger.info("hh", param);
+  [errA, updated] = await to(sequelize.transaction(async (t) => {
+    [err, updateMerchantCount] = await to(merchants.update(param, {
+      fields: [
+        'merchantTypeId',
+        'name',
+        'slug',
+        'address',
+        'countryId',
+        'stateId',
+        'cityId',
+        'zipcode',
+        'regnumber',
+        'establishdate',
+        'languageId',
+        'latitude',
+        'longitude',
+        'profiledescription',
+        'commissionslab',
+        'designation',
+        'website',
+        'accountdetails',
+        'accounttype',
+        'nameonaccount',
+        'status',
+        'deleted',
+        'createdBy',
+        'userId',
+        'customSlug',
+      ],
+      where: { id: id }, transaction: t
+    }));
+    if (err) TE(err.message);
+    // if (!updateMerchantCount || updateMerchantCount[0] === 0) TE("Unable to update merchant details");
+    if (!updateMerchantCount) TE("Unable to update merchant details");
+    [err, updateUserCount] = await to(users.update(param, {
+      fields: [
+        'firstName',
+        'lastName',
+        'email',
+        'phone',
+        'avatartype',
+        'avatarlocation',
+        'password',
+        'active',
+        'confirmed',
+        'timezone',
+        'userTypeId',
+        'socialType',
+        'gender',
+      ], where: { id: param.userId }, transaction: t
+    }));
+    if (err) TE(err.message);
+    if (!updateUserCount || updateUserCount[0] === 0) TE("Unable to update merchant user");;
+    return true;
+  }));
+  if (errA) TE(errA.message);
+  if (!updated) TE("Error updating merchant");
+  return "Updated merchant";
+}
+

@@ -268,7 +268,8 @@ exports.deleteProduct = async function(req, res) {
 
 exports.getProductFilter = async (req, res, next) => {
   try {
-    const param = req.body;
+    // const param = req.body;
+    const param = req.query;
     const [err, product] = await to(
       productService.getProductFilterAggregate(param)
     );

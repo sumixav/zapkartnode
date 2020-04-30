@@ -124,6 +124,9 @@ module.exports = function (sequelize, DataTypes) {
     Model.hasMany(models.order_status_history,
       { as: 'orderHistory', foreignKey: 'orderId' }
     )
+    Model.hasMany(models.ordermaster_pres,
+      { as: 'prescriptions', foreignKey: 'orderMasterId' }
+    )
     // this.userId = this.belongsTo(models.users, { foreignKey: 'id', sourceKey:'userId' });
   };
   // Model.associate = function (models) {

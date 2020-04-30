@@ -14,6 +14,8 @@ const {
   shipment,
   order_status_history,
   merchants,
+  ordermaster_pres,
+  prescriptions,
   sequelize,
 } = require("../auth_models");
 const Product = require("../models/product");
@@ -31,18 +33,22 @@ const crypto = require("crypto");
 const { STRINGS } = require("../utils/appStatics");
 const Op = require("sequelize").Op;
 const omit = require("lodash/omit")
+const find = require("lodash/find")
 
 exports.create = async (param) => {
+  let err, cartDetails, a, errM;
   [err, cartDetails] = await to(
     carts.findAll({ where: { userId: param.user.id, deletedAt: null } })
   );
+  if (err) TE(err.message);
+  if (!cartDetails || cartDetails.length === 0) TE("Nothing in cart");
+
   Logger.info("order param", param);
   if (err) {
     TE(err.message);
   }
   let coupenDetails = (shippingDetails = billingDetails = orderParam = updateOrderMaster = {});
   let totalPrice = (totalQty = salePrice = 0);
-  Logger.info("1111");
   if (param.coupen > 0) {
     Logger.info("2222");
     [err, coupenDetails] = await to(
@@ -53,6 +59,7 @@ exports.create = async (param) => {
     }
   }
   Logger.info("3333");
+
   if (param.shippingId) {
     Logger.info("rrrr");
     [err, shippingDetails] = await to(
@@ -74,40 +81,42 @@ exports.create = async (param) => {
   }
   let orderno = `zapOrd${new Date().getUTCMilliseconds()}`;
   Logger.info("cartDetails", cartDetails);
-  if (cartDetails) {
-    if (cartDetails.length === 0) TE("No items in cart");
-    orderParam = {
-      orderNo: orderno,
-      userId: param.user.id,
-      coupenId: isEmpty(coupenDetails) ? null : coupenDetails.id,
-      paymentSettingId: param.payment,
-      orderStatus: param.payment == 2 ? "processing" : "hold",
-      paymentType: param.payment != 2 ? "onlinePayment" : "cod",
-      // 'billingAddress': `${billingDetails.houseNo} ${billingDetails.street} ${billingDetails.landmark} ${billingDetails.city} ${billingDetails.state} ${billingDetails.pincode}`,
-      // 'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
-      billingAddress: {
-        fullName: billingDetails.fullName,
-        mobileNo: billingDetails.mobileNo,
-        houseNo: billingDetails.houseNo,
-        street: billingDetails.street,
-        landmark: billingDetails.landmark,
-        city: billingDetails.city,
-        state: billingDetails.state,
-        pincode: billingDetails.pincode,
-      },
-      shippingAddress: {
-        fullName: shippingDetails.fullName,
-        mobileNo: shippingDetails.mobileNo,
-        houseNo: shippingDetails.houseNo,
-        street: shippingDetails.street,
-        landmark: shippingDetails.landmark,
-        city: shippingDetails.city,
-        state: shippingDetails.state,
-        pincode: shippingDetails.pincode,
-      },
-      shippingAmount: param.shippingAmount ? param.shippingAmount : 75,
-    };
-    [err, orderMasterDetails] = await to(order_masters.create(orderParam));
+  // if (cartDetails) {
+  // if (cartDetails.length === 0) TE("No items in cart");
+  orderParam = {
+    orderNo: orderno,
+    userId: param.user.id,
+    coupenId: isEmpty(coupenDetails) ? null : coupenDetails.id,
+    paymentSettingId: param.payment,
+    orderStatus: param.payment == 2 ? "processing" : "hold",
+    paymentType: param.payment != 2 ? "onlinePayment" : "cod",
+    // 'billingAddress': `${billingDetails.houseNo} ${billingDetails.street} ${billingDetails.landmark} ${billingDetails.city} ${billingDetails.state} ${billingDetails.pincode}`,
+    // 'shippingAddress': `${shippingDetails.houseNo} ${shippingDetails.street} ${shippingDetails.landmark} ${shippingDetails.city} ${shippingDetails.state} ${shippingDetails.pincode}`,
+    billingAddress: {
+      fullName: billingDetails.fullName,
+      mobileNo: billingDetails.mobileNo,
+      houseNo: billingDetails.houseNo,
+      street: billingDetails.street,
+      landmark: billingDetails.landmark,
+      city: billingDetails.city,
+      state: billingDetails.state,
+      pincode: billingDetails.pincode,
+    },
+    shippingAddress: {
+      fullName: shippingDetails.fullName,
+      mobileNo: shippingDetails.mobileNo,
+      houseNo: shippingDetails.houseNo,
+      street: shippingDetails.street,
+      landmark: shippingDetails.landmark,
+      city: shippingDetails.city,
+      state: shippingDetails.state,
+      pincode: shippingDetails.pincode,
+    },
+    shippingAmount: param.shippingAmount ? param.shippingAmount : 75,
+  };
+
+  [errM, orderDet] = await to(sequelize.transaction(async (t) => {
+    [err, orderMasterDetails] = await to(order_masters.create(orderParam, { transaction: t }));
     Logger.info("orderMasterDetails", orderMasterDetails);
     if (err) {
       TE(err.message);
@@ -156,7 +165,7 @@ exports.create = async (param) => {
       );
       Logger.info("orderItemResult", orderItemResult);
       [err, orderItemDetails] = await to(
-        order_items.bulkCreate(orderItemResult)
+        order_items.bulkCreate(orderItemResult, { transaction: t })
       );
       if (err) {
         TE(err.message);
@@ -164,7 +173,15 @@ exports.create = async (param) => {
       orderMasterDetails.orderTotalAmount = parseInt(totalPrice);
       orderMasterDetails.orderQty = parseInt(totalQty);
       orderMasterDetails.orderSubtotal = parseInt(salePrice);
-      const [errM, updateOrderMaster] = await to(orderMasterDetails.save());
+      if (find(cartDetails, m => m.prescriptionRequired === "yes")) {
+        [err, a] = await to(ordermaster_pres.bulkCreate(param.prescriptions.map(i => ({
+          orderMasterId: orderMasterDetails.id,
+          presId: i
+        })), { transaction: t }));
+        if (err) TE(err.message);
+        Logger.info(a);
+      }
+      const [errM, updateOrderMaster] = await to(orderMasterDetails.save({ transaction: t }));
       // const [errM, updateOrderMaster] = await to(order_masters.update({...updatedOrderParams}, { where: { id: orderMasterDetails.id } }));
       if (!updateOrderMaster) TE("Order could not be updated");
       if (errM) TE(errM.message);
@@ -192,27 +209,29 @@ exports.create = async (param) => {
         paymentJson.furl = "localhost:3000/test";
       }
 
-      if (param.payment == 2) {
+      if (param.payment == 2) { //cart
         [err, cart] = await to(
-          carts.destroy({ where: { userId: param.user.id } })
+          carts.destroy({ where: { userId: param.user.id }, transaction: t })
         );
-        if (err) {
-          return err;
-        }
+        if (err) TE("Error deleting cart")
       }
 
       return { updateOrderMaster, payment: paymentJson };
     }
-  }
+  }));
+  // }
+  if (errM) TE(errM.message);
+  if (!orderDet) TE("Error creating order")
+  return orderDet;
 };
 
-exports.getAllOrders = async (query,userDetails) => {
+exports.getAllOrders = async (query, userDetails) => {
   let orders = {};
-  if(userDetails.userTypeId === 3) {
+  if (userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
       where: { userId: userDetails.id }
     }));
-  if(err) { TE(err.message); }
+    if (err) { TE(err.message); }
     [errA, ordersMerchant] = await to(
       orderitem_merchant.findAll({
         where: { merchantId: merchantlist.id },
@@ -223,42 +242,60 @@ exports.getAllOrders = async (query,userDetails) => {
         ],
       })
     );
-    if(ordersMerchant) {
+    if (ordersMerchant) {
       let orderItem = [];
       Object.entries(ordersMerchant).map(([key, value]) => {
         orderItem.push(value.order_item.id);
-    });
-    
+      });
+
+      [errA, orders] = await to(
+        order_masters.findAll({
+          include: [
+            {
+              model: order_items,
+              where: { id: { [Op.or]: orderItem } }
+            },
+            {
+              model: ordermaster_pres,
+              as: 'prescriptions',
+              include: [
+                {
+                  model: prescriptions
+                }
+              ]
+            },
+          ],
+        })
+      );
+      if (errA) TE(errA.message);
+
+    }
+  }
+  else {
     [errA, orders] = await to(
       order_masters.findAll({
+        where: {
+          ...query,
+        },
         include: [
           {
             model: order_items,
-            where: { id: { [Op.or]: orderItem } }
+          },
+          {
+            model: ordermaster_pres,
+            as: 'prescriptions',
+            include: [
+              {
+                model: prescriptions
+              }
+            ]
           },
         ],
       })
     );
     if (errA) TE(errA.message);
+  }
 
-  }
-}
-  else {
-  [errA, orders] = await to(
-    order_masters.findAll({
-      where: {
-        ...query,
-      },
-      include: [
-        {
-          model: order_items,
-        },
-      ],
-    })
-  );
-  if (errA) TE(errA.message);
-  }
-  
   if (!orders) TE("No orders placed");
 
   // const [errB, ordersWithDetails] = await to(Promise.all(orders.map(async a => {
@@ -275,7 +312,7 @@ exports.getAllOrders = async (query,userDetails) => {
 
   // })));
   // if (errB) TE(errB.message);
-  
+
 
   return orders;
 };
@@ -286,6 +323,15 @@ exports.getUserOrders = async (userId) => {
       include: [
         {
           model: order_items,
+        },
+        {
+          model: ordermaster_pres,
+          as: 'prescriptions',
+          include: [
+            {
+              model: prescriptions
+            }
+          ]
         },
       ],
     })
@@ -343,7 +389,7 @@ exports.updateOrderItem = async (params, orderItemId) => {
       let updateParams = params;
 
 
-      updateParams = omit(updateParams,'merchantId')
+      updateParams = omit(updateParams, 'merchantId')
 
       if (params.quantity) {
         // need to fetch products sale price? (could have be updated)
@@ -396,7 +442,7 @@ exports.updateOrderItem = async (params, orderItemId) => {
         if (!update || update[0] === 0) TE("Error updating master order");
 
 
-        
+
 
         return true;
       }
@@ -670,7 +716,7 @@ exports.bulkAssignOrderItems = async (params, merchantId) => {
 
 exports.deleteAssignedMerchant = async (orderItemId) => {
   let err, deleted;
-  [err, deleted] = await to(orderitem_merchant.destroy({where:{orderItemId}}));
+  [err, deleted] = await to(orderitem_merchant.destroy({ where: { orderItemId } }));
   if (err) TE("Error deleting", +err.message);
   if (!deleted || deleted === 0) TE(STRINGS.NO_DATA_DELETE);
 }
@@ -700,8 +746,8 @@ exports.assignOrderItem = async (params, returnData = false) => {
 
       },
       include: {
-        model:orderitem_merchant,
-        as:'merchantassigned'
+        model: orderitem_merchant,
+        as: 'merchantassigned'
       }
     }));
   if (err) TE(err.message)
@@ -725,11 +771,11 @@ exports.assignOrderItem = async (params, returnData = false) => {
 
 exports.getOrderDetails = async (id, userDetails) => {
   let err, orderData, ordersWithDetails;
-  if(userDetails.userTypeId === 3) {
+  if (userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
       where: { userId: userDetails.id }
     }));
-  if(err) { TE(err.message); }
+    if (err) { TE(err.message); }
     [errA, ordersMerchant] = await to(
       orderitem_merchant.findAll({
         where: { merchantId: merchantlist.id },
@@ -740,18 +786,76 @@ exports.getOrderDetails = async (id, userDetails) => {
         ],
       })
     );
-    if(ordersMerchant) {
+    if (ordersMerchant) {
       let orderItem = [];
       Object.entries(ordersMerchant).map(([key, value]) => {
         orderItem.push(value.order_item.id);
-    });
+      });
+      [err, orderData] = await to(order_masters.findOne(
+        {
+          where: { id },
+          include: [
+            {
+              model: ordermaster_pres,
+              as: 'prescriptions',
+              include: [
+                {
+                  model: prescriptions
+                }
+              ]
+            },
+            {
+              model: order_items,
+              where: { id: { [Op.or]: orderItem } },
+              include: [
+                {
+                  model: shipment_order_item,
+                  as: "shipping",
+                  // exclude: ["id"],
+                  include: [
+                    {
+                      model: shipment,
+                    },
+                  ],
+                },
+                {
+                  model: orderitem_merchant,
+                  as: 'merchantassigned',
+                  include: {
+                    model: merchants
+                  }
+                }
+              ]
+            },
+            {
+              model: order_status_history,
+              as: "orderHistory",
+              // order:[
+              //   [order_status_history,'createdAt', 'DESC']
+              // ]
+            },
+          ]
+        },
+
+      ));
+    }
+  }
+  else {
     [err, orderData] = await to(order_masters.findOne(
       {
         where: { id },
         include: [
           {
+            model: ordermaster_pres,
+            as: 'prescriptions',
+            include: [
+              {
+                model: prescriptions
+              }
+            ]
+          },
+          {
             model: order_items,
-            where: { id: { [Op.or]: orderItem } },
             include: [
               {
                 model: shipment_order_item,
@@ -781,49 +885,9 @@ exports.getOrderDetails = async (id, userDetails) => {
           },
         ]
       },
-  
+
     ));
   }
-  }
-  else {
-  [err, orderData] = await to(order_masters.findOne(
-    {
-      where: { id },
-      include: [
-        {
-          model: order_items,
-          include: [
-            {
-              model: shipment_order_item,
-              as: "shipping",
-              // exclude: ["id"],
-              include: [
-                {
-                  model: shipment,
-                },
-              ],
-            },
-            {
-              model: orderitem_merchant,
-              as: 'merchantassigned',
-              include: {
-                model: merchants
-              }
-            }
-          ]
-        },
-        {
-          model: order_status_history,
-          as: "orderHistory",
-          // order:[
-          //   [order_status_history,'createdAt', 'DESC']
-          // ]
-        },
-      ]
-    },
-
-  ));
-}
   Logger.info(orderData)
   if (err) TE(err.message);
   if (!orderData) TE('No order data');
