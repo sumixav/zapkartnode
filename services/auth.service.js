@@ -233,14 +233,31 @@ const authGbUser = async function (userInfo) {
       where: [
         {
           email: userInfo.loginId,
-          socialMediaId: userInfo.id,
-          socialType: "google"
+          // socialMediaId: userInfo.id,
+          // socialType: "google"
         }
       ]
     })
   );
   if (err) TE(err.message);
   let userParam = {};
+  if (user){
+    userParam.firstName = userInfo.name;
+    userParam.lastName = "";
+    userParam.email = userInfo.loginId;
+    userParam.socialMediaId = userInfo.id;
+    userParam.socialType = "google";
+    userParam.userTypeId = +userInfo.roleId;
+    userParam.active = 1;
+    userParam.confirmed = 1;
+    Logger.info(userParam);
+    [err, user] = await to(users.update({email: userInfo.loginId},userParam));
+    if (err) {
+      return TE(err.message);
+    }
+    if (!user || user[0] === 0) TE("Unable to update user")
+    user = await users.findOne({email:userInfo.loginId})
+  }
   if (!user) {
     userParam.firstName = userInfo.name;
     userParam.lastName = "";
@@ -257,6 +274,7 @@ const authGbUser = async function (userInfo) {
     }
   }
   return user;
+  
 };
 module.exports.authGbUser = authGbUser;
 
