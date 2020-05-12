@@ -56,7 +56,7 @@ module.exports.getCoupen = getCoupen;
 
 const updateCoupen = async function(req, res) {
   let id  = req.params.id;
-  
+  Logger.info('mmm', id);
   try {
       [err, coupenlist] = await to(coupenService.updatecoupen(id,req.body));
           if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);

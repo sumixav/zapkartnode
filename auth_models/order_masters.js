@@ -116,6 +116,7 @@ module.exports = function (sequelize, DataTypes) {
   Model.associate = function (models) {
     // this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
     Model.belongsTo(models.users, { foreignKey: 'userId' });
+    Model.belongsTo(models.offers, { foreignKey: 'coupenId' });
     Model.hasMany(models.order_items);
     Model.hasMany(models.shipment, { as: 'shipments', foreignKey: 'masterOrderId' })
     Model.hasMany(models.order_merchant_assign,

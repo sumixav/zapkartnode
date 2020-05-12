@@ -28,20 +28,24 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       type: DataTypes.TEXT,
       get: function () {
-        return JSON.parse(this.getDataValue("shipmentOriginDetails"));
+        if (this.getDataValue("shipmentOriginDetails"))
+          return JSON.parse(this.getDataValue("shipmentOriginDetails"));
       },
       set: function (value) {
-        this.setDataValue("shipmentOriginDetails", JSON.stringify(value));
+        if (value)
+          this.setDataValue("shipmentOriginDetails", JSON.stringify(value));
       },
     },
     shipmentDestinationAddress: {
       allowNull: true,
       type: DataTypes.TEXT,
       get: function () {
-        return JSON.parse(this.getDataValue("shipmentDestinationAddress"));
+        if (this.getDataValue("shipmentDestinationAddress"))
+          return JSON.parse(this.getDataValue("shipmentDestinationAddress"));
       },
       set: function (value) {
-        this.setDataValue("shipmentDestinationAddress", JSON.stringify(value));
+        if (value)
+          this.setDataValue("shipmentDestinationAddress", JSON.stringify(value));
       },
     },
     grossWeight: {
@@ -139,6 +143,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       validate: {
         isRequired: function (value) {
+          console.log('lll', value, this.shippingStatus)
           if (this.shippingStatus === "delivered" && value == null)
             throw new Error("Delivered date required");
         },
@@ -158,6 +163,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       validate: {
         isRequired: function (value) {
+          console.log('hellooooooi', value, this.shippingStatus)
           if (this.shippingStatus === "shipped" && value == null)
             throw new Error("Shipped created date required");
         },
@@ -224,11 +230,10 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "masterOrderId",
     });
     // Shipment.hasMany(models.order_items, {as:'orderItems'})
-    Shipment.hasMany(models.shipment_order_item, { as: "orderItems", foreignKey:"shipmentId" });
+    Shipment.hasMany(models.shipment_order_item, { as: "orderItems", foreignKey: "shipmentId" });
     Shipment.belongsTo(models.users, { foreignKey: "createdBy" });
     // Shipment.belongsTo(models.user_types,{foreignKey:"createdByType"});
   };
-
   Shipment.prototype.toWeb = function () {
     let json = this.toJSON();
     return json;

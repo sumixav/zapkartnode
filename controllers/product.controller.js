@@ -279,7 +279,9 @@ exports.getProductFilter = async (req, res, next) => {
     if (product) {
       return ReS(
         res,
-        { message: product },
+        { message: 'Products', 
+        // data:product.products && product.products[0] ? product.products[0].paginatedResults : [], totalCount:product && product.products[0] ? product.products[0].totalCount:0, products_brand: product.products_brand  },
+        data:product},
         status_codes_msg.SUCCESS.code
       );
     }

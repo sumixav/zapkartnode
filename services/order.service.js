@@ -49,7 +49,7 @@ exports.create = async (param) => {
   }
   let coupenDetails = (shippingDetails = billingDetails = orderParam = updateOrderMaster = {});
   let totalPrice = (totalQty = salePrice = 0);
-  if (param.coupen > 0) {
+  if (param.coupen) {
     Logger.info("2222");
     [err, coupenDetails] = await to(
       offers.findOne({ where: { coupenCode: param.coupen } })
@@ -174,19 +174,27 @@ exports.create = async (param) => {
       orderMasterDetails.orderQty = parseInt(totalQty);
       orderMasterDetails.orderSubtotal = parseInt(salePrice);
       if (find(cartDetails, m => m.prescriptionRequired === "yes")) {
-        [err, a] = await to(ordermaster_pres.bulkCreate(param.prescriptions.map(i => ({
+        let pres = param.prescriptions;
+        if (param.prescriptions.constructor !== Array) pres = [param.prescriptions];
+        [err, a] = await to(ordermaster_pres.bulkCreate(pres.map(i => ({
           orderMasterId: orderMasterDetails.id,
-          presId: i
+          presId: +i
         })), { transaction: t }));
         if (err) TE(err.message);
-        Logger.info(a);
+      };
+      Logger.info('orderMasterDetails', orderMasterDetails);
+
+      // apply discount to subtotal if valid offer ID
+      if (orderParam.coupenId){
+        [err, couponDetails] = await to(offers.findOne({id:orderParam.coupenId}, {transaction:t}));
+        if (err) TE(err.message);
+        if (!coupenDetails) TE("Invalid coupon code");
+        orderMasterDetails.orderSubtotal-=coupenDetails.amount;
       }
       const [errM, updateOrderMaster] = await to(orderMasterDetails.save({ transaction: t }));
       // const [errM, updateOrderMaster] = await to(order_masters.update({...updatedOrderParams}, { where: { id: orderMasterDetails.id } }));
       if (!updateOrderMaster) TE("Order could not be updated");
-      if (errM) TE(errM.message);
-
-      // remove items from cart - to do
+      if (errM) { console.log('jojojo', errM.message); TE(errM.message) };
 
       if (!isEmpty(param.payment) && param.payment == 1) {
         let gateway = pyMent[0].gatewayDetails;
@@ -199,7 +207,8 @@ exports.create = async (param) => {
         paymentJson.key = resGateWay.key;
         paymentJson.txnid = orderno;
         paymentJson.hash = hash;
-        paymentJson.amount = totalPrice;
+        paymentJson.amount = orderMasterDetails.orderSubtotal;
+        // paymentJson.amount = totalPrice;
         paymentJson.firstname = param.user.firstName;
         paymentJson.email = param.user.email;
         paymentJson.phone = param.user.phone;
@@ -225,7 +234,7 @@ exports.create = async (param) => {
   return orderDet;
 };
 
-exports.getAllOrders = async (query, userDetails) => {
+exports.getAllOrders = async (query, userDetails = {}) => {
   let orders = {};
   if (userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
@@ -250,6 +259,9 @@ exports.getAllOrders = async (query, userDetails) => {
 
       [errA, orders] = await to(
         order_masters.findAll({
+          order: [
+            ['createdAt', 'DESC']
+          ],
           include: [
             {
               model: order_items,
@@ -277,6 +289,9 @@ exports.getAllOrders = async (query, userDetails) => {
         where: {
           ...query,
         },
+        order: [
+          ['createdAt', 'DESC']
+        ],
         include: [
           {
             model: order_items,
@@ -580,6 +595,9 @@ exports.getOrderDetailsSS = async (orderId) => {
         {
           model: order_status_history,
           as: "orderHistory",
+          order: [
+            ['createdAt', 'DESC']
+          ]
           // order:[
           //   [order_status_history,'createdAt', 'DESC']
           // ]
@@ -651,7 +669,7 @@ exports.updateOrder = async (param) => {
     orderId: paramRes.txnid,
     status: paymentStatus,
   };
-  let transactionDetails = await to(
+  [err, transactionDetails] = await to(
     transaction_details.create(transactionParam)
   );
   if (err) {
@@ -769,7 +787,7 @@ exports.assignOrderItem = async (params, returnData = false) => {
   }
 }
 
-exports.getOrderDetails = async (id, userDetails) => {
+exports.getOrderDetails = async (id, userDetails = {}) => {
   let err, orderData, ordersWithDetails;
   if (userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
@@ -795,6 +813,9 @@ exports.getOrderDetails = async (id, userDetails) => {
         {
           where: { id },
           include: [
+            {
+              model:offers
+            },
             {
               model: ordermaster_pres,
               as: 'prescriptions',
@@ -845,6 +866,9 @@ exports.getOrderDetails = async (id, userDetails) => {
       {
         where: { id },
         include: [
+          {
+            model:offers
+          },
           {
             model: ordermaster_pres,
             as: 'prescriptions',

@@ -282,7 +282,7 @@ exports.editCategory = async (params, id, query) => {
   if (params.parent !== category.parent) {
     let idPath = [category._id];
     Logger.info(params.parent === "null");
-    if (params.parent === "null") {
+    if (params.parent === "null" || params.parent ===null) {
       category.parent = null;
       idPath = [category._id];
     } else {

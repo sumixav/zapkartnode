@@ -7,6 +7,7 @@ const {
   shipment_order_item,
   user_types,
   orderitem_merchant,
+  order_status_history,
   sequelize,
   merchants
 } = require("../auth_models");
@@ -92,32 +93,75 @@ module.exports.createShipment = async (params) => {
 };
 
 module.exports.updateShipment = async (params, shipmentId) => {
+  let err, errT, shipments, updatedOrder, orderHistory, shipmentData;
   params = parseStrings(params);
-  Logger.info(params)
-  const [errA, count] = await to(
-    shipment.update(
-      { ...params },
-      {
-        where: {
-          id: shipmentId,
-        },
-      }
-    )
-  );
-  Logger.info("count", count);
-  if (!count || count[0] === 0) TE("Unable to update");
-  if (errA) TE(STRINGS.UPDATE_ERROR + " " + errA.message);
-
-  const [errB, updated] = await to(
-    shipment.findOne({
+  Logger.info(params, shipmentId);
+  const query = [
+    { ...params },
+    {
       where: {
-        id: shipmentId,
+        id: +shipmentId,
       },
-    })
-  );
-  if (errB) TE(STRINGS.RETREIVE_ERROR + errB.message);
-  if (!updated) TE(STRINGS.NO_DATA);
-  return updated;
+    }
+  ]
+  Logger.info("query", query);
+  [errT, shipmentData] = await to(sequelize.transaction(async (t) => {
+
+    const [errA, count] = await to(
+      shipment.update(
+        { ...params },
+        {
+          where: {
+            id: +shipmentId,
+          },
+          transaction: t
+        }
+      )
+    );
+    Logger.info("count", count);
+    if (errA) TE(STRINGS.UPDATE_ERROR + " " + errA.message);
+    if (!count || count[0] === 0) TE("Unable to update");
+
+    const [errB, updated] = await to(
+      shipment.findOne({
+        where: {
+          id: +shipmentId,
+        },
+      })
+    );
+    [err, shipments] = await to(shipment.findAndCountAll({ where: { masterOrderId: updated.masterOrderId, shippingStatus: "delivered" }, transaction:t }))
+    if (err) TE(err.message)
+    if (!shipments) TE("Error fetching shipments");
+    [err, orderItems] = await to(order_items.findAndCountAll({ where: { orderMasterId: updated.masterOrderId }, transaction:t }))
+    if (err) TE(err.message);
+    if (!orderItems) TE("Error fetching order items");
+    Logger.info('count shipment, order', shipments.count, orderItems.count)
+    if (orderItems.count === shipments.count) {
+      [err, updatedOrder] = await to(order_masters.update({ orderStatus: 'completed' }, { where: { id: updated.masterOrderId, orderStatus: { [Op.not]: 'completed' } }, transaction: t }));
+      Logger.info('roo updatedOrder', updatedOrder)
+      // TE("Mock");
+      // if (err) TE(err.message);
+      if (updatedOrder && updatedOrder[0] > 0) {
+        [err, orderHistory] = await to(
+          order_status_history.create({
+            orderStatus: 'completed',
+            comment: 'All items delivered',
+            orderId: updated.masterOrderId,
+          }, { transaction: t })
+        );
+        if (err) TE(err.message);
+        Logger.info('roo orderHistory', orderHistory)
+        if (!orderHistory) TE("Error updating order history")
+      }
+    }
+    if (errB) TE(STRINGS.RETREIVE_ERROR + errB.message);
+    if (!updated) TE(STRINGS.NO_DATA);
+    return updated;
+  }));
+  if (errT) TE(errT.message)
+  if (!shipmentData) TE("Error in updating shipment");
+  return shipmentData
+
 };
 
 module.exports.getShipments = async (params) => {
@@ -130,18 +174,18 @@ module.exports.getShipments = async (params) => {
     where: {
       ...query,
     },
-    include:!query.masterOrderId && [
+    include: !query.masterOrderId && [
       {
-        model:order_masters,
-        as:'masterOrder',
-        include:[
-          {model:users,attributes:['firstName', 'lastName','email','phone']}
+        model: order_masters,
+        as: 'masterOrder',
+        include: [
+          { model: users, attributes: ['firstName', 'lastName', 'email', 'phone'] }
         ]
       }
     ],
     order: [["updatedAt", "DESC"]],
     ...paginate(page, limit),
-    
+
   };
 
   Logger.info(dbQuery)

@@ -88,7 +88,7 @@ router.post(
   Validate.validateProduct,
   ProductController.createProduct
 );
-// router.get("/products/query", ProductController.getAllProductsAggregate);
+router.get("/products/query", ProductController.getProductFilter);
 router.get("/products/:productId", ProductController.getProduct);
 router.get("/products", ProductController.getAllProducts);
 // router.get("/products", ProductController.getProductFilter);

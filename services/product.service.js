@@ -10,7 +10,10 @@ const Composition = require("../models/composition");
 const Category = require("../models/category");
 const { shippingDimModel: ShippingDim } = require("../models/shippingDim");
 const validator = require("validator");
-const find = require("lodash/find")
+const find = require("lodash/find");
+const isEmpty = require("lodash/isEmpty");
+const pick = require("lodash/pick");
+const omit = require("lodash/omit");
 const intersectionBy = require("lodash/intersectionBy");
 // const parseQuery = require("query-string")
 const {
@@ -26,6 +29,7 @@ const {
   getIdQuery,
   uniq,
   isValidId,
+  isObjectId
 } = require("../services/util.service");
 const mongoose = require("mongoose");
 const Logger = require("../logger");
@@ -35,7 +39,6 @@ const { STRINGS, PAGE_LIMIT } = require("../utils/appStatics");
 const { transformProduct } = require("./transforms");
 const parseStrings = require("parse-strings-in-object");
 const qs = require("qs");
-const { isObjectId } = require("./util.service");
 const { addCompositions } = require("./composition.service");
 const { addOrganics } = require("./organic.service");
 const { createOrganic } = require("./organic.service");
@@ -100,6 +103,7 @@ exports.createProduct = async (param) => {
     textDescription,
     organic = [],
     relatedProducts,
+    frequentlyBought,
     imageUrl,
   } = parsedParam;
 
@@ -302,7 +306,7 @@ exports.createProduct = async (param) => {
     textDescription,
     productExtraInfo: productExtraInfoDoc._id,
     relatedProducts,
-
+    frequentlyBought
     // mainImage: mainImageDoc
   });
 
@@ -332,7 +336,7 @@ exports.createProduct = async (param) => {
   Logger.info("prodExtraInfoDoc", prodExtraInfoDoc);
   return Product.populate(
     newProductDoc,
-    "category composition pricing medicineType stock productExtraInfo relatedProducts"
+    "category composition pricing medicineType stock productExtraInfo relatedProducts frequentlyBought"
   );
 };
 
@@ -711,14 +715,14 @@ exports.getAllProductsAggregate = async (query) => {
   } = queryParsed;
 
   let aggregatePipeline = [
-    // {
-    //   $lookup: {
-    //     from: "categories",
-    //     localField: "category",
-    //     foreignField: "_id",
-    //     as: "category"
-    //   }
-    // },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category"
+      }
+    },
     {
       $lookup: {
         from: "brands",
@@ -728,11 +732,11 @@ exports.getAllProductsAggregate = async (query) => {
       },
     },
 
-    // {
-    //   $unwind: {
-    //     path: "$category"
-    //   }
-    // },
+    {
+      $unwind: {
+        path: "$category"
+      }
+    },
     {
       $unwind: {
         path: "$brand",
@@ -811,11 +815,15 @@ exports.getAllProducts = async (query) => {
     // id
   } = queryParsed;
 
-  Logger.info("QUERYAAAAAAA", getIdQuery(queryParsed.category))
+  // Logger.info("QUERYAAAAAAA", getIdQuery(queryParsed.category))
+  if (queryParsed.category && typeof queryParsed.category === "string") queryParsed.category = new Array(queryParsed.category);
+  if (queryParsed.brand && typeof queryParsed.category === "string") queryParsed.category = new Array(queryParsed.category);
+  Logger.info('new queryParsed', queryParsed)
   let categoryQuery = {};
   let brandQuery = {};
   if (queryParsed.category) {
-    if (getIdQuery(queryParsed.category).slug) {
+    if (!isEmpty(find(queryParsed.category, i => getIdQuery(i).slug))) {
+      // if (getIdQuery(queryParsed.category).slug) {
 
       const { category } = queryParsed;
       const [errM, categories] = await to(Category.find({ slug: { $in: Array.isArray(category) ? category : new Array(category) } }))
@@ -851,6 +859,8 @@ exports.getAllProducts = async (query) => {
   }
 
 
+
+
   let select = {};
   let sortQuery = { updatedAt: -1 };
   Object.entries(queryParsed).forEach(([key, value]) => {
@@ -866,6 +876,9 @@ exports.getAllProducts = async (query) => {
         dbQuery = { ...dbQuery, organic: { $in: organic } };
         break;
       case "fields":
+        Logger.info(key, typeof value)
+        if (typeof value === "string")
+          value = value.trim().split(',').map(i => i.trim());
         if (value && value.length > 0) {
           value.forEach((i) => (select[i] = 1));
         }
@@ -1054,7 +1067,7 @@ exports.getAllVariants = async (productId, query) => {
     })
   );
   Logger.info("ff345", attributeCode);
-  const products = await Product.find()
+  const products = await Product.find(dbQuery)
     .select(select)
     .sort({ [sortField]: sortOrder })
     .skip((page - 1) * limit)
@@ -1116,6 +1129,11 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
       path: "relatedProducts",
       populate: { path: "pricing" },
       select: " _id slug name images pricing",
+    })
+    .populate({
+      path: "frequentlyBought",
+      populate: { path: "pricing" },
+      select: " _id slug name images pricing",
     });
 
   Logger.info(product);
@@ -1129,6 +1147,10 @@ exports.editProduct = async (params, query) => {
   // const mainImageFile = req.files["mainImage"][0];
   // const imagesFiles = req.files["images"];
   Logger.info(params);
+  params = {
+    ...params, ...parseStrings(pick(params, ['composition',
+      'organic', 'relatedProducts', 'frequentlyBought']))
+  }
 
   const product = await Product.findOne(dbQuery);
   if (!product) throw new Error(STRINGS.NOT_EXIST);
@@ -1242,6 +1264,7 @@ exports.editProduct = async (params, query) => {
         break;
       case "composition":
         Logger.info(key, value);
+        if (value === null) { product["composition"] = []; break; };
         const newCompositions = value.filter((i) => !isObjectId(i));
         const newCompositionsDocs = addCompositions(newCompositions);
         let toAddComps = value.filter((i) => isObjectId(i));
@@ -1252,6 +1275,7 @@ exports.editProduct = async (params, query) => {
         product["composition"] = toAddComps;
         break;
       case "organic":
+        if (params.organic === null) { product["organic"] = []; break; };
         const newOrganics = params.organic.filter((i) => !isObjectId(i));
         const newOrganicsDocs = addOrganics(newOrganics);
         let toAddOrganicsId = params.organic.filter((i) => isObjectId(i));
@@ -1260,6 +1284,11 @@ exports.editProduct = async (params, query) => {
           ...toAddOrganicsId,
         ]);
         product["organic"] = toAddOrganicsId;
+        break;
+      case 'relatedProducts':
+      case 'frequentlyBought':
+        if (value === null) product[key] = [];
+        else product[key] = value
         break;
       case "description":
       case "keyBenefits":
@@ -1332,32 +1361,168 @@ exports.restoreProduct = async (id) => {
 };
 
 exports.getProductFilterAggregate = async (param) => {
-  const { category, brand, status, sort } = param;
+  let { category, brand, status, sort, search, page = 1, limit = 0, fields, exclude } = param;
   let brandItems = [];
   let queryString = [{ $project: { _v: 0 } }];
-  let productsortlist,
-    pricelookup,
-    productmatch,
-    categorylookup,
-    categoryunwind,
-    categorymatch,
-    brandlookup,
-    brandunwind,
-    brandmatch,
-    sortlist = {};
-  if (status) {
-    productmatch = [{ $match: { status: status } }];
+  let productsortlist = [],
+    queryGroupBrands = [],
+    queryCount = [],
+    pricelookup = [],
+    priceUnwind = [],
+    productmatch = [],
+    categorylookup = [],
+    categoryunwind = [],
+    categorymatch = [],
+    brandlookup = [],
+    brandunwind = [],
+    brandmatch = [],
+    queryStringPagin = [],
+    projectQuery = [],
+    brandProject = [],
+    matchParam = {},
+    projectObj = {},
+    sortlist = {},
+    queryStringBrandGroup=[]
+
+  matchParam = { deleted: false, ...parseStrings(omit(param, ['category', 'brand', 'sort', 'page', 'limit', 'search', 'fields', 'exclude'])) };
+
+  // if (status) {
+  //   productmatch = [{ $match: { status: status } }];
+  // }
+
+
+  if (fields) {
+    console.log('poo', fields);
+    if (typeof fields === "string")
+      fields = fields.split(',').map(i => i.trim());
+    console.log('poo', fields);
+    fields.forEach(i => projectObj[i] = 1);
+
   }
-  if (sort) {
-    productsortlist = [
+  if (exclude) {
+    if (typeof exclude === "string")
+      exclude = exclude.split(',').map(i => i.trim());
+    console.log('pooa', exclude)
+    const skipFields = ['categories_list', 'brands_list'];
+    exclude.forEach(i => { if (!skipFields.includes(i)) projectObj[i] = 0 });
+  }
+  if (!isEmpty(projectObj)) {
+    projectQuery = [
       {
-        $sort: {
-          "pricing.salePrice": sort.salePrice,
-          priorityOrder: sort.priorityOrder,
-        },
-      },
+        $project: projectObj
+      }
     ];
   }
+  console.log('aaaa1', projectObj)
+  console.log('aaaa2', projectQuery)
+  if (search) {
+    Logger.info('search', search);
+    if (search.name)
+      matchParam = { ...matchParam, name: { $regex: search.name, $options: "i" } }
+  }
+  productmatch = [{ $match: matchParam }]
+
+  let sortQuery = { updatedAt: -1 }
+  // let sortQuery = {}
+  if (sort) {
+    sort = parseStrings(sort)
+    sortQuery = Object.assign({}, sort);
+    // Object.keys(sort).forEach(i => {
+    //   switch (i) {
+    //     case 'salePrice':
+    //       sortQuery["pricing.salePrice"] = +sort.salePrice === -1 ? -1 : 1;
+    //       // sortQuery = { ...sortQuery, "pricing.salePrice": +sort.salePrice === -1 ? -1 : 1 }
+    //       break;
+    //     default:
+    //       sortQuery[i] = +sort[i] === -1 ? -1 : 1
+    //       break;
+    //   }
+    // });
+  }
+  productsortlist = [
+    {
+      $sort: sortQuery
+    },
+  ];
+  Logger.info('productsortlist', productsortlist)
+  // generalLookup = [
+  //   {
+  //     $lookup: {
+  //       from: "categories",
+  //       localField: "parentId",
+  //       foreignField: "_id",
+  //       as: "parentId",
+  //     },
+  //   },
+  //   {
+  //     $unwind: "$parentId"
+  //   }
+  // {
+  //   $lookup: {
+  //     from: "compositions",
+  //     localField: "composition",
+  //     foreignField: "_id",
+  //     as: "composition",
+  //   },
+  // },
+  // {
+  //   $lookup: {
+  //     from: "organics",
+  //     localField: "organic",
+  //     foreignField: "_id",
+  //     as: "organic",
+  //   },
+  // },
+  // {
+  //   $lookup: {
+  //     from: "attributes",
+  //     localField: "attributes.attributeGroup",
+  //     foreignField: "_id",
+  //     as: "attributes.attributeGroup",
+  //   },
+  // },
+  // {
+  //   $lookup: {
+  //     from: "attributesValues",
+  //     localField: "attributes.value",
+  //     foreignField: "_id",
+  //     as: "attributes.value",
+  //   },
+  // },
+  // {
+  //   $lookup: {
+  //     from: "medicineTypes",
+  //     localField: "medicineType",
+  //     foreignField: "_id",
+  //     as: "medicineType",
+  //   },
+  // },
+  // {
+  //   $unwind: "$medicineType"
+  // },
+  // {
+  //   $lookup: {
+  //     from: "stocks",
+  //     localField: "stock",
+  //     foreignField: "_id",
+  //     as: "stock",
+  //   },
+  // },
+  // {
+  //   $unwind: "$stock"
+  // },
+  // {
+  //   $lookup: {
+  //     from: "productExtraInfos",
+  //     localField: "productExtraInfo",
+  //     foreignField: "_id",
+  //     as: "productExtraInfo",
+  //   },
+  // },
+  // {
+  //   $unwind: "$productExtraInfo"
+  // },
+  // ]
   pricelookup = [
     {
       $lookup: {
@@ -1368,70 +1533,211 @@ exports.getProductFilterAggregate = async (param) => {
       },
     },
   ];
+  priceUnwind = [
+    {
+      $unwind: "$pricing"
+    }
+  ]
+  categorylookup = [
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        // as: "categories",
+        as: "category",
+      },
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category.idPath",
+        foreignField: "_id",
+        // as: "categories",
+        as: "idPathPop",
+      },
+    },
+  ];
+  categoryunwind = [{ $unwind: "$category" }];
+  categorymatch = [];
   if (category) {
-    let categoryCondition = isValidId(category)
-      ? mongoose.Types.ObjectId(category)
-      : category;
+    if (typeof category === "string") category = [category];
+    // let categoryCondition = isValidId(category)
+    //   ? mongoose.Types.ObjectId(category)
+    //   : category;
+    let categorymatchQuery = {};
+    // Logger.info('valid objectid find', find(category, i => isObjectId(i)))/;
+    if (!isEmpty(find(category, i => isObjectId(i)))) {
+      categorymatchQuery = {
+        // "category._id": { $in: category.map(i => mongoose.Types.ObjectId(i)) }
+        "idPathPop._id": { $in: category.map(i => mongoose.Types.ObjectId(i)) }
+      }
+    }
+    else
+      categorymatchQuery = {
+        // "category.slug": { $in: category }
+        "idPathPop.slug": { $in: category }
 
-    categorylookup = [
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "categories",
-        },
-      },
-    ];
-    categoryunwind = [{ $unwind: "$categories" }];
+      }
     categorymatch = [
-      { $match: { "categories.slug": { $in: [categoryCondition] } } },
-    ];
-    queryString = [
-      ...queryString,
-      ...categorylookup,
-      ...categoryunwind,
-      ...categorymatch,
-    ];
-  }
-
-  if (brand) {
-    brand.map((i) =>
-      isValidId(i)
-        ? brandItems.push(mongoose.Types.ObjectId(i))
-        : brandItems.push(i)
-    );
-    brandlookup = [
-      {
-        $lookup: {
-          from: "brands",
-          localField: "brand",
-          foreignField: "_id",
-          as: "brand",
-        },
-      },
-    ];
-    brandunwind = [{ $unwind: "$brand" }];
-    brandmatch = isValidId(brand[0])
-      ? [{ $match: { "brand.id": { $in: brandItems } } }]
-      : [{ $match: { "brand.slug": { $in: brandItems } } }];
-    queryString = [
-      ...queryString,
-      ...brandlookup,
-      ...brandunwind,
-      ...brandmatch,
+      { $match: categorymatchQuery },
     ];
   }
   queryString = [
     ...queryString,
-    ...pricelookup,
-    ...productmatch,
-    ...productsortlist,
+    ...categorylookup,
+    // ...categoryunwind,
+    ...categorymatch,
+    { $project: { "idPathPop": 0 } }
   ];
 
-  const docs_collection = await Product.aggregate(queryString).exec();
+  brandlookup = [
+    {
+      $lookup: {
+        from: "brands",
+        localField: "brand",
+        foreignField: "_id",
+        as: "brand",
+      },
+    },
+  ];
+  brandunwind = [{ $unwind: "$brand" }];
+  brandmatch = [];
+  if (brand) {
+    if (typeof brand === "string") brand = [brand];
+    brand.map((i) =>
+      isObjectId(i)
+        ? brandItems.push(mongoose.Types.ObjectId(i))
+        : brandItems.push(i)
+    );
+    brandmatch = isValidId(brand[0])
+      ? [{ $match: { "brand._id": { $in: brandItems } } }]
+      : [{ $match: { "brand.slug": { $in: brandItems } } }];
+  }
+  queryString = [
+    ...queryString,
+    ...brandlookup,
+    ...brandunwind,
+    ...brandmatch,
+    
+  ];
+  queryString = [
+    ...queryString,
+    ...productmatch,
+    ...pricelookup,
+    ...priceUnwind,
+    // ...productsortlist,
+  ];
+  queryStringBrandGroup = queryString.filter(i => !brandmatch.includes(i))
+  console.log('queryStringBrandGroup',queryStringBrandGroup )
 
+  // passing $limit: 0 - error - pass only if positive int
+  let paginateQuery = [{ $skip: (+page - 1) * +limit }];
+  if (+limit > 0) paginateQuery = [...paginateQuery, { $limit: +limit }]
+  queryCount = [...queryString, {
+    $group: {
+      _id: null,
+      count: { $sum: 1 }
+    }
+  }]
+  queryStringPagin = [
+    ...queryString,
+    ...projectQuery,
+    ...paginateQuery,
+    ...productsortlist,
+    // {
+    //   $group: {
+    //     _id: null,
+    //     count: { $sum: 1 },
+    //     data: { $push: "$$ROOT" }
+    //   }
+    // },
+    // {
+    //   $skip: (+page - 1) * +limit,
+    // },
+    // {
+    //   $limit: +limit,
+    // },
+    // {
+    //   $facet: {
+    //     paginatedResults: paginateQuery,
+    //     totalCount: [
+    //       {
+    //         $count: 'count'
+    //       }
+    //     ],
+    //     // brands: [{
+    //     //   $bucket: {
+    //     //     groupBy: "$brand._id",
+    //     //     boundaries:[0,200],
+    //     //     default:"other",
+    //     //     output: {
+    //     //       brand: { $mergeObjects: "$brand" },
+    //     //       productCount: { "$sum": 1 }
+
+    //     //     }
+    //     //   }
+    //     // }]
+    //   }
+    // }
+  ]
+
+  queryGroupBrands = [
+    ...queryStringBrandGroup,
+    // ...pricelookup,
+    // ...productmatch,
+    // ...productsortlist,
+    {
+      $group: {
+        _id: "$brand._id",
+        // brand: { $push: "$$ROOT" },
+        brand: { $mergeObjects: "$brand" },
+        productCount: { "$sum": 1 }
+      }
+    }
+  ]
+
+  // Logger.info('queryString', queryString)
+  Logger.info('queryGroupBrands', queryGroupBrands);
+  Logger.info('queryStringPagin', queryStringPagin);
+
+  let [errCount, docs_collection_count] = await to(Product.aggregate(queryCount).exec());
+  if (errCount) TE(errCount.message);
+  if (!docs_collection_count) TE("Error fetching count");
+  Logger.info('docs_collection_count', docs_collection_count)
+  let [errProds, docs_collection] = await to(Product.aggregate(queryStringPagin).exec());
+  if (errProds) TE(errProds.message);
+  if (!docs_collection) TE("Error fetching products");
+
+  [errProds, docs_collection] = await to(Product.populate(docs_collection, [
+    // { path: "category", select: "name images seo" },
+    { path: "composition", select: "_id deleted name slug" },
+    { path: "organic", select: "_id deleted name slug" },
+    //{ path: "brand", select: "_id deleted name slug image" },
+    // { path: "pricing", select: "listPrice salePrice startDate endDate taxId" },
+    {
+      path: "attributes.attributeGroup",
+      select: "name status attribute_group_code",
+    },
+    { path: "attributes.value", select: "value status" },
+    { path: "medicineType" },
+    { path: "stock" },
+    { path: "productExtraInfo" },
+  ]))
+  if (errProds) TE(errProds.message);
+  if (!docs_collection) TE("Error fetching products");
+  const [errBrands, docs_collection_brand] = await to(Product.aggregate(queryGroupBrands).exec());
+  if (errBrands) TE(errBrands.message);
+  // if (!docs_collection_brand) TE("Error fetchingbrands")
+
+  let addInfo = {};
+  if (page) addInfo.page = page;
+  if (limit) addInfo.limit = limit;
+  if (!exclude || (exclude && !exclude.includes('brands_list'))) addInfo.brands_list = docs_collection_brand;
   return {
+    count: docs_collection_count.length > 0 ? docs_collection_count[0].count : 0,
     products: docs_collection,
+    ...addInfo
   };
+
 };

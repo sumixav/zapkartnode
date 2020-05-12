@@ -136,6 +136,7 @@ const productsSchema = Schema(
       required: true
     },
     relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    frequentlyBought: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     textDescription: {
       type: String,
       default: ""
@@ -151,6 +152,11 @@ const productsSchema = Schema(
     selectPopulatedPaths: false
   }
 );
+
+// productsSchema.pre('save', function(next){
+//   console.log('in save hook', this);
+//   next();
+// })
 
 // productsSchema.index({name: 'text'});
 
