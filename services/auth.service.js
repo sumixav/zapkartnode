@@ -247,7 +247,7 @@ const authGbUser = async function (userInfo) {
     userParam.email = userInfo.loginId;
     userParam.socialMediaId = userInfo.id;
     userParam.socialType = "google";
-    userParam.userTypeId = userInfo.roleId;
+    userParam.userTypeId = +userInfo.roleId;
     userParam.active = 1;
     userParam.confirmed = 1;
     Logger.info(userParam);
