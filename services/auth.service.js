@@ -118,9 +118,9 @@ const updateUser = async function (userData, userId) {
   // userData = userBodyParam(param.body);
   userData = parseStrings(userData);
   Logger.info(userData, userId);
-  [err, user] = await to(users.update(userData, { where: { id: userId, userTypeId:2 } }));
+  [err, user] = await to(users.update(userData, { where: { id: userId, userTypeId: 2 } }));
   if (err) TE(err.message);
-  if (!user || (user && user[0] === 0))TE("Unable to update")
+  if (!user || (user && user[0] === 0)) TE("Unable to update")
   Logger.info(user);
   return user;
 };
@@ -241,7 +241,7 @@ const authGbUser = async function (userInfo) {
   );
   if (err) TE(err.message);
   let userParam = {};
-  if (user){
+  if (user) {
     userParam.firstName = userInfo.name;
     userParam.lastName = "";
     userParam.email = userInfo.loginId;
@@ -251,12 +251,12 @@ const authGbUser = async function (userInfo) {
     userParam.active = 1;
     userParam.confirmed = 1;
     Logger.info(userParam);
-    [err, user] = await to(users.update({email: userInfo.loginId},userParam));
+    [err, user] = await to(users.update(userParam,{ where: { email: userInfo.loginId} }));
     if (err) {
       return TE(err.message);
     }
     if (!user || user[0] === 0) TE("Unable to update user")
-    user = await users.findOne({email:userInfo.loginId})
+    user = await users.findOne({ email: userInfo.loginId })
   }
   if (!user) {
     userParam.firstName = userInfo.name;
@@ -274,7 +274,7 @@ const authGbUser = async function (userInfo) {
     }
   }
   return user;
-  
+
 };
 module.exports.authGbUser = authGbUser;
 
