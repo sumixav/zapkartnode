@@ -1098,6 +1098,7 @@ exports.getAllVariants = async (productId, query) => {
 };
 
 exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
+  let err, product, similarProducts;
   let dbQuery = getIdQuery(id);
   dbQuery = { ...dbQuery, deleted: false };
   Logger.info(dbQuery);
@@ -1113,7 +1114,8 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
     if (JSON.parse(noExtraInfo)) select.productExtraInfo = 0;
   }
 
-  const product = await Product.find(dbQuery) // limit page sort fielf sort order
+
+  [err, product] = await to(Product.findOne(dbQuery) // limit page sort fielf sort order
     .select(select)
     .populate("category", "name images seo")
     .populate("composition", "_id deleted name slug")
@@ -1134,11 +1136,22 @@ exports.getProductDetails = async (id, { fields, noExtraInfo }) => {
       path: "frequentlyBought",
       populate: { path: "pricing" },
       select: " _id slug name images pricing",
-    });
+    }));
+  if (err) TE(err.message);
 
   Logger.info(product);
-  if (product.length === 0) throw new Error(STRINGS.NOT_EXIST);
-  return product[0];
+  if (!product) throw new Error(STRINGS.NOT_EXIST);
+  let prodQuery = dbQuery.slug ? { slug: { $nin: dbQuery.slug } } : { _id: { $nin: dbQuery._id } };
+  const similarQuery = {
+    organic: { $in: product.organic },
+    status: "active",
+    deleted: false,
+    ...prodQuery
+  };
+  [err, similarProducts] = await to(Product.find({ ...similarQuery }).populate("pricing"));
+  if (err) TE(err.message);
+
+  return { ...product._doc, similarProducts: !similarProducts ? [] : similarProducts }
 };
 
 exports.editProduct = async (params, query) => {
@@ -1382,7 +1395,7 @@ exports.getProductFilterAggregate = async (param) => {
     matchParam = {},
     projectObj = {},
     sortlist = {},
-    queryStringBrandGroup=[]
+    queryStringBrandGroup = []
 
   matchParam = { deleted: false, ...parseStrings(omit(param, ['category', 'brand', 'sort', 'page', 'limit', 'search', 'fields', 'exclude'])) };
 
@@ -1619,7 +1632,7 @@ exports.getProductFilterAggregate = async (param) => {
     ...brandlookup,
     ...brandunwind,
     ...brandmatch,
-    
+
   ];
   queryString = [
     ...queryString,
@@ -1629,7 +1642,7 @@ exports.getProductFilterAggregate = async (param) => {
     // ...productsortlist,
   ];
   queryStringBrandGroup = queryString.filter(i => !brandmatch.includes(i))
-  console.log('queryStringBrandGroup',queryStringBrandGroup )
+  console.log('queryStringBrandGroup', queryStringBrandGroup)
 
   // passing $limit: 0 - error - pass only if positive int
   let paginateQuery = [{ $skip: (+page - 1) * +limit }];

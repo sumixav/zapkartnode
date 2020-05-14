@@ -185,11 +185,11 @@ exports.create = async (param) => {
       Logger.info('orderMasterDetails', orderMasterDetails);
 
       // apply discount to subtotal if valid offer ID
-      if (orderParam.coupenId){
-        [err, couponDetails] = await to(offers.findOne({id:orderParam.coupenId}, {transaction:t}));
+      if (orderParam.coupenId) {
+        [err, couponDetails] = await to(offers.findOne({ id: orderParam.coupenId }, { transaction: t }));
         if (err) TE(err.message);
         if (!coupenDetails) TE("Invalid coupon code");
-        orderMasterDetails.orderSubtotal-=coupenDetails.amount;
+        orderMasterDetails.orderSubtotal -= coupenDetails.amount;
       }
       const [errM, updateOrderMaster] = await to(orderMasterDetails.save({ transaction: t }));
       // const [errM, updateOrderMaster] = await to(order_masters.update({...updatedOrderParams}, { where: { id: orderMasterDetails.id } }));
@@ -338,6 +338,18 @@ exports.getUserOrders = async (userId) => {
       include: [
         {
           model: order_items,
+          include: [
+            {
+              model: shipment_order_item,
+              as: "shipping",
+              // exclude: ["id"],
+              include: [
+                {
+                  model: shipment,
+                },
+              ],
+            },
+          ]
         },
         {
           model: ordermaster_pres,
@@ -348,7 +360,11 @@ exports.getUserOrders = async (userId) => {
             }
           ]
         },
+
       ],
+      order: [
+        ['createdAt', 'DESC']
+      ]
     })
   );
   if (errA) TE(errA.message);
@@ -814,7 +830,7 @@ exports.getOrderDetails = async (id, userDetails = {}) => {
           where: { id },
           include: [
             {
-              model:offers
+              model: offers
             },
             {
               model: ordermaster_pres,
@@ -867,7 +883,7 @@ exports.getOrderDetails = async (id, userDetails = {}) => {
         where: { id },
         include: [
           {
-            model:offers
+            model: offers
           },
           {
             model: ordermaster_pres,
