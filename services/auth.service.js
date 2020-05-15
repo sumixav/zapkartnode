@@ -200,28 +200,36 @@ const authFbUser = async function (userInfo) {
       where: [
         {
           email: userInfo.loginId,
-          socialMediaId: userInfo.id,
-          socialType: "facebook"
+          // socialMediaId: userInfo.id,
+          // socialType: "facebook"
         }
       ]
     })
   );
   if (err) TE(err.message);
   let userParam = {};
+  userParam.firstName = userInfo.name;
+  userParam.lastName = "";
+  userParam.email = userInfo.loginId;
+  userParam.socialMediaId = userInfo.id;
+  userParam.socialType = "facebook";
+  userParam.userTypeId = +userInfo.roleId;
+  userParam.active = 1;
+  userParam.confirmed = 1;
   if (!user) {
-    userParam.firstName = userInfo.name;
-    userParam.lastName = "";
-    userParam.email = userInfo.loginId;
-    userParam.socialMediaId = userInfo.id;
-    userParam.socialType = "facebook";
-    userParam.userTypeId = userInfo.roleId;
-    userParam.active = 1;
-    userParam.confirmed = 1;
     Logger.info(userParam);
     [err, user] = await to(users.create(userParam));
     if (err) {
       return TE(err.message);
     }
+  }
+  if (user) {
+    [err, user] = await to(users.update(userParam, { where: { email: userParam.email } }));
+    if (err) {
+      return TE(err.message);
+    }
+    if (!user || user[0] === 0) TE("Unable to update user")
+    user = await users.findOne({ email: userInfo.loginId })
   }
   return user;
 };
@@ -251,7 +259,7 @@ const authGbUser = async function (userInfo) {
     userParam.active = 1;
     userParam.confirmed = 1;
     Logger.info(userParam);
-    [err, user] = await to(users.update(userParam,{ where: { email: userInfo.loginId} }));
+    [err, user] = await to(users.update(userParam, { where: { email: userInfo.loginId } }));
     if (err) {
       return TE(err.message);
     }
