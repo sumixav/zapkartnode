@@ -91,14 +91,14 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
       get: function () {
         const dataValue = this.getDataValue("shippingAddress");
-        console.log('getter shippingAddress', dataValue)
+        // console.log('getter shippingAddress', dataValue)
         if (dataValue)
 
           return JSON.parse(dataValue);
       },
       set: function (value) {
-        console.log('setter shippingAddress', value)
-        console.log('setter json shippingAddress', JSON.stringify(value))
+        // console.log('setter shippingAddress', value)
+        // console.log('setter json shippingAddress', JSON.stringify(value))
         if (value) this.setDataValue("shippingAddress", JSON.stringify(value));
 
       },

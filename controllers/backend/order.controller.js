@@ -26,10 +26,11 @@ module.exports.create = create;
 exports.getUserOrders = async (req, res, next) => {
   let userId = req.user.id; // for authenticated users order details
   if (req.params.userId) userId = req.params.userId; // for admin to get user's order details
-
+  let role = 'user'
+  if (req.user.userTypeId === 1) role = 'admin'
   try {
 
-    [err, order] = await to(orderService.getUserOrders(userId));
+    [err, order] = await to(orderService.getUserOrders(userId, role));
 
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (order) {

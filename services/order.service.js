@@ -331,10 +331,12 @@ exports.getAllOrders = async (query, userDetails = {}) => {
 
   return orders;
 };
-exports.getUserOrders = async (userId) => {
+exports.getUserOrders = async (userId, role = 'user') => {
+  let addQuery = {orderStatus:{[Op.ne]:"hold"}};
+  if (role === 'admin') addQuery = {}
   const [errA, orders] = await to(
     order_masters.findAll({
-      where: { userId },
+      where: { userId, ...addQuery },
       include: [
         {
           model: order_items,
