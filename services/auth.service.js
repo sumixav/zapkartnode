@@ -197,13 +197,16 @@ module.exports.authSearchCriteria = authSearchCriteria;
 const authFbUser = async function (userInfo) {
   [err, user] = await to(
     users.findOne({
-      where: [
-        {
-          email: userInfo.loginId,
-          // socialMediaId: userInfo.id,
-          // socialType: "facebook"
-        }
-      ]
+      where:
+      {
+        email: userInfo.loginId,
+
+        // socialMediaId: userInfo.id,
+        // socialType: "facebook"
+      },
+      include: [{ model: user_types, required: false }]
+
+
     })
   );
   if (err) TE(err.message);
@@ -223,14 +226,17 @@ const authFbUser = async function (userInfo) {
       return TE(err.message);
     }
   }
-  if (user) {
+  if (user && user.socialType !== "facebook" && user.socialType !== userInfo.id) {
     [err, user] = await to(users.update(userParam, { where: { email: userParam.email } }));
     if (err) {
       return TE(err.message);
     }
     if (!user || user[0] === 0) TE("Unable to update user")
-    user = await users.findOne({ email: userInfo.loginId })
   }
+  user = await users.findOne({
+    where: { email: userInfo.loginId },
+    include: [{ model: user_types, required: false }]
+  })
   return user;
 };
 module.exports.authFbUser = authFbUser;
@@ -249,38 +255,31 @@ const authGbUser = async function (userInfo) {
   );
   if (err) TE(err.message);
   let userParam = {};
-  if (user) {
-    userParam.firstName = userInfo.name;
-    userParam.lastName = "";
-    userParam.email = userInfo.loginId;
-    userParam.socialMediaId = userInfo.id;
-    userParam.socialType = "google";
-    userParam.userTypeId = +userInfo.roleId;
-    userParam.active = 1;
-    userParam.confirmed = 1;
+  userParam.firstName = userInfo.name;
+  userParam.lastName = "";
+  userParam.email = userInfo.loginId;
+  userParam.socialMediaId = userInfo.id;
+  userParam.socialType = "google";
+  userParam.userTypeId = +userInfo.roleId;
+  userParam.active = 1;
+  userParam.confirmed = 1;
+  if (user && user.socialType !== "google" && user.socialType !== userInfo.id) {
     Logger.info(userParam);
     [err, user] = await to(users.update(userParam, { where: { email: userInfo.loginId } }));
     if (err) {
       return TE(err.message);
     }
     if (!user || user[0] === 0) TE("Unable to update user")
-    user = await users.findOne({ email: userInfo.loginId })
+
   }
   if (!user) {
-    userParam.firstName = userInfo.name;
-    userParam.lastName = "";
-    userParam.email = userInfo.loginId;
-    userParam.socialMediaId = userInfo.id;
-    userParam.socialType = "google";
-    userParam.userTypeId = +userInfo.roleId;
-    userParam.active = 1;
-    userParam.confirmed = 1;
     Logger.info(userParam);
     [err, user] = await to(users.create(userParam));
     if (err) {
       return TE(err.message);
     }
   }
+  user = await users.findOne({ where: { email: userInfo.loginId }, include: [{ model: user_types, required: false }] })
   return user;
 
 };
