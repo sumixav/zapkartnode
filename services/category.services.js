@@ -136,13 +136,13 @@ exports.getAllCategories = async query => {
   // console.log(qs.stringify(options))
   // sort%5BpriorityOrder%5D=1&sort%5BupdatedAt%5D=-1&status=active
 
-  let sortQuery = {};
+  let sortQuery = {updatedAt: -1};
   let select = {};
   let dbQuery = { deleted: false };
 
   // if (query.status) dbQuery = { ...dbQuery, status: query.status };
   // if (query.sort) sortQuery = { ...query.sort, updatedAt: -1 };
-  const { populateParent } = query;
+  // const { populateParent } = query;
 
   const parsedQuery = parseStrings(query);
   console.log("parsedQuery", parsedQuery);
@@ -155,7 +155,7 @@ exports.getAllCategories = async query => {
         // db.getCollection('products').find({name:{$regex:/hea/,$options:"i"}, sku:{$regex:/h22/,$options:"i"}},{sku:1})
         break;
       case "sort":
-        sortQuery = { ...value, updatedAt: -1 };
+        sortQuery = { ...sortQuery, ...value };
       case "page":
       case "limit":
         break;
@@ -171,18 +171,15 @@ exports.getAllCategories = async query => {
     }
   });
 
-  console.log(sortQuery);
-  console.log(select);
-  console.log('dbQuery', dbQuery);
+  Logger.info('sortQuery', sortQuery);
+  Logger.info('select', select);
+  Logger.info('dbQuery', dbQuery);
 
-  const categories = populateParent
-    ? await Category.find(dbQuery)
+  const categories =  await Category.find(dbQuery)
         .sort(sortQuery)
         .select(select)
         .populate("parent")
-    : await Category.find(dbQuery)
-        .sort(sortQuery)
-        .select(select);
+
 
   // if (!categories || categories.length === 0) {
   if (!categories) {
@@ -279,7 +276,7 @@ exports.editCategory = async (params, id, query) => {
   ];
 
   const seoFields = ["metaTitle", "metaDescription", "metaKeywords"];
-  if (params.parent !== category.parent) {
+  if (params.parent && (params.parent !== category.parent)) {
     let idPath = [category._id];
     Logger.info(params.parent === "null");
     if (params.parent === "null" || params.parent ===null) {
@@ -294,11 +291,10 @@ exports.editCategory = async (params, id, query) => {
     category.idPath = idPath;
   }
 
-  Object.entries(fieldsToEdit).map(([key, value]) => {
-    if (seoFields.includes(key)) return (category.seo[key] = value);
+  Object.entries(fieldsToEdit).forEach(([key, value]) => {
+    if (seoFields.includes(key)) category.seo[key] = value;
     if (fieldsToEdit.deletedImages && fieldsToEdit.deletedImages.length > 0) {
-      fieldsToEdit.deletedImages.map(i => category.images.pull({ _id: i }));
-      return "";
+      fieldsToEdit.deletedImages.forEach(i => category.images.pull({ _id: i }));
     }
     if (reqFields.includes(key)) category[key] = value;
   });
