@@ -67,6 +67,7 @@ const createUser = async userInfo => {
     userParam.password = userInfo.password;
     userParam.userTypeId = userInfo.roleId;
     userParam.active = 1;
+    userParam.phoneVerified = 0;
     userParam.confirmed = 1;
     [err, user] = await to(users.create(userParam));
     if (err) {
