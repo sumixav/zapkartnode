@@ -60,7 +60,7 @@ router.patch('/shippingRate/restore/:id', ShippingRateController.restoreShipping
 
 // reviews
 router.post('/reviews/create', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.addReview);
-router.get('/reviews', ReviewsController.getAllReviews);
+// router.get('/reviews', ReviewsController.getAllReviews);
 router.get('/reviews/product/:productId', ReviewsController.getProductReviews);
 router.get('/reviews/user', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
 router.get('/reviews/user/:userId', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
