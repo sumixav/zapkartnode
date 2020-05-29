@@ -74,14 +74,15 @@ module.exports.generateOtp = async ({ phone, userId }) => {
     if (!otpDoc) TE("Database Error");
     Logger.info('otpDoc', otpDoc);
   }
-  // const smsUrl = getSmsUrl({ senderNo: phone, otp });
-  // [err, res] = await to(fetch(smsUrl));
-  // if (err) TE("Error sending SMS. " + err.message);
-  // [err, resJson] = await to(res.json());
-  // if (err) TE("Error sending SMS. " + err.message);
-  // if (resJson && resJson.status === "OK") 
-  return { otp };
-  // TE("Error sending SMS. Please try again later");
+  const smsUrl = getSmsUrl({ senderNo: phone, otp });
+  [err, res] = await to(fetch(smsUrl));
+  if (err) TE("Error sending SMS. " + err.message);
+  [err, resJson] = await to(res.json());
+  if (err) TE("Error sending SMS. " + err.message);
+  if (resJson && resJson.status === "OK") 
+  return true
+  // return { otp };
+  TE("Error sending SMS. Please try again later");
 };
 
 module.exports.verifyOtp = async ({ phone, userId, otp }) => {
