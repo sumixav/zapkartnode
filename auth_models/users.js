@@ -30,6 +30,11 @@ module.exports = function (sequelize, DataTypes) {
       type: DataTypes.STRING(20),
       allowNull: true,
     },
+    phoneVerified: {
+      type:DataTypes.INTEGER(1),
+      allowNull:false,
+      default:0
+    },
     avatartype: {
       type: DataTypes.STRING(255),
       allowNull: true,

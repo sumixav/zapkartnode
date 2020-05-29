@@ -18,12 +18,34 @@ const {
   forgotPasswordSchema,
   passwordUpdateEmailSchema,
   addressSchema,
-  updatePasswordSchema
+  updatePasswordSchema,
+  phoneVerifySchema,
+  otpSchema
 } = require("./schema");
 
 
 
+exports.validatePhoneVerify = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  const validRes = v.validate(params, phoneVerifySchema).errors;
+  if (!(validRes.length > 0)) {
+    return next();
+  } else {
+    const errorMessage = formatValidationError(validRes);
+    return ReE(res, errorMessage, status_codes_msg.VALIDATION_ERROR.code);
+  }
+}
 
+exports.validateOtp = (req, res, next) => {
+  let params = Object.assign({}, req.body);
+  const validRes = v.validate(params, otpSchema).errors;
+  if (!(validRes.length > 0)) {
+    return next();
+  } else {
+    const errorMessage = formatValidationError(validRes);
+    return ReE(res, errorMessage, status_codes_msg.VALIDATION_ERROR.code);
+  }
+}
 
 exports.validateProduct = (req, res, next) => {
   Logger.info(

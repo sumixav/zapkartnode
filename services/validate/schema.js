@@ -432,3 +432,33 @@ exports.addressSchema = {
     "active"
   ],
 };
+
+exports.otpSchema = {
+  properties: {
+    phone: {
+      type: "string",
+      pattern: "[0-9 -()+]+$",
+      maxLength: 10,
+    },
+  },
+  "required": [
+    "phone"
+  ],
+};
+exports.phoneVerifySchema = {
+  properties: {
+    phone: {
+      type: "string",
+      pattern: "[0-9 -()+]+$",
+      maxLength: 10,
+    },
+    otp:{
+      type:"string",
+      pattern: "[0-9 -()+]+$",
+      maxLength:4
+    }
+  },
+  "required": [
+    "phone","otp"
+  ],
+};

@@ -13,6 +13,7 @@ const CoupenController = require('../controllers/backend/coupen.controller');
 const PaymentController = require('../controllers/backend/payment.controller');
 const OrderController = require('../controllers/backend/order.controller');
 const ShipmentController = require('../controllers/backend/shipment.controller');
+const OtpController = require('../controllers/backend/otp.controller');
 const Validate = require('../services/validate');
 const multer = require('multer')
 
@@ -59,6 +60,7 @@ router.patch('/shippingRate/restore/:id', ShippingRateController.restoreShipping
 
 // reviews
 router.post('/reviews/create', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.addReview);
+router.get('/reviews', ReviewsController.getAllReviews);
 router.get('/reviews/product/:productId', ReviewsController.getProductReviews);
 router.get('/reviews/user', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
 router.get('/reviews/user/:userId', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
@@ -146,6 +148,10 @@ router.get('/shipment/:shipmentId', passport.authenticate('jwt', { session: fals
 router.patch('/shipment/:shipmentId', passport.authenticate('jwt', { session: false }), formupload.none(), ShipmentController.editShipment);
 // router.get('/shipment/unshipped/:masterOrderId', passport.authenticate('jwt', { session: false }), ShipmentController.getUnshippedOrderItems);
 router.get('/shipment/unshipped/:masterOrderId', passport.authenticate('jwt', { session: false }), ShipmentController.getUnshippedOrderItems);
+
+// otp 
+router.post('/otp', passport.authenticate('jwt', { session: false }), formupload.none(), Validate.validateOtp, OtpController.generateOtp)
+router.post('/otp/verify', passport.authenticate('jwt', { session: false }), formupload.none(), Validate.validatePhoneVerify, OtpController.verifyOtp)
 
 
 module.exports = router;

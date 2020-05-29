@@ -318,6 +318,15 @@ exports.convertArrayToObject = (array, key) => {
   }, initialValue);
 };
 
+exports.getMinutesDiff = (dateFuture, dateNow) => {
+  let diffInMilliSeconds = Math.abs(dateFuture - dateNow) / 1000;
+  const minutes = Math.floor(diffInMilliSeconds / 60) % 60;
+  diffInMilliSeconds -= minutes * 60;
+  return minutes
+}
+
+exports.generateRandom = () => Math.floor(1000 + Math.random() * 9000)
+
 // exports.saveThumbnail = imagePathArray => {
 //     Logger.info(imagePathArray);
 //     Logger.info("in saveThumbnail");
