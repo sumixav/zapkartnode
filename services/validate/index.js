@@ -271,8 +271,9 @@ const userRegisterSchema = {
     phone: {
       type: "string",
       pattern: "^[0-9()\\-\\.\\s]+$",
-      maxLength: 12,
-      minLength: 6
+      maxLength: 10,
+      // minLength: 6
+      minLength: 10
     }
   },
   required: ["firstName", "lastName", "email", "phone"]
@@ -341,7 +342,8 @@ module.exports.registerUser = (req, res, next) => {
   } else {
     return ReE(
       res,
-      validRes[0].message,
+      // validRes[0].message,
+      formatValidationError(validRes),
       status_codes_msg.VALIDATION_ERROR.code
     );
   }
