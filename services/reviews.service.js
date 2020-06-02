@@ -83,7 +83,7 @@ module.exports.addReview = async (params, userId) => {
  * @param {String} params.text
  * @param {int} params.priorityOrder
  */
-module.exports.updateReview = async (params, reviewId, userId, fromUser=false) => {
+module.exports.updateReview = async (params, reviewId, userId, fromUser = false) => {
   Logger.info(params, reviewId, userId);
   // if (fromUser) params.status = 'pending'
   const [errA, count] = await to(
@@ -92,7 +92,7 @@ module.exports.updateReview = async (params, reviewId, userId, fromUser=false) =
       {
         where: {
           id: reviewId,
-          userId
+          // userId
         }
       }
     )
@@ -162,7 +162,9 @@ module.exports.restoreReview = async (reviewId, userId) => {
   return restored;
 };
 
-module.exports.getUserReviews = async userId => {
+module.exports.getUserReviews = async query => {
+  const {page = 1, limit = MAX_PAGE_LIMIT, userId, isPaginate = true} = query;
+  console.log('query', query)
   const [err, reviewList] = await to(
     reviews.findAndCountAll({
       where: {
@@ -171,9 +173,12 @@ module.exports.getUserReviews = async userId => {
       attributes: {
         exclude: ["deletedAt"]
       },
-      order: [["updatedAt", "DESC"]]
-    })
+      order: [["updatedAt", "DESC"]],
+      ...paginate(page, limit)
+    }),
   );
+
+  console.log('MMM', reviewList, err)
 
   const [errM, userDetails] = await to(
     users.findOne({
@@ -193,11 +198,45 @@ module.exports.getUserReviews = async userId => {
     if (!product) return {};
     return { ...i.toWeb(), product }
   })));
+  Logger.info('helloooi', reviewsWithProdDetails, reviewList.count)
   if (errA) TE(errA.message);
   return {
     reviews: reviewsWithProdDetails,
     user: omitUserProtectedFields(userDetails.toWeb()),
     count: reviewList.count
+  }
+
+};
+
+module.exports.getAllReviews = async (query) => {
+  const { page = 1, limit = MAX_PAGE_LIMIT, ...restQuery } = query;
+  const [err, reviewList] = await to(
+    reviews.findAndCountAll({
+      where: restQuery,
+      include:[
+        {model:users, as:'user'}
+      ],
+      attributes: {
+        exclude: ["deletedAt"]
+      },
+      order: [["updatedAt", "DESC"]],
+      ...paginate(page, limit)
+    })
+  );
+
+  if (err) TE(STRINGS.DB_ERROR + err.message);
+  if (!reviewList) TE(STRINGS.NO_DATA);
+  const [errA, reviewsWithProdDetails] = await to(Promise.all(reviewList.rows.map(async i => {
+    const [errB, product] = await to(Product.findOne({ _id: i.productId }).select("_id slug images name"));
+    if (errB) TE(errB.message);
+    if (!product) return {};
+    return { ...i.toWeb(), product }
+  })));
+  if (errA) TE(errA.message);
+  return {
+    reviews: reviewsWithProdDetails,
+    count: reviewList.count,
+    page
   }
 
 };
@@ -263,6 +302,7 @@ module.exports.getProductReviews = async params => {
       ...i.toWeb(),
     })),
     product: { name: validProd.name, slug: validProd.slug, images: validProd.images },
-    count: data.count
+    count: data.count,
+    page
   };
 };

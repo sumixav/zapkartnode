@@ -19,6 +19,11 @@ CONFIG.development = {
   },
 };
 
+CONFIG.smsApi = {
+  apiKey: process.env.SMS_API_KEY,
+  senderId: process.env.SMS_SENDER_ID,
+}
+
 CONFIG.db_dialect = process.env.DB_DIALECT || "mysql";
 CONFIG.db_host = process.env.DB_HOST || "localhost";
 CONFIG.db_port = process.env.DB_PORT || "3306";

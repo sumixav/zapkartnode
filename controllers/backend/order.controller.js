@@ -46,7 +46,7 @@ exports.getOrderDetails = async (req, res, next) => {
 
   try {
 
-    [err, order] = await to(orderService.getOrderDetails(orderId,req.user));
+    [err, order] = await to(orderService.getOrderDetails(orderId, req.user));
 
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (order) {
@@ -59,7 +59,7 @@ exports.getOrderDetails = async (req, res, next) => {
 exports.getAllOrders = async (req, res, next) => {
   try {
     let user = req.user;
-    [err, orders] = await to(orderService.getAllOrders(req.query,user));
+    [err, orders] = await to(orderService.getAllOrders(req.query, user));
 
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (orders) {
@@ -73,7 +73,7 @@ exports.getAllOrders = async (req, res, next) => {
 exports.assignMerchantToOrder = async (req, res) => {
   try {
     const intParams = parseStrings(pick(req.body, 'merchantId',
-      
+
       'orderItemId'));
     Logger.info('intParams', intParams)
 
@@ -227,6 +227,19 @@ exports.addOrderItem = async (req, res) => {
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (updated) {
       return ReS(res, { message: 'Order item has been created', data: updated }
+        , status_codes_msg.SUCCESS.code);
+    }
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+}
+
+exports.getOrderStats = async (req, res) => {
+  try {
+    [err, data] = await to(orderService.getOrderStats());
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (data) {
+      return ReS(res, { message: 'Order stats', data }
         , status_codes_msg.SUCCESS.code);
     }
   } catch (err) {

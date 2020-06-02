@@ -26,9 +26,9 @@ const sample2 = {
     shippingEmail: "rachel@gmail.com",
 }
 
-map(sample2,(item,key) => {
-    console.log(item, key)
-})
+// map(sample2,(item,key) => {
+//     console.log(item, key)
+// })
 
 const a = [{id:1}, {id:2,qty:2}];
 // console.log(JSON.stringify(a))
@@ -48,3 +48,5 @@ const b = omit(sample, ['fullName']);
 //     console.log(val);
 //     return val === '12'
 // }))
+
+// console.log(Math.floor(1000 + Math.random() * 9000))

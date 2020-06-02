@@ -19,8 +19,8 @@ exports.addReview = async function (req, res) {
 
 exports.editReview = async function (req, res) {
     const { user } = req;
-    if (!user) ReE(res, "Not authorised to edit review", status_codes_msg.INVALID_ENTITY.code);
-    if (user.userTypeId === 1 && !req.params.userId) ReE(res, "Need userId param", status_codes_msg.INVALID_ENTITY.code);
+    if (!user) return ReE(res, "Not authorised to edit review", status_codes_msg.INVALID_ENTITY.code);
+    if (user.userTypeId === 1 && !req.params.userId) return ReE(res, new Error("Need userId param"), status_codes_msg.INVALID_ENTITY.code);
 
     const restParams = omit(req.body, ['status', 'priorityOrder'])
     
@@ -33,8 +33,8 @@ exports.editReview = async function (req, res) {
 
 exports.deleteReview = async function (req, res) {
     const { user } = req;
-    if (!user) ReE(res, "Not authorised to delete review", status_codes_msg.INVALID_ENTITY.code);
-    if (user.userTypeId === 1 && !req.params.userId) ReE(res, "Need userId param", status_codes_msg.INVALID_ENTITY.code);
+    if (!user) return ReE(res, "Not authorised to delete review", status_codes_msg.INVALID_ENTITY.code);
+    if (user.userTypeId === 1 && !req.params.userId) return ReE(res, new Error("Need userId param"), status_codes_msg.INVALID_ENTITY.code);
     const [err, isDeleted] = await to(reviewService.deleteReview(req.params.reviewId, user.userTypeId === 1 ? req.params.userId : user.id));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!isDeleted) return ReE(res, new Error('Error deleting review'), status_codes_msg.INVALID_ENTITY.code);
@@ -44,8 +44,8 @@ exports.deleteReview = async function (req, res) {
 
 exports.restoreReview = async function (req, res) {
     const { user } = req;
-    if (!user) ReE(res, "Not authorised to restore review", status_codes_msg.INVALID_ENTITY.code);
-    if (user.userTypeId === 1 && !req.params.userId) ReE(res, "Need userId param", status_codes_msg.INVALID_ENTITY.code);
+    if (!user) return ReE(res, "Not authorised to restore review", status_codes_msg.INVALID_ENTITY.code);
+    if (user.userTypeId === 1 && !req.params.userId) return ReE(res, new Error("Need userId param"), status_codes_msg.INVALID_ENTITY.code);
     const [err, restoredAddr] = await to(reviewService.restoreReview(req.params.reviewId, user.userTypeId === 1 ? req.params.userId : user.id));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!restoredAddr) return ReE(res, new Error('Error restoring review'), status_codes_msg.INVALID_ENTITY.code);
@@ -55,11 +55,11 @@ exports.restoreReview = async function (req, res) {
 
 exports.getUserReviews = async function (req, res) {
     const { user } = req;
-    if (!user) ReE(res, "Not authorised to fetch reviews", status_codes_msg.INVALID_ENTITY.code);
+    if (!user) return ReE(res, "Not authorised to fetch reviews", status_codes_msg.INVALID_ENTITY.code);
     let userId = req.user.id;
     if (user.userTypeId === 1) userId = req.params.userId;
 
-    const [err, reviews] = await to(reviewService.getUserReviews(userId));
+    const [err, reviews] = await to(reviewService.getUserReviews({userId}));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!reviews) return ReE(res, new Error('No reviews'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Review list', data: reviews }
@@ -69,6 +69,15 @@ exports.getUserReviews = async function (req, res) {
 exports.getProductReviews = async function (req, res) {
     const params = { ...req.query, productId: req.params.productId }
     const [err, reviews] = await to(reviewService.getProductReviews(params));
+    if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+    if (!reviews) return ReE(res, new Error('No reviews'), status_codes_msg.INVALID_ENTITY.code);
+    return ReS(res, { message: 'Review list', data: reviews }
+        , status_codes_msg.SUCCESS.code);
+}
+
+exports.getAllReviews = async function (req, res) {
+    const params = { ...req.query }
+    const [err, reviews] = await to(reviewService.getAllReviews(params));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!reviews) return ReE(res, new Error('No reviews'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'Review list', data: reviews }

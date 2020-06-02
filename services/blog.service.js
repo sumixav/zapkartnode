@@ -90,7 +90,7 @@ exports.getAllBlogs = async query => {
   if (query.feature) dbQuery = { ...dbQuery, feature: query.feature };
 
   const blogs = await Blog.find(dbQuery).sort(sortQuery);
-  if (!blogs || blogs.length === 0) {
+  if (!blogs) {
     const err = new Error(STRINGS.NO_DATA);
     throw err;
   }

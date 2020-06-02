@@ -33,7 +33,8 @@ const crypto = require("crypto");
 const { STRINGS } = require("../utils/appStatics");
 const Op = require("sequelize").Op;
 const omit = require("lodash/omit")
-const find = require("lodash/find")
+const find = require("lodash/find");
+const sub = require("date-fns/sub");
 
 exports.create = async (param) => {
   let err, cartDetails, a, errM;
@@ -236,6 +237,14 @@ exports.create = async (param) => {
 
 exports.getAllOrders = async (query, userDetails = {}) => {
   let orders = {};
+  
+  const { limit, orderStatus } = query
+  let limitQuery = {}
+  if (limit) limitQuery = { limit: +limit };
+  query = omit(query, ["limit", "orderStatus"])
+  if (orderStatus === "nothold")
+    query = { ...query, orderStatus: { [Op.not]: "hold" } };
+  
   if (userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
       where: { userId: userDetails.id }
@@ -289,6 +298,7 @@ exports.getAllOrders = async (query, userDetails = {}) => {
         where: {
           ...query,
         },
+        ...limitQuery,
         order: [
           ['createdAt', 'DESC']
         ],
@@ -332,7 +342,7 @@ exports.getAllOrders = async (query, userDetails = {}) => {
   return orders;
 };
 exports.getUserOrders = async (userId, role = 'user') => {
-  let addQuery = {orderStatus:{[Op.ne]:"hold"}};
+  let addQuery = { orderStatus: { [Op.ne]: "hold" } };
   if (role === 'admin') addQuery = {}
   const [errA, orders] = await to(
     order_masters.findAll({
@@ -962,6 +972,40 @@ exports.getOrderDetails = async (id, userDetails = {}) => {
     user: omitUserProtectedFields(user.toWeb()),
   }
   // return orderData
+}
+
+exports.getOrderStats = async () => {
+  let err, orderData, lastWeekOrders;
+  const currentDate = new Date();
+  const lastWeekDate = sub(currentDate, { weeks: 5 });
+  console.log(currentDate, lastWeekDate);
+  [err, orderData] = await to(order_masters.find({
+    where: { orderStatus: { [Op.not]: "hold" } },
+    attributes: [
+      [sequelize.fn('SUM', sequelize.col('orderSubtotal')), 'totalSales'],
+      [sequelize.fn('COUNT', sequelize.col('id')), 'totalOrders'],
+    ],
+    // group:['weekly']
+  }));
+  if (err) TE(err.message);
+  console.log(orderData);
+
+  [err, lastWeekOrders] = await to(order_masters.find({
+    where: {
+      orderStatus: { [Op.not]: "hold" },
+      createdAt: { [Op.between]: [lastWeekDate, currentDate] }
+    },
+    attributes: [
+      [sequelize.fn('SUM', sequelize.col('orderSubtotal')), 'lastWeektotalSales'],
+      [sequelize.fn('COUNT', sequelize.col('id')), 'lastWeektotalOrders'],
+    ]
+  }));
+  if (err) TE(err.message)
+
+  let returnData = {};
+  if (orderData) returnData = { ...orderData.toWeb() }
+  if (lastWeekOrders) returnData = { ...returnData, ...lastWeekOrders.toWeb() }
+  return returnData;
 }
 
 

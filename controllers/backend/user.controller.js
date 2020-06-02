@@ -262,7 +262,7 @@ exports.getUserDetails = async function (req, res) {
     if (orders) {
         const [errB, orders] = await to(ordersService.getUserOrders(userId));
         if (errB) Logger.error(errB)
-        Logger.info('orders', orders)
+        // Logger.info('orders', orders)
         if (orders)
             user = { ...user, orders }
     }
@@ -270,13 +270,14 @@ exports.getUserDetails = async function (req, res) {
     if (wishlist) {
         const [errC, wishlistData] = await to(wishlistService.getWishlist(userId));
         if (errC) Logger.error(errC)
-        Logger.info(wishlistData)
+        // Logger.info(wishlistData)
         if (wishlistData) user = { ...user, wishlist: wishlistData }
     }
 
     if (reviews) {
-        const [errD, reviewsData] = await to(reviewsService.getUserReviews(userId));
+        const [errD, reviewsData] = await to(reviewsService.getUserReviews({userId, isPaginate:false}));
         if (errD) Logger.error(errD)
+        Logger.info('BBB', reviewsData)
         if (reviewsData) user = { ...user, reviews: reviewsData }
     }
 

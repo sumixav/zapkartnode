@@ -60,7 +60,7 @@ router.patch('/shippingRate/restore/:id', ShippingRateController.restoreShipping
 
 // reviews
 router.post('/reviews/create', passport.authenticate('jwt', { session: false }), formupload.none(), ReviewsController.addReview);
-// router.get('/reviews', ReviewsController.getAllReviews);
+router.get('/reviews', ReviewsController.getAllReviews);
 router.get('/reviews/product/:productId', ReviewsController.getProductReviews);
 router.get('/reviews/user', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
 router.get('/reviews/user/:userId', passport.authenticate('jwt', { session: false }), ReviewsController.getUserReviews);
@@ -139,6 +139,7 @@ router.post('/order/update', passport.authenticate('jwt', { session: false }), f
 router.post('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.assignMerchantToOrder);
 router.delete('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.deleteAssignedMerchantToItem);
 // router.patch('/order/assign/:merchantOrderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.updateAssignedMerchantToOrder);
+router.get('/order/stats', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderStats);
 router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), OrderController.getOrderDetails);
 
 // shipments
