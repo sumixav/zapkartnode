@@ -76,7 +76,7 @@ const createUser = async userInfo => {
     Logger.info("dsfdg", user);
     return user;
   } else if (email && email.email) {
-    return TE("Email id already exist");
+    return TE("Email ID with same name already exists. Please choose a different email ID");
   } else if (phone && phone.phone) {
     return TE("phone number already exist");
   }

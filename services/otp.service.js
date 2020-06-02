@@ -27,12 +27,13 @@ module.exports.generateOtp = async ({ phone, userId }) => {
   let err, res, resJson, duplicatePhone, otpDoc, updatedOtp;
 
   // duplicate number
-  [err, duplicatePhone] = await to(users.findOne({ where: { phone } }));
+  [err, duplicatePhone] = await to(users.findOne({ where: { phone: phone } }));
   // [err, duplicatePhone] = await to(users.findOne({ where: { phone, id: { [Op.not]: userId } } }));
   if (err) {
     TE("Database Error");
     Logger.error(err.message);
   }
+  console.log('dip', duplicatePhone)
   if (duplicatePhone) {
     if (duplicatePhone.userId !== userId) TE("Phone number already exists with another account.");
   }

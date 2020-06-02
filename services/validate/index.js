@@ -276,7 +276,7 @@ const userRegisterSchema = {
       minLength: 10
     }
   },
-  required: ["firstName", "lastName", "email", "phone"]
+  required: ["firstName", "lastName", "email"]
 };
 
 const userProfileSchema = {
