@@ -21,7 +21,11 @@ const moment = require('moment');
 
 
 exports.createCoupen = async (param) => {
+  let err, coupenlists;
   const { totalUsedCount, description, type, method, minimum_cart, maximum_cart, offeritem, name, validFrom, validTo, coupenTypeId, status, coupenCode, usergroup, userData, amount } = param;
+  [err, duplicateCoupon] = await to(offers.findOne({coupenCode}));
+  if (err) TE(err.message);
+  if (duplicateCoupon) TE("Coupon code already exists");
   [err, coupenlists] = await to(offers.create({ totalUsedCount, method, minimum_cart, maximum_cart, type, description, createdBy: 1, name, validFrom, validTo, status, coupenCode, amount }));
   if (err) { TE(err.message); }
   Logger.info("00000", coupenlists, userData);
@@ -205,9 +209,9 @@ const getCoupenDetail = async (id, user) => {
 
     [err, userGroupcoupen] = await to(offer_user_mappings.findAll({ where: { offerId: coupenlist.id, mappingType: 'individualUser' } }));
     if (err) { TE(err.message); }
-    let cartPrice = cart.map(cartprice => cartprice.price).reduce((acc, cartprice) => cartprice + acc);
+    let cartPrice = cart.map(cartprice => cartprice.price).reduce((acc, cartprice) => +cartprice + +acc);
 
-    if (coupenlist && (!(cartPrice >= coupenlist.minimum_cart))) {
+    if (coupenlist && (!(cartPrice >= +coupenlist.minimum_cart))) {
       TE(`Coupen minimum cart value should be Rs ${coupenlist.minimum_cart}`);
     }
     if (userGroupcoupen && (userGroupcoupen.length > 0)) {
@@ -226,6 +230,7 @@ const getCoupenDetail = async (id, user) => {
         offerProductResult.map(async function (item) {
           //Object.assign(item, {key3: "value3"});
           cartProduct = await carts.findOne({ where: { userId: user.id, productId: item.itemId } });
+          if (!cartProduct) return;
           if (coupenlist.type === 'flat') {
             let cartPrice = cartProduct.price * cartProduct.quantity;
             let coupenPrice = coupenlist.amount * cartProduct.quantity;
