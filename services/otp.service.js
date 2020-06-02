@@ -27,24 +27,33 @@ module.exports.generateOtp = async ({ phone, userId }) => {
   let err, res, resJson, duplicatePhone, otpDoc, updatedOtp;
 
   // duplicate number
-  [err, duplicatePhone] = await to(users.findOne({ where: { phone, id: { [Op.not]: userId } } }));
+  [err, duplicatePhone] = await to(users.findOne({ where: { phone } }));
+  // [err, duplicatePhone] = await to(users.findOne({ where: { phone, id: { [Op.not]: userId } } }));
   if (err) {
     TE("Database Error");
     Logger.error(err.message);
   }
-  if (duplicatePhone) TE("Phone number already exists with another account.");
+  if (duplicatePhone) {
+    if (duplicatePhone.userId !== userId) TE("Phone number already exists with another account.");
+  }
+
+  // delete past requests
+  [err, deleted] = await to(Otp.destroy({ where: { userId, phone: { [Op.not]: phone } } }));
+  if (err) TE(err.message);
+  console.log('mmm', deleted)
 
   const otp = generateRandom();
   const currentdt = new Date()
   const expiresAt = new Date(Date.now() + (EXPIRES_MINUTES * 60 * 1000));
-  
+
   // if otp requested again
-  [err, existingOtp] = await to(Otp.findOne({ where:{userId, phone} }));
+  [err, existingOtp] = await to(Otp.findOne({ where: { userId } }));
+  // [err, existingOtp] = await to(Otp.findOne({ where:{userId, phone} }));
   if (err) {
     TE("Database Error. " + err.message);
     Logger.error(err.message);
   }
-  
+
   Logger.info('existingOtp', existingOtp)
 
   if (existingOtp) {
