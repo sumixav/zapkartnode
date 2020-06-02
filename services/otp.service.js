@@ -37,17 +37,17 @@ module.exports.generateOtp = async ({ phone, userId }) => {
   const otp = generateRandom();
   const currentdt = new Date()
   const expiresAt = new Date(Date.now() + (EXPIRES_MINUTES * 60 * 1000));
+  
   // if otp requested again
-  [err, existingOtp] = await to(Otp.findOne({ userId, phone }));
+  [err, existingOtp] = await to(Otp.findOne({ where:{userId, phone} }));
   if (err) {
     TE("Database Error. " + err.message);
     Logger.error(err.message);
   }
-
-
+  
+  Logger.info('existingOtp', existingOtp)
 
   if (existingOtp) {
-    console.log('existingOtp', existingOtp)
     let noOfRetries = existingOtp.noOfRetries + 1;
     if (noOfRetries >= MAX_NO_OF_TRIES) {
       let retrydt = addMinutes(existingOtp.lastRetry, RETRY_MINUTES)
@@ -74,15 +74,15 @@ module.exports.generateOtp = async ({ phone, userId }) => {
     if (!otpDoc) TE("Database Error");
     Logger.info('otpDoc', otpDoc);
   }
-  const smsUrl = getSmsUrl({ senderNo: phone, otp });
-  [err, res] = await to(fetch(smsUrl));
-  if (err) TE("Error sending SMS. " + err.message);
-  [err, resJson] = await to(res.json());
-  if (err) TE("Error sending SMS. " + err.message);
-  if (resJson && resJson.status === "OK") 
+  // const smsUrl = getSmsUrl({ senderNo: phone, otp });
+  // [err, res] = await to(fetch(smsUrl));
+  // if (err) TE("Error sending SMS. " + err.message);
+  // [err, resJson] = await to(res.json());
+  // if (err) TE("Error sending SMS. " + err.message);
+  // if (resJson && resJson.status === "OK") 
   return true
   // return { otp };
-  TE("Error sending SMS. Please try again later");
+  // TE("Error sending SMS. Please try again later");
 };
 
 module.exports.verifyOtp = async ({ phone, userId, otp }) => {
