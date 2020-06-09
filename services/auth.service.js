@@ -1,4 +1,4 @@
-const { users, user_types, address } = require("../auth_models");
+const { users, user_types, address, sequelize } = require("../auth_models");
 const validator = require("validator");
 const { to, TE, omitUserProtectedFields } = require("../services/util.service");
 const { sendMail } = require("../services/mail.service");
@@ -42,44 +42,50 @@ const findUserByPhone = async function (phone) {
 };
 module.exports.findUserByPhone = findUserByPhone;
 
-const createUser = async userInfo => {
-  let email = await findUserByEmail(userInfo.email);
+const createUser = async (userInfo, transaction = null) => {
+  let [errA, result] = await to(sequelize.transaction(async(t) => {
 
-  let phone =
-    typeof userInfo.phone != "undefined"
-      ? await findUserByPhone(userInfo.phone.toString())
-      : null;
-
-  let imagesPath = [];
-  let userParam = {};
-
-  if (typeof userInfo.files != "undefined") {
-    images = userInfo.files["image"];
-    imagesPath = images.map(i => i.path);
-    userParam.avatarlocation = imagesPath;
-  }
-  if (email.message === "NotExist") {
-    userParam.firstName = userInfo.firstName;
-    userParam.lastName = userInfo.lastName;
-    userParam.email = userInfo.email;
-    userParam.phone =
-      typeof userInfo.phone != "undefined" ? userInfo.phone : null;
-    userParam.password = userInfo.password;
-    userParam.userTypeId = userInfo.roleId;
-    userParam.active = 1;
-    userParam.phoneVerified = 0;
-    userParam.confirmed = 1;
-    [err, user] = await to(users.create(userParam));
-    if (err) {
-      return TE(err.message);
+    let email = await findUserByEmail(userInfo.email);
+  
+    let phone =
+      typeof userInfo.phone != "undefined"
+        ? await findUserByPhone(userInfo.phone.toString())
+        : null;
+  
+    let imagesPath = [];
+    let userParam = {};
+  
+    if (typeof userInfo.files != "undefined") {
+      images = userInfo.files["image"];
+      imagesPath = images.map(i => i.path);
+      userParam.avatarlocation = imagesPath;
     }
-    Logger.info("dsfdg", user);
-    return user;
-  } else if (email && email.email) {
-    return TE("Email ID with same name already exists. Please choose a different email ID");
-  } else if (phone && phone.phone) {
-    return TE("phone number already exist");
-  }
+    if (email.message === "NotExist") {
+      userParam.firstName = userInfo.firstName;
+      userParam.lastName = userInfo.lastName;
+      userParam.email = userInfo.email;
+      userParam.phone =
+        typeof userInfo.phone != "undefined" ? userInfo.phone : null;
+      userParam.password = userInfo.password;
+      userParam.userTypeId = userInfo.roleId;
+      userParam.active = 1;
+      userParam.phoneVerified = 0;
+      userParam.confirmed = 1;
+      [err, user] = await to(users.create(userParam, {transaction: transaction || t}));
+      if (err) {
+        return TE(err.message);
+      }
+      Logger.info("dsfdg", user);
+      return user;
+    } else if (email && email.email) {
+      return TE("Email ID with same name already exists. Please choose a different email ID");
+    } else if (phone && phone.phone) {
+      return TE("phone number already exist");
+    }
+  }));
+  if (errA) TE(errA.message);
+  if (!result) TE("Error creating user");
+  return result;
 };
 module.exports.createUser = createUser;
 

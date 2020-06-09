@@ -76,15 +76,18 @@ module.exports = function (sequelize, DataTypes) {
     },
     latitude: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      // allowNull: false,
+      allowNull: true
     },
     longitude: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      // allowNull: false,
+      allowNull: true
     },
     profiledescription: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      // allowNull: false,
+      allowNull: true
     },
     commissionslab: {
       type: DataTypes.INTEGER(20),
@@ -92,11 +95,13 @@ module.exports = function (sequelize, DataTypes) {
     },
     designation: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      // allowNull: false
+      allowNull: true
     },
     website: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      // allowNull: false
+      allowNull: true
     },
     accountdetails: {
       type: DataTypes.STRING(255),

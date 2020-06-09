@@ -1364,6 +1364,59 @@ exports.deleteProduct = async (id) => {
   return false;
 };
 
+exports.deleteProducts = async (id) => {
+  const a = await Product.find({ _id: { $in: id }, deleted: false });
+  Logger.info(a);
+  if (!a || (a.length !== id.length)) throw new Error(STRINGS.INVALID_ID);
+  // if (a.deleted === true) throw new Error(STRINGS.NOT_EXIST);
+
+  const session = await Product.startSession();
+  try {
+
+    session.startTransaction();
+
+    // main product
+    const [err, variantdDel] = await to(Promise.all(a.map(async prod => {
+
+      if (prod.parentId === null && prod.variantCount > 0) {
+        // main with variants; soft deletes all variants
+        const variants = await Product.find({ parentId: prod._id });
+        Logger.info("variants", variants);
+        if (variants.length > 0) {
+          const variantIds = variants.map((i) => i._id);
+          // Logger.info(variantIds);
+          const b = await Product.updateMany(
+            { _id: { $in: variantIds } }, { deleted: true }
+          , {session});
+          Logger.info("Variants delete", b);
+          return (b.ok === 1 && b.nModified === a.variantCount)
+        }
+      }
+    })));
+    if (err) TE(err.message);
+    if (variantdDel.includes(false)) TE("Error deleting variants of products")
+    console.log('kol', variantdDel)
+
+    // delete main product (or) variant product
+    const b = await Product.updateMany({ _id: { $in: id } }, { deleted: true }, {session});
+    // throw new Error('mock error');
+    Logger.info(b);
+    if (b.ok === 1 && b.nModified === id.length) {
+
+      await session.commitTransaction();
+      session.endSession();
+    }
+    return true;
+  }
+  catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(err.message)
+  }
+
+  // return false;
+};
+
 exports.restoreProduct = async (id) => {
   const restoredData = await Product.findOneAndUpdate(
     { _id: id, deleted: true },
@@ -1435,11 +1488,11 @@ exports.getProductFilterAggregate = async (param) => {
     Logger.info('search', search);
     // if (search.name)
     //   matchParam = { ...matchParam, name: { $regex: search.name, $options: "i" } }
-    
+
     for (let key in search) {
       searchParam.push({ [key]: { $regex: search[key], $options: "i" } })
     }
-    matchParam = { ...matchParam, $or:searchParam }
+    matchParam = { ...matchParam, $or: searchParam }
   }
   productmatch = [{ $match: matchParam }]
 
@@ -1779,7 +1832,7 @@ exports.getProductFilterAggregate = async (param) => {
 
 };
 
-exports.getProductSearch = async (param) => {
+exports.getProductFilterAggregate = async (param) => {
   let { category, brand, status, sort, search, page = 1, limit = 0, fields, exclude } = param;
   let brandItems = [];
   let queryString = [{ $project: { _v: 0 } }];
@@ -1806,7 +1859,7 @@ exports.getProductSearch = async (param) => {
     productInfolookup = [],
     productInfounwind = [];
 
-  matchParam = { deleted: false, status:'active' };
+  matchParam = { deleted: false, status: 'active' };
 
   // if (status) {
   //   productmatch = [{ $match: { status: status } }];
@@ -1835,9 +1888,9 @@ exports.getProductSearch = async (param) => {
       }
     ];
   }
-    
-  matchParam = { ...matchParam, $or:[{name:{ $regex: name, $options: "i" }, "productExtraInfo.description": { $regex: name, $options: "i" } }] }
-  
+
+  matchParam = { ...matchParam, $or: [{ name: { $regex: name, $options: "i" }, "productExtraInfo.description": { $regex: name, $options: "i" } }] }
+
   productmatch = [{ $match: matchParam }]
 
   let sortQuery = { updatedAt: -1 }
@@ -1862,7 +1915,7 @@ exports.getProductSearch = async (param) => {
       $sort: sortQuery
     },
   ];
- 
+
   brandlookup = [
     {
       $lookup: {

@@ -62,6 +62,7 @@ router.patch(
   CategoryController.editCategory
 );
 router.delete("/category/:id", CategoryController.deleteCategory);
+router.delete("/category", CategoryController.deleteCategories);
 
 // Attribute
 router.get("/attributeGroup", AttributeGroupController.getAllAttrubutes);
@@ -99,6 +100,7 @@ router.patch(
   ProductController.editProduct
 );
 router.delete("/products/:productId", ProductController.deleteProduct);
+router.delete("/products", ProductController.deleteProducts);
 // router.patch('/products/restore:productId', ProductController.restore);
 
 // Brand

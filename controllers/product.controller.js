@@ -266,6 +266,26 @@ exports.deleteProduct = async function(req, res) {
   }
 };
 
+exports.deleteProducts = async function(req, res) {
+  try {
+    let { ids } = req.query;
+    ids = ids.split(",").map(i => i.trim());
+    const [err, isDeleted] = await to(
+      productService.deleteProducts(ids)
+    );
+    Logger.info(err, isDeleted);
+    if (err) throw err;
+    if (isDeleted)
+      return ReS(
+        res,
+        { message: "Products deleted" },
+        status_codes_msg.SUCCESS.code
+      );
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
 exports.getProductFilter = async (req, res, next) => {
   try {
     // const param = req.body;

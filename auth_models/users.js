@@ -31,9 +31,9 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: true,
     },
     phoneVerified: {
-      type:DataTypes.INTEGER(1),
-      allowNull:false,
-      default:0
+      type: DataTypes.INTEGER(1),
+      allowNull: false,
+      default: 0
     },
     avatartype: {
       type: DataTypes.STRING(255),
@@ -169,18 +169,54 @@ module.exports = function (sequelize, DataTypes) {
 
 
   Model.beforeSave(async (user, options) => {
+    console.log('hoil', user.password)
     let err;
     if (user.changed('password')) {
+      console.log('PAS CHANGED onSave', user.password);
       let salt, hash
       [err, salt] = await to(bcrypt.genSalt(10));
       if (err) TE(err.message, true);
-
+      console.log(salt);
       [err, hash] = await to(bcrypt.hash(user.password, salt));
       if (err) TE(err.message, true);
 
       user.password = hash;
+      user.passwordChangedAt = Date.now();
     }
   });
+  // Model.beforeBulkUpdate(async (user, options) => {
+  //   console.log('hoili', user)
+  //   let err;
+  //   if (user.changed('password')) {
+  //     console.log('PAS CHANGED onSave', user.password)
+  //     let salt, hash
+  //     [err, salt] = await to(bcrypt.genSalt(10));
+  //     if (err) TE(err.message, true);
+
+  //     [err, hash] = await to(bcrypt.hash(user.password, salt));
+  //     if (err) TE(err.message, true);
+
+  //     user.password = hash;
+  //     user.passwordChangedAt = Date.now();
+  //   }
+  // });
+
+  // Model.beforeUpdate(async (user, options) => {
+  //   console.log('hoil', user.password)
+  //   let err;
+  //   if (user.changed('password')) {
+  //     console.log('PAS CHANGED onUpdate', user.password)
+  //     let salt, hash
+  //     [err, salt] = await to(bcrypt.genSalt(10));
+  //     if (err) TE(err.message, true);
+
+  //     [err, hash] = await to(bcrypt.hash(user.password, salt));
+  //     if (err) TE(err.message, true);
+
+  //     user.password = hash;
+  //     user.passwordChangedAt = Date.now();
+  //   }
+  // });
 
   Model.prototype.toWeb = function (pw) {
     let json = this.toJSON();

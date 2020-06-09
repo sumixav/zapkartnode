@@ -9,10 +9,10 @@ const create = async (req, res, next) => {
   let param = req.body;
  
   try {
-      [err, user] = await to(authService.createUser({...param,roleId:3}));
-      if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
-      let merchantParam = {...param,"userId":user.id,"createdBy":req.user.id};
-     [err, merchant] = await to(merchantService.createmerchant(merchantParam));
+      // [err, user] = await to(authService.createUser({...param,roleId:3}));
+      // if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+      // let merchantParam = {...param,"userId":user.id,"createdBy":req.user.id};
+     [err, merchant] = await to(merchantService.createmerchant({...param, createdBy: req.user.id}));
   
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (merchant) {
@@ -54,6 +54,7 @@ const getMerchant = async function(req, res) {
           if (merchantlist) {
             userlist = user.toJSON();
             delete userlist.password;
+            delete userlist.id;
             merchant = {...merchantlist.toJSON(),...userlist}
               return ReS(res, { message:'merchant', data :merchant}
                       , status_codes_msg.SUCCESS.code);
@@ -69,7 +70,7 @@ const updateMerchant = async function(req, res) {
   let id  = req.params.id;
   
   try {
-      [err, merchantlist] = await to(merchantService.updatemerchant(id,req.body));
+      [err, merchantlist] = await to(merchantService.updatemerchantNew(id,req.body));
           if(err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
           if (merchantlist) {
               

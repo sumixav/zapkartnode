@@ -35,6 +35,7 @@ const Op = require("sequelize").Op;
 const omit = require("lodash/omit")
 const find = require("lodash/find");
 const sub = require("date-fns/sub");
+const format = require("date-fns/format");
 
 exports.create = async (param) => {
   let err, cartDetails, a, errM;
@@ -193,12 +194,14 @@ exports.create = async (param) => {
         orderMasterDetails.orderSubtotal -= coupenDetails.amount;
       }
       const [errM, updateOrderMaster] = await to(orderMasterDetails.save({ transaction: t }));
+
       // const [errM, updateOrderMaster] = await to(order_masters.update({...updatedOrderParams}, { where: { id: orderMasterDetails.id } }));
       if (!updateOrderMaster) TE("Order could not be updated");
       if (errM) { console.log('jojojo', errM.message); TE(errM.message) };
 
       if (!isEmpty(param.payment) && param.payment == 1) {
         let gateway = pyMent[0].gatewayDetails;
+        Logger.info('gateway', gateway)
         let resGateWay = JSON.parse(gateway);
         let cryp = crypto.createHash("sha512");
         let text = `${resGateWay.key}|${orderno}|${totalPrice}|${productDetails}|${param.user.firstName}|${param.user.email}|||||BOLT_KIT_NODE_JS||||||${resGateWay.salt}`;
@@ -219,11 +222,24 @@ exports.create = async (param) => {
         paymentJson.furl = "localhost:3000/test";
       }
 
-      if (param.payment == 2) { //cart
+      if (param.payment == 2) { // cart delete on cod
         [err, cart] = await to(
           carts.destroy({ where: { userId: param.user.id }, transaction: t })
         );
-        if (err) TE("Error deleting cart")
+        if (err) TE("Error deleting cart");
+
+        const [errMail, mailStatus] = await to(sendMail({
+          to: param.user.email,
+          text: 'Your order has been placed.\n\n'
+            + `Order No: #${orderNo}\n\n`
+            + `Order date:${format(updateOrderMaster.createdAt, "MM/dd/yyyy")}\n\n`,
+          subject: 'Zapkart Order Confirmation'
+        }));
+
+        Logger.info(mailStatus)
+
+        if (errMail || !mailStatus || !mailStatus.messageId) TE("Error sending mail")
+        if (mailStatus.messageId) Logger.info(`Order confirmation mail sent ${orderno}`)
       }
 
       return { updateOrderMaster, payment: paymentJson };
@@ -237,14 +253,14 @@ exports.create = async (param) => {
 
 exports.getAllOrders = async (query, userDetails = {}) => {
   let orders = {};
-  
+
   const { limit, orderStatus } = query
   let limitQuery = {}
   if (limit) limitQuery = { limit: +limit };
   query = omit(query, ["limit", "orderStatus"])
   if (orderStatus === "nothold")
     query = { ...query, orderStatus: { [Op.not]: "hold" } };
-  
+
   if (userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
       where: { userId: userDetails.id }
@@ -677,6 +693,7 @@ exports.updateOrder = async (param) => {
       where: { orderNo: paramRes.txnid },
     })
   );
+
   let paymentStatus = paramRes.status !== "success" ? "failed" : "success";
   const [err, updateOrderMaster] = await to(
     order_masters.update(
@@ -688,8 +705,22 @@ exports.updateOrder = async (param) => {
       { where: { orderNo: paramRes.txnid } }
     )
   );
+  if (paymentStatus === "success") {
+    const [errMail, mailStatus] = await to(sendMail({
+      to: param.user.email,
+      text: 'Your order has been placed.\n\n'
+        + `Order No: #${orderNo}\n\n`
+        + `Order date: ${format(updateOrderMaster.createdAt, "MM/dd/yyyy")}\n\n`,
+      subject: 'Zapkart Order Confirmation'
+    }));
+    Logger.info(mailStatus)
+
+    if (errMail || !mailStatus || !mailStatus.messageId) TE("Error sending mail")
+    if (mailStatus.messageId) Logger.info(`Order confirmation mail sent ${orderno}`)
+  }
+
   if (err) {
-    return err;
+    TE(err.message);
   }
   let transactionParam = {
     transactionId: paramRes.txnid,

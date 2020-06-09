@@ -28,12 +28,21 @@ const { transformCategory } = require("./transforms");
 exports.deleteCategory = async id => {
   console.log("hi");
   try {
-    const a = await Category.findOne({ _id: id });
-    if (!a) throw new Error("Invalid category");
-    if (a.deleted === true) throw new Error("Category does not exist");
-    const b = await Category.update({ _id: id }, { deleted: true });
+    const a = await Category.find({ _id: { $in: id }, deleted: false });
+    if (!a || a.length !== id.length) {
+      // let invalidIds = ''
+      // if (a.length) {
+      //   a.forEach(i => {
+      //     console.log('ko',!id.includes(i._id.toString()), i._id.toString())
+      //     if (!id.includes(i._id.toString())) { invalidIds = invalidIds + i._id.toString() }
+      //   })
+      // }
+      throw new Error(`Invalid category ID ${invalidIds}`);
+    }
+    // if (a.deleted === true) throw new Error("Category does not exist");
+    const b = await Category.updateMany({ _id: { $in: id } }, { deleted: true });
     Logger.info(b);
-    if (b.ok === 1 && b.nModified === 1) return true;
+    if (b.ok === 1 && b.nModified === id.length) return true;
     return false;
   } catch (error) {
     throw error;
@@ -136,7 +145,7 @@ exports.getAllCategories = async query => {
   // console.log(qs.stringify(options))
   // sort%5BpriorityOrder%5D=1&sort%5BupdatedAt%5D=-1&status=active
 
-  let sortQuery = {updatedAt: -1};
+  let sortQuery = { updatedAt: -1 };
   let select = {};
   let dbQuery = { deleted: false };
 
@@ -175,10 +184,10 @@ exports.getAllCategories = async query => {
   Logger.info('select', select);
   Logger.info('dbQuery', dbQuery);
 
-  const categories =  await Category.find(dbQuery)
-        .sort(sortQuery)
-        .select(select)
-        .populate("parent")
+  const categories = await Category.find(dbQuery)
+    .sort(sortQuery)
+    .select(select)
+    .populate("parent")
 
 
   // if (!categories || categories.length === 0) {
@@ -279,7 +288,7 @@ exports.editCategory = async (params, id, query) => {
   if (params.parent && (params.parent !== category.parent)) {
     let idPath = [category._id];
     Logger.info(params.parent === "null");
-    if (params.parent === "null" || params.parent ===null) {
+    if (params.parent === "null" || params.parent === null) {
       category.parent = null;
       idPath = [category._id];
     } else {

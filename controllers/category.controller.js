@@ -47,6 +47,28 @@ exports.deleteCategory = async function (req, res) {
   }
 };
 
+exports.deleteCategories = async function (req, res) {
+  try {
+    let { ids } = req.query
+    ids = ids.split(",").map(i => i.trim());
+    const [err, isDeleted] = await to(
+      categoryService.deleteCategory(ids)
+
+    );
+    Logger.info(err, isDeleted);
+    if (err) throw err;
+    if (isDeleted)
+      return ReS(
+        res,
+        { message: "Categories deleted" },
+        status_codes_msg.SUCCESS.code
+      );
+    return ReE(res, new Error("Error deleting"), status_codes_msg.INVALID_ENTITY.code);
+  } catch (err) {
+    return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
+  }
+};
+
 exports.getAllCategories = async function (req, res) {
   try {
     const [err, categories] = await to(

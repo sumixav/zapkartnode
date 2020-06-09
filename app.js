@@ -69,7 +69,7 @@ mongoose
   .connect(CONFIG.mongodb_uri, {
     dbName: CONFIG.db_name,
     useNewUrlParser: true,
-    useUnifiedTopology: true,
+    useUnifiedTopology: true
   })
   .then(() => {
     Logger.info(`📖  Connected to MongoDB database: ${CONFIG.db_name}`);
