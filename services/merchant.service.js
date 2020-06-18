@@ -67,7 +67,7 @@ module.exports.getMerchantId = getMerchantId;
 exports.updatemerchant = async (id, param) => {
 
   console.log("hh", param);
-  [err, merchantdetails] = await to(merchants.update(param, { where: { id: id } }));
+  [err, merchantdetails] = await to(merchants.update(parseparam, { where: { id: id } }));
   if (err) TE(err.message);
   return merchantdetails;
 }
@@ -83,7 +83,7 @@ exports.updatemerchantNew = async (id, param) => {
   Logger.info("hh", param);
   if (param.deleted !== 'true') param.deleted=null;
   [errA, updated] = await to(sequelize.transaction(async (t) => {
-    [err, updateMerchantCount] = await to(merchantDoc.update(param, {
+    [err, updateMerchantCount] = await to(merchantDoc.update(parseStrings(param), {
       fields: [
         'merchantTypeId',
         'name',
@@ -115,7 +115,7 @@ exports.updatemerchantNew = async (id, param) => {
     }));
     if (err) TE(err.message);
     // if (!updateMerchantCount || updateMerchantCount[0] === 0) TE("Unable to update merchant details");
-    console.log('jokl', updateMerchantCount);
+    // console.log('jokl', updateMerchantCount);
     if (!updateMerchantCount) TE("Unable to update merchant details");
     [err, user] = await to(users.findOne({ where: { id: merchantDoc.userId } }));
     if (err) TE(err.message);
@@ -138,6 +138,7 @@ exports.updatemerchantNew = async (id, param) => {
       ],
       where: { id: merchantDoc.userId }, transaction: t
     }));
+    console.log('joi', updateUserCount)
     if (err) TE(err.message);
     if (!updateUserCount || updateUserCount[0] === 0) TE("Unable to update merchant user");;
     return true;

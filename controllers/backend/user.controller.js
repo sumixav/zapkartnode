@@ -4,7 +4,7 @@ const userService = require('../../services/user.service');
 const wishlistService = require('../../services/wishlist.service');
 const ordersService = require('../../services/order.service');
 const reviewsService = require('../../services/reviews.service');
-const { to, ReE, ReS } = require('../../services/util.service');
+const { to, ReE, ReS, TE } = require('../../services/util.service');
 const { status_codes_msg } = require('../../utils/appStatics');
 const prescriptionService = require("../../services/prescription.service")
 const { STRINGS } = require("../../utils/appStatics")
@@ -243,8 +243,11 @@ exports.getUsers = async function (req, res) {
 
 exports.updateUser = async function (req, res) {
     const { userId } = req.params;
-    Logger.info(userId)
-    const [err, data] = await to(authService.updateUser(req.body, userId));
+    let userType = 2;
+    Logger.info('jaja', req.user.user_type.name, +req.user.id === +userId);
+    if (req.user.user_type.name === "admin" && (+req.user.id === +userId)) userType = req.user.user_type.id
+    // if (userData.user_type && userData.user_type.name === "admin" && userId === r)
+    const [err, data] = await to(authService.updateUser(req.body, userId, userType));
     if (err) return ReE(res, err, status_codes_msg.INVALID_ENTITY.code);
     if (!data) return ReE(res, new Error('Unable to update'), status_codes_msg.INVALID_ENTITY.code);
     return ReS(res, { message: 'User updated', users: data.users, total: data.count }

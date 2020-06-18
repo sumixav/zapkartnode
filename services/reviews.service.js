@@ -47,7 +47,7 @@ var status = {
  */
 module.exports.addReview = async (params, userId) => {
   const { orderId, productId } = params;
-
+  let errB, review;
   // check if it is ordered product
   const [errA, orderProduct] = await to(
     order_items.findOne({ where: { productId, orderMasterId: orderId } })
@@ -60,17 +60,25 @@ module.exports.addReview = async (params, userId) => {
     reviews.findOne({ where: { productId }, userId })
   );
   if (errC) TE(STRINGS.DB_ERROR + errC.message);
-  if (duplicateReview) TE("Review already posted");
+  // if (duplicateReview) TE("Review already posted");
+  if (duplicateReview) {
+    [errB, review] = await to(duplicateReview.update({ ...params }))
+    if (errB) TE("Error updating review. " + errB.message);
+    if (!review) TE("Error updating review");
+  }
 
   // create review for ordered product
-  const [errB, review] = await to(
-    reviews.create({
-      ...params,
-      userId
-    })
-  );
-  if (errB) TE("Error creating review. " + errB.message);
-  if (!review) TE("Error creating review");
+  else {
+    [errB, review] = await to(
+      reviews.create({
+        ...params,
+        userId
+      })
+    );
+    if (errB) TE("Error creating review. " + errB.message);
+    if (!review) TE("Error creating review");
+  }
+  
   return review;
 };
 
@@ -163,7 +171,7 @@ module.exports.restoreReview = async (reviewId, userId) => {
 };
 
 module.exports.getUserReviews = async query => {
-  const {page = 1, limit = MAX_PAGE_LIMIT, userId, isPaginate = true} = query;
+  const { page = 1, limit = MAX_PAGE_LIMIT, userId, isPaginate = true } = query;
   console.log('query', query)
   const [err, reviewList] = await to(
     reviews.findAndCountAll({
@@ -213,8 +221,8 @@ module.exports.getAllReviews = async (query) => {
   const [err, reviewList] = await to(
     reviews.findAndCountAll({
       where: restQuery,
-      include:[
-        {model:users, as:'user'}
+      include: [
+        { model: users, as: 'user' }
       ],
       attributes: {
         exclude: ["deletedAt"]

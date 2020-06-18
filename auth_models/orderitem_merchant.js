@@ -28,7 +28,7 @@ module.exports = function (sequelize, DataTypes) {
         },
         status: {
             type: DataTypes.ENUM,
-            values: ['shipment-created', 'shipment-to-admin', 'rejected', 'pending'],
+            values: ['shipment-created', 'shipment-to-admin', 'rejected', 'pending', 'accepted'],
             defaultValue: 'pending'
           },
           comment: {

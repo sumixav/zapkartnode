@@ -43,18 +43,18 @@ const findUserByPhone = async function (phone) {
 module.exports.findUserByPhone = findUserByPhone;
 
 const createUser = async (userInfo, transaction = null) => {
-  let [errA, result] = await to(sequelize.transaction(async(t) => {
+  let [errA, result] = await to(sequelize.transaction(async (t) => {
 
     let email = await findUserByEmail(userInfo.email);
-  
+
     let phone =
       typeof userInfo.phone != "undefined"
         ? await findUserByPhone(userInfo.phone.toString())
         : null;
-  
+
     let imagesPath = [];
     let userParam = {};
-  
+
     if (typeof userInfo.files != "undefined") {
       images = userInfo.files["image"];
       imagesPath = images.map(i => i.path);
@@ -71,7 +71,7 @@ const createUser = async (userInfo, transaction = null) => {
       userParam.active = 1;
       userParam.phoneVerified = 0;
       userParam.confirmed = 1;
-      [err, user] = await to(users.create(userParam, {transaction: transaction || t}));
+      [err, user] = await to(users.create(userParam, { transaction: transaction || t }));
       if (err) {
         return TE(err.message);
       }
@@ -120,13 +120,21 @@ const authUser = async function (userInfo) {
 };
 module.exports.authUser = authUser;
 
-const updateUser = async function (userData, userId) {
+const updateUser = async function (userData, userId, userTypeId) {
   let err, user;
   // userData = userBodyParam(param.body);
+  Logger.info('kol', userTypeId)
   userData = parseStrings(userData);
   Logger.info(userData, userId);
-  [err, user] = await to(users.update(userData, { where: { id: userId, userTypeId: 2 } }));
+  const [errA, u] = await to(users.findOne({ where: { id: userId, userTypeId } }));
+  if (errA) TE(errA.message);
+  if (!u) TE("User does not exist");
+
+  [err, user] = await to(u.update(userData));
+
   if (err) TE(err.message);
+  Logger.info('haha', user)
+
   if (!user || (user && user[0] === 0)) TE("Unable to update")
   Logger.info(user);
   return user;

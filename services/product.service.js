@@ -1867,7 +1867,7 @@ exports.getProductFilterAggregate = async (param) => {
 
 
   if (fields) {
-    console.log('poo', fields);
+    
     if (typeof fields === "string")
       fields = fields.split(',').map(i => i.trim());
     console.log('poo', fields);
@@ -1889,7 +1889,13 @@ exports.getProductFilterAggregate = async (param) => {
     ];
   }
 
-  matchParam = { ...matchParam, $or: [{ name: { $regex: name, $options: "i" }, "productExtraInfo.description": { $regex: name, $options: "i" } }] }
+  if (search){
+    for (let key in search){
+      searchParam = [...searchParam, {[key]:{ $regex: search[key], $options: "i" } }]
+    }
+    matchParam = { ...matchParam, $or: searchParam }
+  }
+  // matchParam = { ...matchParam, $or: [{ name: { $regex: name, $options: "i" }, "productExtraInfo.description": { $regex: name, $options: "i" } }] }
 
   productmatch = [{ $match: matchParam }]
 

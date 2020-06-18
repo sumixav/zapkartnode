@@ -43,6 +43,7 @@
     "qs": "^6.9.1",
     "query-string": "^6.10.1",
     "rand-token": "^0.4.0",
+    "razorpay": "^2.0.6",
     "rc": "^1.2.8",
     "sequelize-slugify": "^0.9.1",
     "serve-favicon": "~2.5.0",

@@ -7,6 +7,7 @@ const {
   offers,
   address,
   users,
+  payment_method,
   order_merchant_assign_items,
   orderitem_merchant,
   order_merchant_assign,
@@ -36,6 +37,8 @@ const omit = require("lodash/omit")
 const find = require("lodash/find");
 const sub = require("date-fns/sub");
 const format = require("date-fns/format");
+const RazorPay = require("razorpay");
+const { sendMail } = require("../services/mail.service")
 
 exports.create = async (param) => {
   let err, cartDetails, a, errM;
@@ -193,7 +196,7 @@ exports.create = async (param) => {
         if (!coupenDetails) TE("Invalid coupon code");
         orderMasterDetails.orderSubtotal -= coupenDetails.amount;
       }
-      const [errM, updateOrderMaster] = await to(orderMasterDetails.save({ transaction: t }));
+      const [errM, updateOrderMaster] = await to(orderMasterDetails.save({ transaction: t, include: [{ model: order_items }] }));
 
       // const [errM, updateOrderMaster] = await to(order_masters.update({...updatedOrderParams}, { where: { id: orderMasterDetails.id } }));
       if (!updateOrderMaster) TE("Order could not be updated");
@@ -222,6 +225,34 @@ exports.create = async (param) => {
         paymentJson.furl = "localhost:3000/test";
       }
 
+      // razorpay
+      if (!isEmpty(param.payment) && param.payment == 3) {
+        let gateway = pyMent[0].gatewayDetails;
+        let resGateWay = JSON.parse(gateway);
+        const instance = new RazorPay({
+          key_id: resGateWay.key,
+          key_secret: resGateWay.secret,
+        });
+        const options = {
+          amount: orderMasterDetails.orderSubtotal * 100,
+          currency: "INR",
+          receipt: orderno,
+          payment_capture: '0'
+        }
+        const [errRp, rpRes] = await to(instance.orders.create(options));
+        if (errRp) TE(err.message);
+        if (!rpRes) TE("Error creating payment");
+
+        paymentJson.amount = rpRes.amount;  // amount in the smallest currency unit
+        paymentJson.currency = rpRes.currency;
+        paymentJson.payment_capture = '0';
+        paymentJson.order_id = rpRes.id;
+        paymentJson.name = param.user.firstName;
+        paymentJson.email = param.user.email;
+        paymentJson.contact = param.user.phone;
+
+      }
+
       if (param.payment == 2) { // cart delete on cod
         [err, cart] = await to(
           carts.destroy({ where: { userId: param.user.id }, transaction: t })
@@ -231,15 +262,15 @@ exports.create = async (param) => {
         const [errMail, mailStatus] = await to(sendMail({
           to: param.user.email,
           text: 'Your order has been placed.\n\n'
-            + `Order No: #${orderNo}\n\n`
+            + `Order No: #${orderMasterDetails.orderNo}\n\n`
             + `Order date:${format(updateOrderMaster.createdAt, "MM/dd/yyyy")}\n\n`,
           subject: 'Zapkart Order Confirmation'
         }));
 
         Logger.info(mailStatus)
 
-        if (errMail || !mailStatus || !mailStatus.messageId) TE("Error sending mail")
-        if (mailStatus.messageId) Logger.info(`Order confirmation mail sent ${orderno}`)
+        if (errMail || !mailStatus || !mailStatus.messageId) Logger.error("Error sending mail")
+        if (mailStatus && mailStatus.messageId) Logger.info(`Order confirmation mail sent ${orderMasterDetails.orderno}`)
       }
 
       return { updateOrderMaster, payment: paymentJson };
@@ -252,7 +283,8 @@ exports.create = async (param) => {
 };
 
 exports.getAllOrders = async (query, userDetails = {}) => {
-  let orders = {};
+  // let orders = {};
+  let orders = [];
 
   const { limit, orderStatus } = query
   let limitQuery = {}
@@ -260,8 +292,8 @@ exports.getAllOrders = async (query, userDetails = {}) => {
   query = omit(query, ["limit", "orderStatus"])
   if (orderStatus === "nothold")
     query = { ...query, orderStatus: { [Op.not]: "hold" } };
-
-  if (userDetails.userTypeId === 3) {
+  console.log('hmm', userDetails.userTypeId)
+  if (+userDetails.userTypeId === 3) {
     [err, merchantlist] = await to(merchants.find({
       where: { userId: userDetails.id }
     }));
@@ -276,7 +308,8 @@ exports.getAllOrders = async (query, userDetails = {}) => {
         ],
       })
     );
-    if (ordersMerchant) {
+    console.log('umm', ordersMerchant)
+    if (ordersMerchant.length > 0) {
       let orderItem = [];
       Object.entries(ordersMerchant).map(([key, value]) => {
         orderItem.push(value.order_item.id);
@@ -688,57 +721,78 @@ exports.getOrderDetailsSS = async (orderId) => {
 
 exports.updateOrder = async (param) => {
   let paramRes = JSON.parse(param.paymentResponse);
-  const [errA, order] = await to(
-    order_masters.findOne({
-      where: { orderNo: paramRes.txnid },
-    })
-  );
+  console.log('helloi', paramRes, param.paymentResponse);
+  const [errM, updatedOrder] = await to(sequelize.transaction(async (t) => {
+    // const [errA, order] = await to(
+    //   order_masters.findOne({
+    //     where: { orderNo: paramRes.txnid },
+    //   })
+    // );
 
-  let paymentStatus = paramRes.status !== "success" ? "failed" : "success";
-  const [err, updateOrderMaster] = await to(
-    order_masters.update(
-      {
-        paymentStatus,
-        orderStatus: "processing",
-        transactionId: paramRes.txnid,
-      },
-      { where: { orderNo: paramRes.txnid } }
-    )
-  );
-  if (paymentStatus === "success") {
-    const [errMail, mailStatus] = await to(sendMail({
-      to: param.user.email,
-      text: 'Your order has been placed.\n\n'
-        + `Order No: #${orderNo}\n\n`
-        + `Order date: ${format(updateOrderMaster.createdAt, "MM/dd/yyyy")}\n\n`,
-      subject: 'Zapkart Order Confirmation'
-    }));
-    Logger.info(mailStatus)
+    let paymentStatus = paramRes.status !== "success" ? "failed" : "success";
+    const [errA, updateOrderMaster] = await to(
+      order_masters.update(
+        {
+          paymentStatus,
+          orderStatus: "processing",
+          transactionId: paramRes.razorpay_order_id || paramRes.txnid,
+        },
+        { where: { orderNo: paramRes.txnid }, transaction: t },
 
-    if (errMail || !mailStatus || !mailStatus.messageId) TE("Error sending mail")
-    if (mailStatus.messageId) Logger.info(`Order confirmation mail sent ${orderno}`)
-  }
+      )
+    );
+    if (errA) {
+      TE(`aa;${errA.message}`);
+    }
+    if (paramRes.razorpay_payment_id) { // verify transaction for razorpay
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paramRes
+      const [errC, payment] = await to(payment_method.findOne({ where: { methodName: 'razorpay' } }));
+      if (errC) TE(`aa;${errC.message}`);
+      if (!payment) TE("Payment method does not exist in database");
+      const gatewayDetails = JSON.parse(payment.gatewayDetails);
+      const secret = gatewayDetails.secret;
+      const hash = crypto.createHmac('sha256', secret)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest('hex');
+      console.log(hash, razorpay_signature)
+      if (hash !== razorpay_signature) TE("Razorpay Payment verification failed")
+    }
+    if (paymentStatus === "success") {
+      const [errMail, mailStatus] = await to(sendMail({
+        to: param.user.email,
+        text: 'Your order has been placed.\n\n'
+          + `Order No: #${updateOrderMaster.orderNo}\n\n`
+          + `Order date: ${format(updateOrderMaster.createdAt, "MM/dd/yyyy")}\n\n`,
+        subject: 'Zapkart Order Confirmation'
+      }));
+      Logger.info(mailStatus)
 
-  if (err) {
-    TE(err.message);
-  }
-  let transactionParam = {
-    transactionId: paramRes.txnid,
-    transactionResponseDetails: param.paymentResponse,
-    orderId: paramRes.txnid,
-    status: paymentStatus,
-  };
-  [err, transactionDetails] = await to(
-    transaction_details.create(transactionParam)
-  );
-  if (err) {
-    return err;
-  }
-  if (paramRes.status === "success") {
-    let cart = await to(carts.destroy({ where: { userId: param.user.id } }));
-  }
+      if (errMail || !mailStatus || !mailStatus.messageId) TE("Error sending mail")
+      if (mailStatus.messageId) Logger.info(`Order confirmation mail sent ${updateOrderMaster.orderNo}`)
+    }
 
-  return updateOrderMaster;
+    let transactionParam = {
+      transactionId: paramRes.razorpay_order_id || paramRes.txnid,
+      transactionResponseDetails: param.paymentResponse,
+      orderId: paramRes.txnid,
+      status: paymentStatus,
+    };
+    const [errB, transactionDetails] = await to(
+      transaction_details.create(transactionParam, { transaction: t })
+    );
+    if (errB) {
+      TE(`aa;${errB.message}`);
+    }
+    if (paramRes.status === "success") {
+      let cart = await to(carts.destroy({ where: { userId: param.user.id }, transaction: t }));
+    }
+
+    return updateOrderMaster;
+  }));
+  if (errM) TE(errM.message);
+  if (!updatedOrder) TE("Error updating order");
+  return updatedOrder;
+
 };
 
 exports.updateOrderA = async (params, orderId) => {
@@ -802,12 +856,14 @@ exports.deleteAssignedMerchant = async (orderItemId) => {
  * @param params.orderId
  * @param params.merchantId
  * @param params.comment
+ * @param params.status
  */
 exports.assignOrderItem = async (params, returnData = false) => {
   // status
   //  values: ['shipment-created', 'shipment-to-admin', 'rejected', 'pending'],
-  let err, existing, newData, updatedData;
+  let err, existing, newData, updatedData, orderItem;
   const { orderItemId } = params;
+  params = omit(params, ['orderItemId']);
 
   [err, orderItem] = await to(order_items.findOne(
     {
@@ -839,7 +895,7 @@ exports.assignOrderItem = async (params, returnData = false) => {
     return returnData ? this.getOrderDetails(orderItem.orderMasterId) : true;
   }
   else {
-    [err, updatedData] = await to(orderitem_merchant.update({ ...params, status: 'pending' }, { where: { orderItemId } }))
+    [err, updatedData] = await to(orderitem_merchant.update({ ...params, status: params.status || 'pending' }, { where: { orderItemId } }))
     if (err) TE(err.message)
     if (!updatedData || updatedData[0] === 0) TE("Not updated");
     return returnData ? this.getOrderDetails(orderItem.orderMasterId) : true;

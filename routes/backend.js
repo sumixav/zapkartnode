@@ -14,6 +14,7 @@ const PaymentController = require('../controllers/backend/payment.controller');
 const OrderController = require('../controllers/backend/order.controller');
 const ShipmentController = require('../controllers/backend/shipment.controller');
 const OtpController = require('../controllers/backend/otp.controller');
+const MailController = require('../controllers/backend/mail.controller');
 const Validate = require('../services/validate');
 const multer = require('multer')
 
@@ -136,7 +137,7 @@ router.patch('/order/update/:orderId', passport.authenticate('jwt', { session: f
 
 router.post('/order/update', passport.authenticate('jwt', { session: false }), formupload.none(), OrderController.update);
 // n
-router.post('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.assignMerchantToOrder);
+router.post('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin', 'merchant'),formupload.none(), OrderController.assignMerchantToOrder);
 router.delete('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.deleteAssignedMerchantToItem);
 // router.patch('/order/assign/:merchantOrderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.updateAssignedMerchantToOrder);
 router.get('/order/stats', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderStats);
@@ -153,6 +154,10 @@ router.get('/shipment/unshipped/:masterOrderId', passport.authenticate('jwt', { 
 // otp 
 router.post('/otp', passport.authenticate('jwt', { session: false }), formupload.none(), Validate.validateOtp, OtpController.generateOtp)
 router.post('/otp/verify', passport.authenticate('jwt', { session: false }), formupload.none(), Validate.validatePhoneVerify, OtpController.verifyOtp)
+
+// mail settings
+router.get('/mailSettings', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),MailController.getMailSettings)
+router.patch('/mailSettings/edit', passport.authenticate('jwt', { session: false }), formupload.none(), MailController.editMailSettings)
 
 
 module.exports = router;

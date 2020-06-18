@@ -87,7 +87,7 @@ module.exports = function (sequelize, DataTypes) {
        { as: "assignedMerchant", foreignKey:"orderItemId" }
       );
     Model.hasOne(models.orderitem_merchant, 
-       { as: "merchantassigned", foreignKey:"orderItemId" }
+       { as: "merchantassigned", foreignKey:"orderItemId" } // using
       );
     // this.userId = this.belongsTo(models.users, { foreignKey: 'userId' });
   };
