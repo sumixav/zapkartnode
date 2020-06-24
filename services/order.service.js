@@ -84,7 +84,7 @@ exports.create = async (param) => {
       TE(err.message);
     }
   }
-  let orderno = `zapOrd${new Date().getUTCMilliseconds()}`;
+  let orderno = `popolr${new Date().getUTCMilliseconds()}`;
   Logger.info("cartDetails", cartDetails);
   // if (cartDetails) {
   // if (cartDetails.length === 0) TE("No items in cart");

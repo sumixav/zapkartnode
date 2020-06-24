@@ -62,6 +62,7 @@ const getUserById = async function (req, res) {
 module.exports.getUserById = getUserById;
 
 const update = async function (req, res) {
+    
     let err, user, data
     user = req.user;
     data = req.body;
@@ -85,8 +86,8 @@ const update = async function (req, res) {
         'resetPasswordToken',
         'resetPasswordExpiresIn'
     ]);
-    if (err)
-        return ReS(res, { user }
+    if (err) ReE(res, err, 422);
+    return ReS(res, { user }
             , status_codes_msg.CREATED.code);
 }
 module.exports.update = update;

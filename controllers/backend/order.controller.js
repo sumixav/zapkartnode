@@ -75,7 +75,7 @@ exports.assignMerchantToOrder = async (req, res) => {
     const intParams = parseStrings(pick(req.body, 'merchantId',
 
       'orderItemId'));
-    Logger.info('intParams', intParams)
+    Logger.info('intParams', intParams);
 
     const params = { ...req.body, ...intParams };
 

@@ -141,7 +141,8 @@ router.post('/order/assign', passport.authenticate('jwt', { session: false }), c
 router.delete('/order/assign', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.deleteAssignedMerchantToItem);
 // router.patch('/order/assign/:merchantOrderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin'),formupload.none(), OrderController.updateAssignedMerchantToOrder);
 router.get('/order/stats', passport.authenticate('jwt', { session: false }), checkIsRole('admin'), OrderController.getOrderStats);
-router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), OrderController.getOrderDetails);
+// router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), checkIsRole('admin','merchant'), OrderController.getOrderDetails);
+router.get('/order/:orderId', passport.authenticate('jwt', { session: false }), OrderController.getOrderDetails);
 
 // shipments
 router.post('/shipment/create', passport.authenticate('jwt', { session: false }), formupload.none(), ShipmentController.createShipment);
