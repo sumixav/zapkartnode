@@ -12,8 +12,8 @@ const config = CONFIG.development
 
 const sequelize = new Sequelize(
   CONFIG.sql_db_name,
-  CONFIG.db_user,
-  CONFIG.db_password,
+  CONFIG.sql_db_user,
+  CONFIG.sql_db_password,
   config
 );
 

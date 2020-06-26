@@ -67,12 +67,12 @@ Logger.info(`Environment: ${CONFIG.app}`);
 Logger.info("MONDODB_URI", CONFIG.mongodb_uri);
 mongoose
   .connect(CONFIG.mongodb_uri, {
-    dbName: CONFIG.db_name,
+    dbName: CONFIG.mongodb_name,
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
   .then(() => {
-    Logger.info(`📖  Connected to MongoDB database: ${CONFIG.db_name}`);
+    Logger.info(`📖  Connected to MongoDB database: ${CONFIG.mongodb_name}`);
   })
   .catch((err) => Logger.error("❗  Could not connect to MongoDB...", err));
 

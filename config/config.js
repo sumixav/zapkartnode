@@ -6,11 +6,11 @@ CONFIG.app = process.env.APP || "development";
 CONFIG.port = process.env.PORT || "3005";
 
 CONFIG.development = {
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  username: process.env.SQL_DB_USER,
+  password: process.env.SQL_DB_PASSWORD,
   database: process.env.SQL_DB_NAME,
   host: "127.0.0.1",
-  dialect: process.env.DB_DIALECT|| "mysql",
+  dialect: process.env.SQL_DB_DIALECT|| "mysql",
   operatorsAliases: false,
   define: {
     charset: "utf8",
@@ -24,10 +24,7 @@ CONFIG.smsApi = {
   senderId: process.env.SMS_SENDER_ID,
 }
 
-CONFIG.db_dialect = process.env.DB_DIALECT || "mysql";
-CONFIG.db_host = process.env.DB_HOST || "localhost";
-CONFIG.db_port = process.env.DB_PORT || "3306";
-CONFIG.db_name = process.env.DB_NAME || "zapkart-dev";
+CONFIG.mongodb_name = process.env.MONGODB_NAME || "zapkart-dev";
 CONFIG.sql_db_name = process.env.SQL_DB_NAME || "zapkartdev";
 
 // CONFIG.db_dialect = process.env.DB_DIALECT || 'mysql';
@@ -35,8 +32,8 @@ CONFIG.sql_db_name = process.env.SQL_DB_NAME || "zapkartdev";
 // CONFIG.db_port = process.env.DB_PORT || '3306';
 // CONFIG.sql_db_name = process.env.SQL_DB_NAME || 'demodb';
 
-CONFIG.db_user = process.env.DB_USER || "admin";
-CONFIG.db_password = process.env.DB_PASSWORD || "admin";
+CONFIG.sql_db_user = process.env.SQL_DB_USER || "admin";
+CONFIG.sql_db_password = process.env.SQL_DB_PASSWORD || "admin";
 CONFIG.mongodb_uri =
   process.env.MONGODB_URI ||
   "mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb";
