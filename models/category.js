@@ -7,8 +7,9 @@ mongoose.plugin(slug)
 
 const categorySchema = mongoose.Schema(
   {
-    _id: mongoose.Schema.Types.ObjectId,
-    name: { type: String, required: true },
+    // _id: mongoose.Schema.Types.ObjectId,
+    name: { type: String, required: true, unique:true
+     },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       default: null
@@ -34,7 +35,7 @@ const categorySchema = mongoose.Schema(
       type: String,
       slug: "name",
       index: true,
-      unique: true,
+      // unique: true,
       slugPaddingSize: 4
     },
     priorityOrder: {
@@ -50,6 +51,11 @@ const categorySchema = mongoose.Schema(
     timestamps: true
   }
 );
+
+// categorySchema.pre('insertMany', function(next) {
+//   console.log('koala', this.name);
+//   // next()
+// });
 
 // categorySchema.pre('find', function(next) {
 

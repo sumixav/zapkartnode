@@ -15,6 +15,7 @@ const MedicineTypeController = require("../controllers/medicineType.controller.j
 const ComboController = require("../controllers/combo.controller.js");
 const BlogController = require("../controllers/blog.controller.js");
 const BannerController = require("../controllers/banner.controller.js");
+const DataController = require("../controllers/data.controller.js");
 
 const passport = require("passport");
 const path = require("path");
@@ -32,9 +33,10 @@ const brandUpload = upload("brand").fields([{ name: "image" }]);
 const comboUpload = upload("combo").fields([{ name: "image" }]);
 const blogUpload = upload("blog").fields([{ name: "image" }]);
 const bannerUpload = upload("banner").fields([{ name: "image" }]);
+const excelUpload = upload("data", "excel").single('file');
 
 /* GET Heart Beat. */
-router.get("/get-heart-beat", function(req, res, next) {
+router.get("/get-heart-beat", function (req, res, next) {
   res.json({
     status: "success",
     message: "Zapkart API",
@@ -234,6 +236,14 @@ router.delete("/banner/:bannerId", BannerController.deleteBanner);
 
 router.get("/getbrandcategory", BrandConroller.getBrandCategoryDetails);
 router.post("/getProductFilter", ProductController.getProductFilter);
+
+// upload excel
+// router.get("/upload", function (req, res) {
+//   res.sendFile(path.join(__dirname, "../public/upload.html"));
+// });
+router.post("/uploadExcel", excelUpload, DataController.uploadExcel);
+
+
 
 // router.post('/users/login', Validate.validateAuth, UserController.login);
 // router.get('/users/:id', passport.authenticate('jwt', { session: false }), UserController.getUserById);

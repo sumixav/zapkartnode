@@ -1,0 +1,21 @@
+input[type="submit"], input::-webkit-file-upload-button {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.2);;
+    border-radius: 5px;
+    padding: 8px;
+    box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.36);
+    margin-right: 10px;
+    
+}
+
+input[type="submit"]:active, input::-webkit-file-upload-button:active, input::-webkit-file-upload-button:hover, input[type="submit"]:hover{
+    outline: none;
+    background: rgba(0, 0, 0, 0.36);
+    color: white;
+    transition: background ease-in 0.3s
+}
+
+
+input[type="submit"]:hover, input::-webkit-file-upload-button:hover{
+    cursor: pointer;
+}

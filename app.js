@@ -30,13 +30,14 @@ const CONFIG = require("./config/config");
 
 app.use(compression());
 app.use(logger("dev"));
+// app.use(express.static(__dirname + '/public'));
+app.use('/static', express.static('public'))
 
 // for parsing application/xwww-
 app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 // app.use("/upload", express.static(__dirname + '/upload'));
-app.use("/uploads", express.static("uploads"));
 
 //Passport
 app.use(passport.initialize());
@@ -67,12 +68,13 @@ Logger.info(`Environment: ${CONFIG.app}`);
 Logger.info("MONDODB_URI", CONFIG.mongodb_uri);
 mongoose
   .connect(CONFIG.mongodb_uri, {
-    dbName: CONFIG.db_name,
+    dbName: CONFIG.mongodb_name,
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
   })
   .then(() => {
-    Logger.info(`📖  Connected to MongoDB database: ${CONFIG.db_name}`);
+    Logger.info(`📖  Connected to MongoDB database: ${CONFIG.mongodb_name}`);
+    Logger.info('Mongoose version',mongoose.version)
   })
   .catch((err) => Logger.error("❗  Could not connect to MongoDB...", err));
 

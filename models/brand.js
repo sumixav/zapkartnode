@@ -8,7 +8,7 @@ mongoose.plugin(slug);
 
 const brandsSchema = mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique:true },
     // image: { type: String, required: true },
     image: [imageSchema],
     status: {
@@ -28,7 +28,7 @@ const brandsSchema = mongoose.Schema(
     },
     seo: {
       type: seoSchema,
-      required: true
+      // required: true
     },
     deleted: {
       type: Boolean,
@@ -39,6 +39,9 @@ const brandsSchema = mongoose.Schema(
     timestamps: true
   }
 );
+
+
+
 
 
 // brandsSchema.pre('save', async function (next) {

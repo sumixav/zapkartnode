@@ -28,26 +28,27 @@ const getStorage = (location = null) =>
         }
     });
 
-const fileFilter = (req, file, cb) => {
-    Logger.info(file.mimetype);
-    if (file.fieldname === 'prescription') {
-        filter(/image\/jpeg|image\/jpg|image\/png|application\/pdf/, file, cb);
-    }
-    else {
-        filter(/image\/jpeg|image\/jpg|image\/png/, file, cb);
-    }
-    // if (
-    //     file.mimetype === "image/png" ||
-    //     file.mimetype === "image/jpeg" ||
-    //     req.files['prescription'] && file.mimetype === "application/pdf"
-    // ) {
-    //     cb(null, true); // accept file
-    // } else {
-    //     Logger.error("invalid file type");
-    //     // cb(null, false) // reject file
-    //     cb(new Error("invalid file type"), false); // reject file
-    // }
-};
+// const fileFilter = (req, file, cb) => {
+//     Logger.info(file.mimetype);
+//     console.log('jiji', req);
+//     if (file.fieldname === 'prescription') {
+//         filter(/image\/jpeg|image\/jpg|image\/png|application\/pdf/, file, cb);
+//     }
+//     else {
+//         filter(/image\/jpeg|image\/jpg|image\/png/, file, cb);
+//     }
+//     // if (
+//     //     file.mimetype === "image/png" ||
+//     //     file.mimetype === "image/jpeg" ||
+//     //     req.files['prescription'] && file.mimetype === "application/pdf"
+//     // ) {
+//     //     cb(null, true); // accept file
+//     // } else {
+//     //     Logger.error("invalid file type");
+//     //     // cb(null, false) // reject file
+//     //     cb(new Error("invalid file type"), false); // reject file
+//     // }
+// };
 
 
 const filter = (mimetypes, file, cb) => {
@@ -62,12 +63,28 @@ const filter = (mimetypes, file, cb) => {
 }
 
 
-const upload = location =>
+const upload = (location, type = null) =>
     multer({
         storage: getStorage(location),
-        fileFilter,
+        fileFilter: (req, file, cb) => {
+            Logger.info(file.mimetype);
+            if (type === 'excel') {
+                if (['xls', 'xlsx'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
+                    return cb(new Error('Wrong extension type. Required xls/xlsx'));
+                }
+                cb(null, true);
+            }
+            else {
+                if (file.fieldname === 'prescription') {
+                    filter(/image\/jpeg|image\/jpg|image\/png|application\/pdf/, file, cb);
+                }
+                else {
+                    filter(/image\/jpeg|image\/jpg|image\/png/, file, cb);
+                }
+            }
+        },
         onError: function (err, next) {
-            Logger.info('SO ERROR', err)
+            Logger.info('FILE UPLOAD ERROR', err)
         }
     });
 
