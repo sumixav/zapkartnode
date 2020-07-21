@@ -23,7 +23,7 @@
     "gm": "^1.23.1",
     "is-empty": "^1.2.0",
     "jsonschema": "^1.2.4",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "mongoose": "^5.9.20",
     "mongoose-delete": "^0.5.1",
