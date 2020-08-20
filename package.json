@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "await-to-js": "^2.0.1",
-    "bcrypt": "^3.0.0",
+    "bcrypt": "^5.0.0",
     "bcrypt-promise": "^2.0.0",
     "body-parser": "^1.18.3",
     "clean-deep": "^3.2.0",
